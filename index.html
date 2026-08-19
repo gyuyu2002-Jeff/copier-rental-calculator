@@ -797,11 +797,11 @@
 
   // 獨立保存各自的設備清單（全新機與二手機不混用，預設 1 台）
   let newMachinesData = [
-    { id: 1, name: "設備 #1", itemKey: "n_g1_17", price: "0.500", base: 3000, meter: 4500, bwMeter: 2000, bwRate: 0.40 }
+    { id: 1, name: "設備 #1", itemKey: "n_g1_17", price: "3.340", base: 3000, meter: 4500, bwMeter: 2000, bwRate: 0.40 }
   ];
 
   let usedMachinesData = [
-    { id: 1, name: "二手設備 #1", itemKey: "u_g2_1", price: "0.450", base: 3000, meter: 4500, bwMeter: 2000, bwRate: 0.253 }
+    { id: 1, name: "二手設備 #1", itemKey: "u_g2_1", price: "2.682", base: 3000, meter: 4500, bwMeter: 2000, bwRate: 0.253 }
   ];
 
   let nextId = 2;
@@ -823,77 +823,113 @@
   }
 
   // 產生純淨的項次選單 HTML (僅顯示當前契約的項次)
+  // 產生純淨的項次選單 HTML (僅顯示當前契約的項次)
   function generateOptionsHtml(selectedKey) {
     if (currentMode === 'new') {
       return `
-        <optgroup label="── 第 1 組：雷射黑白複合機（免加收黑白） ──">
-          <option value="n_g1_1" ${selectedKey === 'n_g1_1' ? 'selected' : ''}>第1項：黑白 20張 (2年期) - 基本 7,000張</option>
-          <option value="n_g1_2" ${selectedKey === 'n_g1_2' ? 'selected' : ''}>第2項：黑白 20張 (3年期) - 基本 7,000張</option>
-          <option value="n_g1_3" ${selectedKey === 'n_g1_3' ? 'selected' : ''}>第3、4項：黑白 30張 (2年期) - 基本 10,000張</option>
-          <option value="n_g1_5" ${selectedKey === 'n_g1_5' ? 'selected' : ''}>第5項：黑白 30張 含掃描 (2年期) - 基本 10,000張</option>
-          <option value="n_g1_6" ${selectedKey === 'n_g1_6' ? 'selected' : ''}>第6、7項：黑白 30張 (3年期) - 基本 10,000張</option>
-          <option value="n_g1_8" ${selectedKey === 'n_g1_8' ? 'selected' : ''}>第8項：黑白 30張 含掃描 (3年期) - 基本 10,000張</option>
-          <option value="n_g1_9" ${selectedKey === 'n_g1_9' ? 'selected' : ''}>第9項：黑白 40張 (2年期) - 基本 15,000張</option>
-          <option value="n_g1_10" ${selectedKey === 'n_g1_10' ? 'selected' : ''}>第10項：黑白 40張 (3年期) - 基本 15,000張</option>
-          <option value="n_g1_11" ${selectedKey === 'n_g1_11' ? 'selected' : ''}>第11、12項：黑白 50張 (2年期) - 基本 20,000張</option>
-          <option value="n_g1_13" ${selectedKey === 'n_g1_13' ? 'selected' : ''}>第13、14項：黑白 50張 (3年期) - 基本 20,000張</option>
-          <option value="n_g1_15" ${selectedKey === 'n_g1_15' ? 'selected' : ''}>第15項：黑白 60張 (2年期) - 基本 25,000張</option>
-          <option value="n_g1_16" ${selectedKey === 'n_g1_16' ? 'selected' : ''}>第16項：黑白 60張 (3年期) - 基本 25,000張</option>
-        </optgroup>
-        <optgroup label="── 第 1 組：雷射彩色複合機（加收黑白） ──">
-          <option value="n_g1_17" ${selectedKey === 'n_g1_17' ? 'selected' : ''}>第17項：彩色 20張 (2年期) - 基本 3,000張 (黑白+$0.40)</option>
-          <option value="n_g1_18" ${selectedKey === 'n_g1_18' ? 'selected' : ''}>第18項：彩色 20張 (3年期) - 基本 3,000張 (黑白+$0.38)</option>
-          <option value="n_g1_19" ${selectedKey === 'n_g1_19' ? 'selected' : ''}>第19項：彩色 30張 (2年期) - 基本 3,000張 (黑白+$0.40)</option>
-          <option value="n_g1_20" ${selectedKey === 'n_g1_20' ? 'selected' : ''}>第20項：彩色 30張 含掃描 (2年期) - 基本 3,000張 (黑白+$0.40)</option>
-          <option value="n_g1_21" ${selectedKey === 'n_g1_21' ? 'selected' : ''}>第21項：彩色 30張 (3年期) - 基本 3,000張 (黑白+$0.38)</option>
-          <option value="n_g1_22" ${selectedKey === 'n_g1_22' ? 'selected' : ''}>第22項：彩色 30張 含掃描 (3年期) - 基本 3,000張 (黑白+$0.38)</option>
-          <option value="n_g1_23" ${selectedKey === 'n_g1_23' ? 'selected' : ''}>第23項：彩色 40張 (2年期) - 基本 3,500張 (黑白+$0.40)</option>
-          <option value="n_g1_24" ${selectedKey === 'n_g1_24' ? 'selected' : ''}>第24項：彩色 40張 (3年期) - 基本 3,500張 (黑白+$0.38)</option>
-          <option value="n_g1_25" ${selectedKey === 'n_g1_25' ? 'selected' : ''}>第25項：彩色 50張 (2年期) - 基本 3,500張 (黑白+$0.40)</option>
-          <option value="n_g1_26" ${selectedKey === 'n_g1_26' ? 'selected' : ''}>第26項：彩色 50張 (3年期) - 基本 3,500張 (黑白+$0.38)</option>
-        </optgroup>
-        <optgroup label="── 第 3 組：噴墨彩色複合機（加收黑白） ──">
-          <option value="n_g3_1" ${selectedKey === 'n_g3_1' ? 'selected' : ''}>噴墨第1項：彩色 20張 (2年期) - 基本 3,000張 (黑白+$0.30)</option>
-          <option value="n_g3_2" ${selectedKey === 'n_g3_2' ? 'selected' : ''}>噴墨第2項：彩色 20張 (3年期) - 基本 3,000張 (黑白+$0.285)</option>
-          <option value="n_g3_3" ${selectedKey === 'n_g3_3' ? 'selected' : ''}>噴墨第3項：彩色 40張 (2年期) - 基本 3,500張 (黑白+$0.30)</option>
-          <option value="n_g3_4" ${selectedKey === 'n_g3_4' ? 'selected' : ''}>噴墨第4項：彩色 40張 (3年期) - 基本 3,500張 (黑白+$0.285)</option>
-          <option value="n_g3_5" ${selectedKey === 'n_g3_5' ? 'selected' : ''}>噴墨第5項：彩色 50張 (2年期) - 基本 3,500張 (黑白+$0.30)</option>
-          <option value="n_g3_6" ${selectedKey === 'n_g3_6' ? 'selected' : ''}>噴墨第6項：彩色 50張 (3年期) - 基本 3,500張 (黑白+$0.285)</option>
-        </optgroup>
-        <optgroup label="── 其他 ──">
-          <option value="custom_new" ${selectedKey === 'custom_new' ? 'selected' : ''}>自訂規格與張數</option>
-        </optgroup>
+<optgroup label="── 第 1 組：雷射黑白複合機（免加收黑白） ──">
+  <option value="n_g1_1" ${selectedKey === 'n_g1_1' ? 'selected' : ''}>第1項：IM 2500 (2年期) - 基本 7,000張 (單價: $0.501)</option>
+  <option value="n_g1_2" ${selectedKey === 'n_g1_2' ? 'selected' : ''}>第2項：IM 2500 (3年期) - 基本 7,000張 (單價: $0.466)</option>
+  <option value="n_g1_3" ${selectedKey === 'n_g1_3' ? 'selected' : ''}>第3項：IM 3500 (2年期, 1~30台) - 基本 10,000張 (單價: $0.476)</option>
+  <option value="n_g1_4" ${selectedKey === 'n_g1_4' ? 'selected' : ''}>第4項：IM 3500 (2年期, 31~80台) - 基本 10,000張 (單價: $0.441)</option>
+  <option value="n_g1_5" ${selectedKey === 'n_g1_5' ? 'selected' : ''}>第5項：IM 3500 含掃描 (2年期) - 基本 10,000張 (單價: $0.568)</option>
+  <option value="n_g1_6" ${selectedKey === 'n_g1_6' ? 'selected' : ''}>第6項：IM 3500 (3年期, 1~30台) - 基本 10,000張 (單價: $0.448)</option>
+  <option value="n_g1_7" ${selectedKey === 'n_g1_7' ? 'selected' : ''}>第7項：IM 3500 (3年期, 31~80台) - 基本 10,000張 (單價: $0.412)</option>
+  <option value="n_g1_8" ${selectedKey === 'n_g1_8' ? 'selected' : ''}>第8項：IM 3500 含掃描 (3年期) - 基本 10,000張 (單價: $0.516)</option>
+  <option value="n_g1_9" ${selectedKey === 'n_g1_9' ? 'selected' : ''}>第9項：IM 4000 (2年期) - 基本 15,000張 (單價: $0.461)</option>
+  <option value="n_g1_10" ${selectedKey === 'n_g1_10' ? 'selected' : ''}>第10項：IM 4000 (3年期) - 基本 15,000張 (單價: $0.435)</option>
+  <option value="n_g1_11" ${selectedKey === 'n_g1_11' ? 'selected' : ''}>第11項：IM 5000 (2年期) - 基本 20,000張 (單價: $0.420)</option>
+  <option value="n_g1_12" ${selectedKey === 'n_g1_12' ? 'selected' : ''}>第12項：IM 5000 含掃描 (2年期) - 基本 20,000張 (單價: $0.496)</option>
+  <option value="n_g1_13" ${selectedKey === 'n_g1_13' ? 'selected' : ''}>第13項：IM 5000 (3年期) - 基本 20,000張 (單價: $0.399)</option>
+  <option value="n_g1_14" ${selectedKey === 'n_g1_14' ? 'selected' : ''}>第14項：IM 5000 含掃描 (3年期) - 基本 20,000張 (單價: $0.463)</option>
+  <option value="n_g1_15" ${selectedKey === 'n_g1_15' ? 'selected' : ''}>第15項：IM 6000/7000 (2年期) - 基本 25,000張 (單價: $0.416)</option>
+  <option value="n_g1_16" ${selectedKey === 'n_g1_16' ? 'selected' : ''}>第16項：IM 6000/7000 (3年期) - 基本 25,000張 (單價: $0.399)</option>
+</optgroup>
+<optgroup label="── 第 1 組：雷射彩色複合機（黑白: 2年$0.40 / 3年$0.38） ──">
+  <option value="n_g1_17" ${selectedKey === 'n_g1_17' ? 'selected' : ''}>第17項：IM C2010/C2510 (2年期) - 基本 3,000張 (黑白+$0.40) (單價: $3.340)</option>
+  <option value="n_g1_18" ${selectedKey === 'n_g1_18' ? 'selected' : ''}>第18項：IM C2010/C2510 (3年期) - 基本 3,000張 (黑白+$0.38) (單價: $3.135)</option>
+  <option value="n_g1_19" ${selectedKey === 'n_g1_19' ? 'selected' : ''}>第19項：IM C3010EX/C3510EX (2年期) - 基本 3,000張 (黑白+$0.40) (單價: $3.441)</option>
+  <option value="n_g1_20" ${selectedKey === 'n_g1_20' ? 'selected' : ''}>第20項：IM C3010EX/C3510EX 含掃描 (2年期) - 基本 3,000張 (黑白+$0.40) (單價: $3.968)</option>
+  <option value="n_g1_21" ${selectedKey === 'n_g1_21' ? 'selected' : ''}>第21項：IM C3010EX/C3510EX (3年期) - 基本 3,000張 (黑白+$0.38) (單價: $3.193)</option>
+  <option value="n_g1_22" ${selectedKey === 'n_g1_22' ? 'selected' : ''}>第22項：IM C3010EX/C3510EX 含掃描 (3年期) - 基本 3,000張 (黑白+$0.38) (單價: $3.694)</option>
+  <option value="n_g1_23" ${selectedKey === 'n_g1_23' ? 'selected' : ''}>第23項：IM C4510 (2年期) - 基本 3,500張 (黑白+$0.40) (單價: $3.649)</option>
+  <option value="n_g1_24" ${selectedKey === 'n_g1_24' ? 'selected' : ''}>第24項：IM C4510 (3年期) - 基本 3,500張 (黑白+$0.38) (單價: $3.350)</option>
+  <option value="n_g1_25" ${selectedKey === 'n_g1_25' ? 'selected' : ''}>第25項：IM C6010 (2年期) - 基本 3,500張 (黑白+$0.40) (單價: $4.135)</option>
+  <option value="n_g1_26" ${selectedKey === 'n_g1_26' ? 'selected' : ''}>第26項：IM C6010 (3年期) - 基本 3,500張 (黑白+$0.38) (單價: $3.482)</option>
+</optgroup>
+<optgroup label="── 第 3 組：噴墨彩色複合機（黑白: 2年$0.30 / 3年$0.285） ──">
+  <option value="n_g3_1" ${selectedKey === 'n_g3_1' ? 'selected' : ''}>噴墨第1項：EM-C8100/C8101 (2年期) - 基本 3,000張 (黑白+$0.30) (單價: $2.706)</option>
+  <option value="n_g3_2" ${selectedKey === 'n_g3_2' ? 'selected' : ''}>噴墨第2項：EM-C8100/C8101 (3年期) - 基本 3,000張 (黑白+$0.285) (單價: $2.570)</option>
+  <option value="n_g3_3" ${selectedKey === 'n_g3_3' ? 'selected' : ''}>噴墨第3項：AM C4000 (2年期) - 基本 3,500張 (黑白+$0.30) (單價: $2.954)</option>
+  <option value="n_g3_4" ${selectedKey === 'n_g3_4' ? 'selected' : ''}>噴墨第4項：AM C4000 (3年期) - 基本 3,500張 (黑白+$0.285) (單價: $2.763)</option>
+  <option value="n_g3_5" ${selectedKey === 'n_g3_5' ? 'selected' : ''}>噴墨第5項：AM C5000 (2年期) - 基本 3,500張 (黑白+$0.30) (單價: $3.093)</option>
+  <option value="n_g3_6" ${selectedKey === 'n_g3_6' ? 'selected' : ''}>噴墨第6項：AM C5000 (3年期) - 基本 3,500張 (黑白+$0.285) (單價: $2.894)</option>
+</optgroup>
+<optgroup label="── 其他 ──">
+  <option value="custom_new" ${selectedKey === 'custom_new' ? 'selected' : ''}>自訂項次與單價</option>
+</optgroup>
       `;
     } else {
       return `
-        <optgroup label="── 第 1 組：雷射黑白複合機（免加收黑白） ──">
-          <option value="u_g1_1" ${selectedKey === 'u_g1_1' ? 'selected' : ''}>第1、2項：黑白 20張 - 基本 5,000張</option>
-          <option value="u_g1_3" ${selectedKey === 'u_g1_3' ? 'selected' : ''}>第3、4項：黑白 20張 - 基本 7,000張</option>
-          <option value="u_g1_5" ${selectedKey === 'u_g1_5' ? 'selected' : ''}>第5~8項：黑白 30張 - 基本 7,000張</option>
-          <option value="u_g1_9" ${selectedKey === 'u_g1_9' ? 'selected' : ''}>第9~12項：黑白 30張 - 基本 10,000張</option>
-          <option value="u_g1_13" ${selectedKey === 'u_g1_13' ? 'selected' : ''}>第13、14項：黑白 40張 - 基本 7,000張</option>
-          <option value="u_g1_15" ${selectedKey === 'u_g1_15' ? 'selected' : ''}>第15、16項：黑白 40張 - 基本 10,000張</option>
-          <option value="u_g1_17" ${selectedKey === 'u_g1_17' ? 'selected' : ''}>第17、18項：黑白 40張 - 基本 15,000張</option>
-          <option value="u_g1_19" ${selectedKey === 'u_g1_19' ? 'selected' : ''}>第19~22項：黑白 50張 - 基本 10,000張</option>
-          <option value="u_g1_23" ${selectedKey === 'u_g1_23' ? 'selected' : ''}>第23~26項：黑白 50張 - 基本 15,000張</option>
-          <option value="u_g1_27" ${selectedKey === 'u_g1_27' ? 'selected' : ''}>第27~30項：黑白 50張 - 基本 20,000張</option>
-          <option value="u_g1_31" ${selectedKey === 'u_g1_31' ? 'selected' : ''}>第31、32項：黑白 60張 - 基本 12,500張</option>
-          <option value="u_g1_33" ${selectedKey === 'u_g1_33' ? 'selected' : ''}>第33、34項：黑白 60張 - 基本 18,500張</option>
-          <option value="u_g1_35" ${selectedKey === 'u_g1_35' ? 'selected' : ''}>第35、36項：黑白 60張 - 基本 25,000張</option>
-        </optgroup>
-        <optgroup label="── 第 2 組：雷射彩色複合機（黑白+$0.253） ──">
-          <option value="u_g2_1" ${selectedKey === 'u_g2_1' ? 'selected' : ''}>雷射彩色 第1、2項：20張 - 基本 3,000張 (黑白+$0.253)</option>
-          <option value="u_g2_3" ${selectedKey === 'u_g2_3' ? 'selected' : ''}>雷射彩色 第3~6項：30張 - 基本 3,000張 (黑白+$0.253)</option>
-        </optgroup>
-        <optgroup label="── 第 3 組：噴墨彩色複合機（黑白+$0.202） ──">
-          <option value="u_g3_1" ${selectedKey === 'u_g3_1' ? 'selected' : ''}>噴墨彩色 第1、2項：20張 - 基本 3,000張 (黑白+$0.202)</option>
-          <option value="u_g3_3" ${selectedKey === 'u_g3_3' ? 'selected' : ''}>噴墨彩色 第3、4項：40張 - 基本 3,500張 (黑白+$0.202)</option>
-          <option value="u_g3_5" ${selectedKey === 'u_g3_5' ? 'selected' : ''}>噴墨彩色 第5、6項：50張 - 基本 3,500張 (黑白+$0.202)</option>
-          <option value="u_g3_7" ${selectedKey === 'u_g3_7' ? 'selected' : ''}>噴墨彩色 第7、8項：60張 - 基本 4,000張 (黑白+$0.202)</option>
-        </optgroup>
-        <optgroup label="── 其他 ──">
-          <option value="custom_used" ${selectedKey === 'custom_used' ? 'selected' : ''}>自訂規格與張數</option>
-        </optgroup>
+<optgroup label="── 第 1 組：雷射黑白複合機（免加收黑白） ──">
+  <option value="u_g1_1" ${selectedKey === 'u_g1_1' ? 'selected' : ''}>第1項：IM 2702 / MP 2555SP (2年期) - 基本 5,000張 (單價: $0.298)</option>
+  <option value="u_g1_2" ${selectedKey === 'u_g1_2' ? 'selected' : ''}>第2項：IM 2702 / MP 2555SP (3年期) - 基本 5,000張 (單價: $0.288)</option>
+  <option value="u_g1_3" ${selectedKey === 'u_g1_3' ? 'selected' : ''}>第3項：IM 2500 (2年期) - 基本 7,000張 (單價: $0.298)</option>
+  <option value="u_g1_4" ${selectedKey === 'u_g1_4' ? 'selected' : ''}>第4項：IM 2500 (3年期) - 基本 7,000張 (單價: $0.288)</option>
+  <option value="u_g1_5" ${selectedKey === 'u_g1_5' ? 'selected' : ''}>第5項：IM 2702 / MP 2555SP (2年期) - 基本 7,000張 (單價: $0.265)</option>
+  <option value="u_g1_6" ${selectedKey === 'u_g1_6' ? 'selected' : ''}>第6項：IM 2702 / MP 2555SP (3年期) - 基本 7,000張 (單價: $0.253)</option>
+  <option value="u_g1_7" ${selectedKey === 'u_g1_7' ? 'selected' : ''}>第7項：IM 3500 (2年期) - 基本 7,000張 (單價: $0.294)</option>
+  <option value="u_g1_8" ${selectedKey === 'u_g1_8' ? 'selected' : ''}>第8項：IM 3500 (3年期) - 基本 7,000張 (單價: $0.285)</option>
+  <option value="u_g1_9" ${selectedKey === 'u_g1_9' ? 'selected' : ''}>第9項：IM 3500 / MP 3555SP (2年期) - 基本 10,000張 (單價: $0.255)</option>
+  <option value="u_g1_10" ${selectedKey === 'u_g1_10' ? 'selected' : ''}>第10項：MP 4055SP 含掃描 (2年期) - 基本 10,000張 (單價: $0.351)</option>
+  <option value="u_g1_11" ${selectedKey === 'u_g1_11' ? 'selected' : ''}>第11項：IM 3500 / MP 3555SP (3年期) - 基本 10,000張 (單價: $0.248)</option>
+  <option value="u_g1_12" ${selectedKey === 'u_g1_12' ? 'selected' : ''}>第12項：MP 4055SP 含掃描 (3年期) - 基本 10,000張 (單價: $0.339)</option>
+  <option value="u_g1_13" ${selectedKey === 'u_g1_13' ? 'selected' : ''}>第13項：IM 4000 / MP 4055SP (2年期) - 基本 7,000張 (單價: $0.362)</option>
+  <option value="u_g1_14" ${selectedKey === 'u_g1_14' ? 'selected' : ''}>第14項：IM 4000 / MP 4055SP (3年期) - 基本 7,000張 (單價: $0.358)</option>
+  <option value="u_g1_15" ${selectedKey === 'u_g1_15' ? 'selected' : ''}>第15項：IM 4000 / MP 4055SP (2年期) - 基本 10,000張 (單價: $0.351)</option>
+  <option value="u_g1_16" ${selectedKey === 'u_g1_16' ? 'selected' : ''}>第16項：IM 4000 / MP 4055SP (3年期) - 基本 10,000張 (單價: $0.339)</option>
+  <option value="u_g1_17" ${selectedKey === 'u_g1_17' ? 'selected' : ''}>第17項：IM 4000 / MP 4055SP (2年期) - 基本 15,000張 (單價: $0.263)</option>
+  <option value="u_g1_18" ${selectedKey === 'u_g1_18' ? 'selected' : ''}>第18項：IM 4000 / MP 4055SP (3年期) - 基本 15,000張 (單價: $0.248)</option>
+  <option value="u_g1_19" ${selectedKey === 'u_g1_19' ? 'selected' : ''}>第19項：IM 5000 / MP 5055SP (2年期) - 基本 10,000張 (單價: $0.345)</option>
+  <option value="u_g1_20" ${selectedKey === 'u_g1_20' ? 'selected' : ''}>第20項：IM 5000 / MP 5055SP (3年期) - 基本 10,000張 (單價: $0.329)</option>
+  <option value="u_g1_21" ${selectedKey === 'u_g1_21' ? 'selected' : ''}>第21項：MP 5055SP / IM 5000 含掃描 (2年期) - 基本 10,000張 (單價: $0.302)</option>
+  <option value="u_g1_22" ${selectedKey === 'u_g1_22' ? 'selected' : ''}>第22項：MP 5055SP / IM 5000 含掃描 (3年期) - 基本 10,000張 (單價: $0.299)</option>
+  <option value="u_g1_23" ${selectedKey === 'u_g1_23' ? 'selected' : ''}>第23項：MP 5055SP / IM 5000 (2年期) - 基本 15,000張 (單價: $0.306)</option>
+  <option value="u_g1_24" ${selectedKey === 'u_g1_24' ? 'selected' : ''}>第24項：MP 5055SP / IM 5000 (3年期) - 基本 15,000張 (單價: $0.253)</option>
+  <option value="u_g1_25" ${selectedKey === 'u_g1_25' ? 'selected' : ''}>第25項：MP 5055SP / IM 5000 含掃描 (2年期) - 基本 15,000張 (單價: $0.253)</option>
+  <option value="u_g1_26" ${selectedKey === 'u_g1_26' ? 'selected' : ''}>第26項：MP 5055SP / IM 5000 含掃描 (3年期) - 基本 15,000張 (單價: $0.238)</option>
+  <option value="u_g1_27" ${selectedKey === 'u_g1_27' ? 'selected' : ''}>第27項：MP 5055SP / IM 5000 (2年期) - 基本 20,000張 (單價: $0.238)</option>
+  <option value="u_g1_28" ${selectedKey === 'u_g1_28' ? 'selected' : ''}>第28項：MP 5055SP / IM 5000 (3年期) - 基本 20,000張 (單價: $0.429)</option>
+  <option value="u_g1_29" ${selectedKey === 'u_g1_29' ? 'selected' : ''}>第29項：MP 5055SP / IM 5000 含掃描 (2年期) - 基本 20,000張 (單價: $0.429)</option>
+  <option value="u_g1_30" ${selectedKey === 'u_g1_30' ? 'selected' : ''}>第30項：MP 5055SP / IM 5000 含掃描 (3年期) - 基本 20,000張 (單價: $0.415)</option>
+  <option value="u_g1_31" ${selectedKey === 'u_g1_31' ? 'selected' : ''}>第31項：MP 6055SP / IM 6000 / IM 7000 (2年期) - 基本 12,500張 (單價: $0.339)</option>
+  <option value="u_g1_32" ${selectedKey === 'u_g1_32' ? 'selected' : ''}>第32項：MP 6055SP / IM 6000 / IM 7000 (3年期) - 基本 12,500張 (單價: $0.324)</option>
+  <option value="u_g1_33" ${selectedKey === 'u_g1_33' ? 'selected' : ''}>第33項：MP 6055SP / IM 6000 / IM 7000 (2年期) - 基本 18,500張 (單價: $0.324)</option>
+  <option value="u_g1_34" ${selectedKey === 'u_g1_34' ? 'selected' : ''}>第34項：MP 6055SP / IM 6000 / IM 7000 (3年期) - 基本 18,500張 (單價: $0.247)</option>
+  <option value="u_g1_35" ${selectedKey === 'u_g1_35' ? 'selected' : ''}>第35項：MP 6055SP / IM 6000 / IM 7000 (2年期) - 基本 25,000張 (單價: $0.247)</option>
+  <option value="u_g1_36" ${selectedKey === 'u_g1_36' ? 'selected' : ''}>第36項：MP 6055SP / IM 6000 / IM 7000 (3年期) - 基本 25,000張 (單價: $0.233)</option>
+</optgroup>
+<optgroup label="── 第 2 組：雷射彩色複合機（黑白+$0.253） ──">
+  <option value="u_g2_1" ${selectedKey === 'u_g2_1' ? 'selected' : ''}>雷射彩色 第1項：IM C2000/C2010 (2年期) - 基本 3,000張 (黑白+$0.253) (單價: $2.682)</option>
+  <option value="u_g2_2" ${selectedKey === 'u_g2_2' ? 'selected' : ''}>雷射彩色 第2項：IM C2000/C2010 (3年期) - 基本 3,000張 (黑白+$0.253) (單價: $2.632)</option>
+  <option value="u_g2_3" ${selectedKey === 'u_g2_3' ? 'selected' : ''}>雷射彩色 第3項：IM C2500~C3010EX (2年期) - 基本 3,000張 (黑白+$0.253) (單價: $2.763)</option>
+  <option value="u_g2_4" ${selectedKey === 'u_g2_4' ? 'selected' : ''}>雷射彩色 第4項：IM C2500~C3010EX (3年期) - 基本 3,000張 (黑白+$0.253) (單價: $2.682)</option>
+  <option value="u_g2_5" ${selectedKey === 'u_g2_5' ? 'selected' : ''}>雷射彩色 第5項：IM C3000~C3510EX 含掃描 (2年期) - 基本 3,000張 (黑白+$0.253) (單價: $3.016)</option>
+  <option value="u_g2_6" ${selectedKey === 'u_g2_6' ? 'selected' : ''}>雷射彩色 第6項：IM C3000~C3510EX 含掃描 (3年期) - 基本 3,000張 (黑白+$0.253) (單價: $2.925)</option>
+</optgroup>
+<optgroup label="── 第 3 組：噴墨彩色複合機（黑白+$0.202） ──">
+  <option value="u_g3_1" ${selectedKey === 'u_g3_1' ? 'selected' : ''}>噴墨彩色 第1項：WF C878R / EM C8100 (2年期) - 基本 3,000張 (黑白+$0.202) (單價: $1.974)</option>
+  <option value="u_g3_2" ${selectedKey === 'u_g3_2' ? 'selected' : ''}>噴墨彩色 第2項：WF C878R / EM C8100 (3年期) - 基本 3,000張 (黑白+$0.202) (單價: $1.953)</option>
+  <option value="u_g3_3" ${selectedKey === 'u_g3_3' ? 'selected' : ''}>噴墨彩色 第3項：AM C4000 (2年期) - 基本 3,500張 (黑白+$0.202) (單價: $2.227)</option>
+  <option value="u_g3_4" ${selectedKey === 'u_g3_4' ? 'selected' : ''}>噴墨彩色 第4項：AM C4000 (3年期) - 基本 3,500張 (黑白+$0.202) (單價: $2.024)</option>
+  <option value="u_g3_5" ${selectedKey === 'u_g3_5' ? 'selected' : ''}>噴墨彩色 第5項：AM C5000 (2年期) - 基本 3,500張 (黑白+$0.202) (單價: $2.379)</option>
+  <option value="u_g3_6" ${selectedKey === 'u_g3_6' ? 'selected' : ''}>噴墨彩色 第6項：AM C5000 (3年期) - 基本 3,500張 (黑白+$0.202) (單價: $2.126)</option>
+  <option value="u_g3_7" ${selectedKey === 'u_g3_7' ? 'selected' : ''}>噴墨彩色 第7項：AM C6000 / WF C20600 (2年期) - 基本 4,000張 (黑白+$0.202) (單價: $2.702)</option>
+  <option value="u_g3_8" ${selectedKey === 'u_g3_8' ? 'selected' : ''}>噴墨彩色 第8項：AM C6000 / WF C20600 (3年期) - 基本 4,000張 (黑白+$0.202) (單價: $2.686)</option>
+</optgroup>
+<optgroup label="── 其他 ──">
+  <option value="custom_used" ${selectedKey === 'custom_used' ? 'selected' : ''}>自訂項次與單價</option>
+</optgroup>
       `;
     }
   }
@@ -1261,11 +1297,11 @@
     if (confirm(`確定要重設為預設的${currentMode === 'new' ? '全新機' : '二手機'}資料嗎？`)) {
       if (currentMode === 'new') {
         newMachinesData = [
-          { id: 1, name: "設備 #1", itemKey: "n_g1_17", price: "0.500", base: 3000, meter: 4500, bwMeter: 2000, bwRate: 0.40 }
+          { id: 1, name: "設備 #1", itemKey: "n_g1_17", price: "3.340", base: 3000, meter: 4500, bwMeter: 2000, bwRate: 0.40 }
         ];
       } else {
         usedMachinesData = [
-          { id: 1, name: "二手設備 #1", itemKey: "u_g2_1", price: "0.450", base: 3000, meter: 4500, bwMeter: 2000, bwRate: 0.253 }
+          { id: 1, name: "二手設備 #1", itemKey: "u_g2_1", price: "2.682", base: 3000, meter: 4500, bwMeter: 2000, bwRate: 0.253 }
         ];
       }
       nextId = 2;
