@@ -273,10 +273,10 @@
       outline: none;
     }
 
-    /* 統一整齊的 5 欄式表單佈局 */
+    /* 統一整齊的 5 欄式表單佈局 (項次選單佔 1.8fr 寬度) */
     .form-grid-5 {
       display: grid;
-      grid-template-columns: 1.4fr 1.1fr 1fr 1fr 1.1fr;
+      grid-template-columns: 1.8fr 1fr 1fr 1fr 1.1fr;
       gap: 12px;
       align-items: start;
     }
@@ -320,7 +320,7 @@
     /* 輸入框與下拉選單樣式 (font-size 16px 防止 iOS 放大) */
     input, select {
       height: 42px;
-      padding: 8px 12px;
+      padding: 8px 10px;
       border: 1px solid var(--slate-300);
       border-radius: 7px;
       font-size: 16px;
@@ -328,6 +328,11 @@
       background-color: #ffffff;
       transition: all 0.15s ease;
       width: 100%;
+    }
+    select {
+      font-size: 14px;
+      text-overflow: ellipsis;
+      cursor: pointer;
     }
     input:focus, select:focus {
       border-color: var(--primary);
@@ -561,7 +566,7 @@
 
 <div class="container">
   <header>
-    <div class="header-badge">臺灣共同供應契約條款標準試算</div>
+    <div class="header-badge">臺灣銀行招標案號 LP5-114034 標準規範</div>
     <h1>影印機租賃印量計算系統（可多台合併）</h1>
     <p class="subtitle">自動1.5%誤印率・超印階梯累進係數（85% / 75%）・彩色機黑白加收費率試算</p>
   </header>
@@ -618,31 +623,122 @@
 
   <!-- 條款備註卡片 -->
   <div class="rules-card">
-    <strong>📋 共同供應契約計費依據摘要：</strong><br>
+    <strong>📋 臺灣銀行採購部 LP5-114034 契約計費依據摘要：</strong><br>
     1. <strong>實際計費張數</strong>：每台設備依抄表張數自動扣除 <strong>1.5% 誤印率</strong>（四捨五入計算至整數）。<br>
     2. <strong>階梯累進超額計費</strong>：<br>
        &nbsp;&nbsp;• <strong>超額 50% 以內</strong>：超額張數按原單價 <strong>85%</strong> 計收。<br>
        &nbsp;&nbsp;• <strong>超額 50% 以上</strong>：超出 50% 之部分按原單價 <strong>75%</strong> 計收。<br>
-    3. <strong>彩色機黑白加收費率</strong>：<br>
-       &nbsp;&nbsp;• 第 17, 19, 20, 23, 25 項：加收 <strong>NT$ 0.40 / 張</strong>。<br>
-       &nbsp;&nbsp;• 第 18, 21, 22, 24, 26 項：加收 <strong>NT$ 0.38 / 張</strong>。
+    3. <strong>基本張數型彩色機黑白加收費率</strong>：<br>
+       &nbsp;&nbsp;• <strong>第 1 組雷射彩色機</strong>：第 17, 19, 20, 23, 25 項加收 <strong>NT$ 0.40 / 張</strong>；第 18, 21, 22, 24, 26 項加收 <strong>NT$ 0.38 / 張</strong>。<br>
+       &nbsp;&nbsp;• <strong>第 3 組噴墨彩色機</strong>：第 1, 3, 5 項加收 <strong>NT$ 0.30 / 張</strong>；第 2, 4, 6 項加收 <strong>NT$ 0.285 / 張</strong>。
   </div>
 </div>
 
 <script>
+  // 契約項次規格定義表 (臺銀 LP5-114034)
+  const CONTRACT_ITEMS = {
+    // === 第 1 組：雷射黑白複合機 (免加收黑白) ===
+    "g1_1":  { name: "第1組第1項：黑白 20張 (2年期)", base: 7000, bwRate: 0, price: "0.350" },
+    "g1_2":  { name: "第1組第2項：黑白 20張 (3年期)", base: 7000, bwRate: 0, price: "0.350" },
+    "g1_3":  { name: "第1組第3項：黑白 30張 (2年期)", base: 10000, bwRate: 0, price: "0.350" },
+    "g1_4":  { name: "第1組第4項：黑白 30張 (2年期)", base: 10000, bwRate: 0, price: "0.350" },
+    "g1_5":  { name: "第1組第5項：黑白 30張 含掃描 (2年期)", base: 10000, bwRate: 0, price: "0.350" },
+    "g1_6":  { name: "第1組第6項：黑白 30張 (3年期)", base: 10000, bwRate: 0, price: "0.350" },
+    "g1_7":  { name: "第1組第7項：黑白 30張 (3年期)", base: 10000, bwRate: 0, price: "0.350" },
+    "g1_8":  { name: "第1組第8項：黑白 30張 含掃描 (3年期)", base: 10000, bwRate: 0, price: "0.350" },
+    "g1_9":  { name: "第1組第9項：黑白 40張 (2年期)", base: 15000, bwRate: 0, price: "0.350" },
+    "g1_10": { name: "第1組第10項：黑白 40張 (3年期)", base: 15000, bwRate: 0, price: "0.350" },
+    "g1_11": { name: "第1組第11項：黑白 50張 (2年期)", base: 20000, bwRate: 0, price: "0.350" },
+    "g1_12": { name: "第1組第12項：黑白 50張 含掃描 (2年期)", base: 20000, bwRate: 0, price: "0.350" },
+    "g1_13": { name: "第1組第13項：黑白 50張 (3年期)", base: 20000, bwRate: 0, price: "0.350" },
+    "g1_14": { name: "第1組第14項：黑白 50張 含掃描 (3年期)", base: 20000, bwRate: 0, price: "0.350" },
+    "g1_15": { name: "第1組第15項：黑白 60張 (2年期)", base: 25000, bwRate: 0, price: "0.350" },
+    "g1_16": { name: "第1組第16項：黑白 60張 (3年期)", base: 25000, bwRate: 0, price: "0.350" },
+
+    // === 第 1 組：雷射彩色複合機 (加收黑白) ===
+    "g1_17": { name: "第1組第17項：彩色 20張 (2年期)", base: 3000, bwRate: 0.40, price: "0.500" },
+    "g1_18": { name: "第1組第18項：彩色 20張 (3年期)", base: 3000, bwRate: 0.38, price: "0.500" },
+    "g1_19": { name: "第1組第19項：彩色 30張 (2年期)", base: 3000, bwRate: 0.40, price: "0.500" },
+    "g1_20": { name: "第1組第20項：彩色 30張 含掃描 (2年期)", base: 3000, bwRate: 0.40, price: "0.500" },
+    "g1_21": { name: "第1組第21項：彩色 30張 (3年期)", base: 3000, bwRate: 0.38, price: "0.500" },
+    "g1_22": { name: "第1組第22項：彩色 30張 含掃描 (3年期)", base: 3000, bwRate: 0.38, price: "0.500" },
+    "g1_23": { name: "第1組第23項：彩色 40張 (2年期)", base: 3500, bwRate: 0.40, price: "0.500" },
+    "g1_24": { name: "第1組第24項：彩色 40張 (3年期)", base: 3500, bwRate: 0.38, price: "0.500" },
+    "g1_25": { name: "第1組第25項：彩色 50張 (2年期)", base: 3500, bwRate: 0.40, price: "0.500" },
+    "g1_26": { name: "第1組第26項：彩色 50張 (3年期)", base: 3500, bwRate: 0.38, price: "0.500" },
+
+    // === 第 3 組：噴墨彩色複合機 (加收黑白) ===
+    "g3_1":  { name: "第3組第1項：噴墨彩色 20張 (2年期)", base: 3000, bwRate: 0.30, price: "3.000" },
+    "g3_2":  { name: "第3組第2項：噴墨彩色 20張 (3年期)", base: 3000, bwRate: 0.285, price: "3.000" },
+    "g3_3":  { name: "第3組第3項：噴墨彩色 40張 (2年期)", base: 3500, bwRate: 0.30, price: "3.000" },
+    "g3_4":  { name: "第3組第4項：噴墨彩色 40張 (3年期)", base: 3500, bwRate: 0.285, price: "3.000" },
+    "g3_5":  { name: "第3組第5項：噴墨彩色 50張 (2年期)", base: 3500, bwRate: 0.30, price: "3.000" },
+    "g3_6":  { name: "第3組第6項：噴墨彩色 50張 (3年期)", base: 3500, bwRate: 0.285, price: "3.000" },
+
+    // === 自訂 ===
+    "custom": { name: "自訂項次 / 自訂張數與費率", base: 5000, bwRate: 0, price: "0.500" }
+  };
+
+  // 產生項次下拉選單 HTML
+  function generateOptionsHtml(selectedKey) {
+    return `
+      <optgroup label="── 第 1 組：雷射黑白複合機（免加收黑白） ──">
+        <option value="g1_1" ${selectedKey === 'g1_1' ? 'selected' : ''}>第1項：黑白 20張 (2年期) - 基本 7,000張</option>
+        <option value="g1_2" ${selectedKey === 'g1_2' ? 'selected' : ''}>第2項：黑白 20張 (3年期) - 基本 7,000張</option>
+        <option value="g1_3" ${selectedKey === 'g1_3' ? 'selected' : ''}>第3項：黑白 30張 (2年期) - 基本 10,000張</option>
+        <option value="g1_4" ${selectedKey === 'g1_4' ? 'selected' : ''}>第4項：黑白 30張 (2年期) - 基本 10,000張</option>
+        <option value="g1_5" ${selectedKey === 'g1_5' ? 'selected' : ''}>第5項：黑白 30張 含掃描 (2年期) - 基本 10,000張</option>
+        <option value="g1_6" ${selectedKey === 'g1_6' ? 'selected' : ''}>第6項：黑白 30張 (3年期) - 基本 10,000張</option>
+        <option value="g1_7" ${selectedKey === 'g1_7' ? 'selected' : ''}>第7項：黑白 30張 (3年期) - 基本 10,000張</option>
+        <option value="g1_8" ${selectedKey === 'g1_8' ? 'selected' : ''}>第8項：黑白 30張 含掃描 (3年期) - 基本 10,000張</option>
+        <option value="g1_9" ${selectedKey === 'g1_9' ? 'selected' : ''}>第9項：黑白 40張 (2年期) - 基本 15,000張</option>
+        <option value="g1_10" ${selectedKey === 'g1_10' ? 'selected' : ''}>第10項：黑白 40張 (3年期) - 基本 15,000張</option>
+        <option value="g1_11" ${selectedKey === 'g1_11' ? 'selected' : ''}>第11項：黑白 50張 (2年期) - 基本 20,000張</option>
+        <option value="g1_12" ${selectedKey === 'g1_12' ? 'selected' : ''}>第12項：黑白 50張 含掃描 (2年期) - 基本 20,000張</option>
+        <option value="g1_13" ${selectedKey === 'g1_13' ? 'selected' : ''}>第13項：黑白 50張 (3年期) - 基本 20,000張</option>
+        <option value="g1_14" ${selectedKey === 'g1_14' ? 'selected' : ''}>第14項：黑白 50張 含掃描 (3年期) - 基本 20,000張</option>
+        <option value="g1_15" ${selectedKey === 'g1_15' ? 'selected' : ''}>第15項：黑白 60張 (2年期) - 基本 25,000張</option>
+        <option value="g1_16" ${selectedKey === 'g1_16' ? 'selected' : ''}>第16項：黑白 60張 (3年期) - 基本 25,000張</option>
+      </optgroup>
+      <optgroup label="── 第 1 組：雷射彩色複合機（加收黑白） ──">
+        <option value="g1_17" ${selectedKey === 'g1_17' ? 'selected' : ''}>第17項：彩色 20張 (2年期) - 基本 3,000張 (黑白+$0.40)</option>
+        <option value="g1_18" ${selectedKey === 'g1_18' ? 'selected' : ''}>第18項：彩色 20張 (3年期) - 基本 3,000張 (黑白+$0.38)</option>
+        <option value="g1_19" ${selectedKey === 'g1_19' ? 'selected' : ''}>第19項：彩色 30張 (2年期) - 基本 3,000張 (黑白+$0.40)</option>
+        <option value="g1_20" ${selectedKey === 'g1_20' ? 'selected' : ''}>第20項：彩色 30張 含掃描 (2年期) - 基本 3,000張 (黑白+$0.40)</option>
+        <option value="g1_21" ${selectedKey === 'g1_21' ? 'selected' : ''}>第21項：彩色 30張 (3年期) - 基本 3,000張 (黑白+$0.38)</option>
+        <option value="g1_22" ${selectedKey === 'g1_22' ? 'selected' : ''}>第22項：彩色 30張 含掃描 (3年期) - 基本 3,000張 (黑白+$0.38)</option>
+        <option value="g1_23" ${selectedKey === 'g1_23' ? 'selected' : ''}>第23項：彩色 40張 (2年期) - 基本 3,500張 (黑白+$0.40)</option>
+        <option value="g1_24" ${selectedKey === 'g1_24' ? 'selected' : ''}>第24項：彩色 40張 (3年期) - 基本 3,500張 (黑白+$0.38)</option>
+        <option value="g1_25" ${selectedKey === 'g1_25' ? 'selected' : ''}>第25項：彩色 50張 (2年期) - 基本 3,500張 (黑白+$0.40)</option>
+        <option value="g1_26" ${selectedKey === 'g1_26' ? 'selected' : ''}>第26項：彩色 50張 (3年期) - 基本 3,500張 (黑白+$0.38)</option>
+      </optgroup>
+      <optgroup label="── 第 3 組：噴墨彩色複合機（加收黑白） ──">
+        <option value="g3_1" ${selectedKey === 'g3_1' ? 'selected' : ''}>第1項：噴墨彩色 20張 (2年期) - 基本 3,000張 (黑白+$0.30)</option>
+        <option value="g3_2" ${selectedKey === 'g3_2' ? 'selected' : ''}>第2項：噴墨彩色 20張 (3年期) - 基本 3,000張 (黑白+$0.285)</option>
+        <option value="g3_3" ${selectedKey === 'g3_3' ? 'selected' : ''}>第3項：噴墨彩色 40張 (2年期) - 基本 3,500張 (黑白+$0.30)</option>
+        <option value="g3_4" ${selectedKey === 'g3_4' ? 'selected' : ''}>第4項：噴墨彩色 40張 (3年期) - 基本 3,500張 (黑白+$0.285)</option>
+        <option value="g3_5" ${selectedKey === 'g3_5' ? 'selected' : ''}>第5項：噴墨彩色 50張 (2年期) - 基本 3,500張 (黑白+$0.30)</option>
+        <option value="g3_6" ${selectedKey === 'g3_6' ? 'selected' : ''}>第6項：噴墨彩色 50張 (3年期) - 基本 3,500張 (黑白+$0.285)</option>
+      </optgroup>
+      <optgroup label="── 其他 ──">
+        <option value="custom" ${selectedKey === 'custom' ? 'selected' : ''}>自訂項次 / 自訂張數與費率</option>
+      </optgroup>
+    `;
+  }
+
   // 顯示今日日期
   const today = new Date();
   const dateStr = today.getFullYear() + ' 年 ' + (today.getMonth() + 1) + ' 月 ' + today.getDate() + ' 日';
   document.getElementById('currentDateText').innerText = `結算日期：${dateStr}`;
 
   let machines = [
-    { id: 1, name: "1F 總務處彩色機", type: "typeA", price: "0.5", base: 5000, meter: 7500, bwMeter: 3000 },
-    { id: 2, name: "2F 會計室黑白機", type: "standard", price: "0.35", base: 4000, meter: 4200, bwMeter: 0 }
+    { id: 1, name: "1F 總務處彩色機", itemKey: "g1_17", price: "0.500", base: 3000, meter: 4500, bwMeter: 2000, bwRate: 0.40 },
+    { id: 2, name: "2F 會計室黑白機", itemKey: "g1_2", price: "0.350", base: 7000, meter: 7200, bwMeter: 0, bwRate: 0 }
   ];
 
   let nextId = 3;
 
-  // 渲染所有設備卡片 DOM（僅在新增、刪除、重設時執行，保證輸入過程不被中斷）
+  // 渲染所有設備卡片 DOM
   function render() {
     const container = document.getElementById('machineContainer');
     container.innerHTML = '';
@@ -666,29 +762,28 @@
         <div class="form-grid-5">
           <div class="form-group">
             <div class="label-box">
-              <label>契約項次類別</label>
+              <label>契約項次規格選單</label>
+              <span class="sub-note">選擇後自動帶入張數與單價</span>
             </div>
-            <select onchange="updateMachineType(${m.id}, this.value)">
-              <option value="standard" ${m.type === 'standard' ? 'selected' : ''}>一般/黑白 (免加收黑白)</option>
-              <option value="typeA" ${m.type === 'typeA' ? 'selected' : ''}>17, 19, 20, 23, 25項 (+0.40元)</option>
-              <option value="typeB" ${m.type === 'typeB' ? 'selected' : ''}>18, 21, 22, 24, 26項 (+0.38元)</option>
+            <select onchange="updateMachineItem(${m.id}, this.value)">
+              ${generateOptionsHtml(m.itemKey || 'custom')}
             </select>
           </div>
 
           <div class="form-group">
             <div class="label-box">
               <label>每張原單價 (NT$)</label>
-              <span class="sub-note">支援小數如 0.501</span>
+              <span class="sub-note">支援三位小數如 0.501</span>
             </div>
-            <input type="text" inputmode="decimal" class="num-align" placeholder="例如 0.501" value="${m.price}" oninput="updateFieldValue(${m.id}, 'price', this.value)">
+            <input type="text" id="price-${m.id}" inputmode="decimal" class="num-align" placeholder="0.500" value="${m.price}" oninput="updateFieldValue(${m.id}, 'price', this.value)">
           </div>
 
           <div class="form-group">
             <div class="label-box">
               <label>每月基本張數</label>
-              <span class="sub-note">合約規定額度</span>
+              <span class="sub-note">依項次自動帶入或手動修</span>
             </div>
-            <input type="number" inputmode="numeric" class="num-align" step="1" min="0" placeholder="5000" value="${m.base}" oninput="updateFieldValue(${m.id}, 'base', this.value)">
+            <input type="number" id="base-${m.id}" inputmode="numeric" class="num-align" step="1" min="0" placeholder="5000" value="${m.base}" oninput="updateFieldValue(${m.id}, 'base', this.value)">
           </div>
 
           <div class="form-group">
@@ -696,7 +791,7 @@
               <label>抄表張數</label>
               <span class="sub-note">原始計數器讀數</span>
             </div>
-            <input type="number" inputmode="numeric" class="num-align" step="1" min="0" placeholder="0" value="${m.meter}" oninput="updateFieldValue(${m.id}, 'meter', this.value)">
+            <input type="number" id="meter-${m.id}" inputmode="numeric" class="num-align" step="1" min="0" placeholder="0" value="${m.meter}" oninput="updateFieldValue(${m.id}, 'meter', this.value)">
           </div>
 
           <div class="form-group">
@@ -720,7 +815,7 @@
                 <label style="color: var(--amber-700);">黑白抄表張數</label>
                 <span class="sub-note">黑白計數器讀數</span>
               </div>
-              <input type="number" inputmode="numeric" class="num-align" step="1" min="0" placeholder="0" value="${m.bwMeter}" oninput="updateFieldValue(${m.id}, 'bwMeter', this.value)">
+              <input type="number" id="bwMeter-${m.id}" inputmode="numeric" class="num-align" step="1" min="0" placeholder="0" value="${m.bwMeter}" oninput="updateFieldValue(${m.id}, 'bwMeter', this.value)">
             </div>
 
             <div class="form-group">
@@ -756,7 +851,7 @@
     recalculate();
   }
 
-  // 實時計算並原地更新各卡片與頂部儀表板（不銷毀 DOM，手機鍵盤不跳出）
+  // 實時計算並原地更新各卡片與頂部儀表板
   function recalculate() {
     let totalBaseFee = 0;
     let totalOverFee = 0;
@@ -768,18 +863,12 @@
       const baseNum = parseFloat(m.base) || 0;
       const meterNum = parseFloat(m.meter) || 0;
       const bwMeterNum = parseFloat(m.bwMeter) || 0;
+      const bwRate = parseFloat(m.bwRate) || 0;
 
       // 1. 扣除 1.5% 誤印張數 (四捨五入取整數)
       const actualCount = Math.round(meterNum * 0.985);
       
-      // 2. 黑白加收費率
-      let bwRate = 0;
-      if (m.type === 'typeA') {
-        bwRate = 0.40;
-      } else if (m.type === 'typeB') {
-        bwRate = 0.38;
-      }
-
+      // 2. 黑白加收金額
       let bwActual = 0;
       let bwFee = 0;
       if (bwRate > 0) {
@@ -854,7 +943,29 @@
     document.getElementById('sumGrandTotal').innerText = `NT$ ${Math.round(grandTotal).toLocaleString()}`;
   }
 
-  // 處理數值欄位更新
+  // 選擇契約項次規格：自動帶入基本張數、單價與黑白費率
+  function updateMachineItem(id, itemKey) {
+    const machine = machines.find(m => m.id === id);
+    if (!machine) return;
+
+    machine.itemKey = itemKey;
+    const itemInfo = CONTRACT_ITEMS[itemKey];
+    if (itemInfo) {
+      machine.base = itemInfo.base;
+      machine.bwRate = itemInfo.bwRate;
+      machine.price = itemInfo.price;
+
+      // 原地更新輸入框
+      const baseInput = document.getElementById(`base-${id}`);
+      if (baseInput) baseInput.value = machine.base;
+
+      const priceInput = document.getElementById(`price-${id}`);
+      if (priceInput) priceInput.value = machine.price;
+    }
+    recalculate();
+  }
+
+  // 處理手動數值欄位更新
   function updateFieldValue(id, field, rawValue) {
     const machine = machines.find(m => m.id === id);
     if (!machine) return;
@@ -862,23 +973,16 @@
     recalculate();
   }
 
-  // 處理契約項次切換
-  function updateMachineType(id, typeVal) {
-    const machine = machines.find(m => m.id === id);
-    if (!machine) return;
-    machine.type = typeVal;
-    recalculate();
-  }
-
   function addMachine() {
     machines.push({
       id: nextId++,
       name: `設備 #${machines.length + 1}`,
-      type: "standard",
-      price: "0.5",
-      base: 5000,
-      meter: 5000,
-      bwMeter: 0
+      itemKey: "g1_1",
+      price: "0.350",
+      base: 7000,
+      meter: 7000,
+      bwMeter: 0,
+      bwRate: 0
     });
     render();
   }
@@ -895,8 +999,8 @@
   function resetDefault() {
     if (confirm("確定要重設為預設範例資料嗎？")) {
       machines = [
-        { id: 1, name: "1F 總務處彩色機", type: "typeA", price: "0.5", base: 5000, meter: 7500, bwMeter: 3000 },
-        { id: 2, name: "2F 會計室黑白機", type: "standard", price: "0.35", base: 4000, meter: 4200, bwMeter: 0 }
+        { id: 1, name: "1F 總務處彩色機", itemKey: "g1_17", price: "0.500", base: 3000, meter: 4500, bwMeter: 2000, bwRate: 0.40 },
+        { id: 2, name: "2F 會計室黑白機", itemKey: "g1_2", price: "0.350", base: 7000, meter: 7200, bwMeter: 0, bwRate: 0 }
       ];
       nextId = 3;
       render();
