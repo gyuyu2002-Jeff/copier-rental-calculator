@@ -828,33 +828,45 @@
     }
 
 
-    /* 方式 B 跨項折抵切換開關 */
+    /* 顯眼的「啟用黑彩折抵」互動按鈕開關 */
     .offset-toggle-container {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(255, 255, 255, 0.14);
-      padding: 3px 10px;
-      border-radius: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: #ffffff;
+      color: #1e3a8a;
+      padding: 5px 14px;
+      border-radius: 24px;
+      border: 2px solid #60a5fa;
       cursor: pointer;
       user-select: none;
-      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .offset-toggle-container:hover {
-      background: rgba(255, 255, 255, 0.22);
+      background: #eff6ff;
+      border-color: #3b82f6;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    .offset-toggle-container.active-checked {
+      background: #10b981 !important;
+      border-color: #34d399 !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
     }
     .offset-toggle-checkbox {
-      width: 16px;
-      height: 16px;
+      width: 18px;
+      height: 18px;
       cursor: pointer;
-      accent-color: #10b981;
+      accent-color: #059669;
     }
     .offset-toggle-text {
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: #ffffff;
+      font-size: 0.88rem;
+      font-weight: 800;
+      letter-spacing: 0.2px;
     }
+
 
 
     /* 智慧上傳收費單 Modal 樣式 */
@@ -1034,9 +1046,9 @@
     <div class="summary-header">
       <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
         <span class="summary-title" id="summaryReportTitle">📊 公家機關全新影印機本月合計結算報告</span>
-        <label class="offset-toggle-container" title="勾選可將未印滿之黑白基本費等值折抵彩色機費用與超印費">
-          <input type="checkbox" id="chkEnableOffsetB" class="offset-toggle-checkbox" onchange="recalculate()">
-          <span class="offset-toggle-text">🎁 啟用方式 B 跨項折抵（爭取折讓）</span>
+        <label class="offset-toggle-container" id="offsetToggleLabel" title="點擊啟用：將未印滿之黑白機基本費等值折抵彩色機超印費與黑白加收費">
+          <input type="checkbox" id="chkEnableOffsetB" class="offset-toggle-checkbox" onchange="onOffsetToggleChanged(this.checked)">
+          <span class="offset-toggle-text" id="offsetToggleText">🎁 啟用黑彩折抵</span>
         </label>
       </div>
       <span class="summary-date" id="currentDateText"></span>
@@ -1059,7 +1071,7 @@
         <div class="value" id="sumBwFee">NT$ 0</div>
       </div>
       <div class="summary-item" id="offsetSummaryCard" style="background: rgba(16, 185, 129, 0.22); border-color: rgba(52, 211, 153, 0.4);">
-        <div class="label" style="color: #d1fae5;">🎁 黑白未達折抵(方式B)</div>
+        <div class="label" style="color: #d1fae5;">🎁 黑彩折抵 (方式B)</div>
         <div class="value" id="sumOffsetFee" style="color: #a7f3d0;">- NT$ 0</div>
       </div>
       <div class="summary-item total-highlight">
@@ -1074,7 +1086,7 @@
 
   <!-- 底部備註署名 -->
   <footer style="text-align: center; margin-top: 24px; padding: 14px 0; color: #64748b; font-size: 0.84rem; line-height: 1.8;">
-    <p style="color: #64748b; font-size: 0.84rem; margin-bottom: 4px; font-weight: 500;">⚠️ 網站算式僅供參考 實際請依ERP與台銀公告資訊為準</p>
+    <p style="color: #64748b; font-size: 0.84rem; margin-bottom: 4px; font-weight: 500;">⚠️ 網站算式僅供參考 實際請依ERP與台銀公告資訊為準 ｜ 🛡️ 本機端即時運算・公務資料絕不上傳外流</p>
     <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">by Antigravity 吳漢君</p>
   </footer>
 </div>
@@ -1100,7 +1112,8 @@
         <div class="upload-dropzone" id="dropzone" onclick="document.getElementById('invoiceFileInput').click()">
           <div class="upload-dropzone-icon">📄</div>
           <div style="font-weight: 700; color: #6d28d9; margin-bottom: 4px;">點擊選取或拖曳收費單檔案至此</div>
-          <div style="font-size: 0.78rem; color: var(--slate-500);">支援 PDF（數位或掃描檔）、JPG、PNG 等出貨單或收費單</div>
+          <div style="font-size: 0.78rem; color: var(--slate-500); margin-bottom: 6px;">支援 PDF（數位或掃描檔）、JPG、PNG 等出貨單或收費單</div>
+          <div style="font-size: 0.72rem; color: #059669; font-weight: 700; background: #ecfdf5; padding: 4px 8px; border-radius: 6px; display: inline-block;">🛡️ 機密保證：檔案僅於本機瀏覽器端解析，絕不上傳或回傳至任何伺服器</div>
           <input type="file" id="invoiceFileInput" accept=".pdf,image/*" style="display:none;" onchange="handleFileSelected(this.files[0])">
         </div>
       </div>
@@ -1825,8 +1838,11 @@ const NEW_CONTRACT_ITEMS = {
         3. <strong>基本張數型彩色機黑白加收費率</strong>：<br>
            &nbsp;&nbsp;• <strong>第 1 組雷射彩色機</strong>：第 17, 19, 20, 23, 25 項加收 <strong>NT$ 0.40 / 張</strong>；第 18, 21, 22, 24, 26 項加收 <strong>NT$ 0.38 / 張</strong>。<br>
            &nbsp;&nbsp;• <strong>第 3 組噴墨彩色機</strong>：第 1, 3, 5 項加收 <strong>NT$ 0.30 / 張</strong>；第 2, 4, 6 項加收 <strong>NT$ 0.285 / 張</strong>。<br>
-        4. <strong>黑白未達標基本費金額折抵（方式 B 規範）</strong>：<br>
-           &nbsp;&nbsp;• 若機關黑白機實際印量未達每月基本張數，其已繳付基本費之剩餘額度價值（<code>未印張數 × 契約單價</code>），系統會自動等值折抵彩色機之超印租費或黑白加收費，使機關繳付之基本費發揮最大效益。
+        4. <strong>黑彩折抵機制（方式 B 規範）</strong>：<br>
+           &nbsp;&nbsp;• 若機關黑白機實際印量未達每月基本張數，其已繳付基本費之剩餘額度價值（<code>未印張數 × 契約單價</code>），開啟「<strong>🎁 啟用黑彩折抵</strong>」後，系統會自動等值折抵彩色機之超印租費或黑白加收費，為機關發揮最大效益。<br>
+        5. <strong>🛡️ 公務機密與資訊安全保障說明</strong>：<br>
+           &nbsp;&nbsp;• <strong>100% 本機端即時運算（Client-Side Only）</strong>：本系統所有設備資料、抄表讀數、及上傳之收費單 PDF 檔案，<strong>完全僅在使用者本機瀏覽器內部進行解析運算</strong>。<br>
+           &nbsp;&nbsp;• <strong>絕無任何資料外流</strong>：無後端伺服器儲存或傳輸任何公務資訊，完全杜絕資安外洩風險，請各級公家機關與國衛院同仁安心使用。
       `;
     } else {
       box.style.borderLeftColor = '#059669';
@@ -1838,8 +1854,11 @@ const NEW_CONTRACT_ITEMS = {
         3. <strong>基本張數型彩色機黑白加收費率</strong>：<br>
            &nbsp;&nbsp;• <strong>第 2 組雷射彩色機</strong>：第 1 ~ 6 項一律加收 <strong>NT$ 0.253 / 張</strong>。<br>
            &nbsp;&nbsp;• <strong>第 3 組噴墨彩色機</strong>：第 1 ~ 8 項一律加收 <strong>NT$ 0.202 / 張</strong>。<br>
-        4. <strong>黑白未達標基本費金額折抵（方式 B 規範）</strong>：<br>
-           &nbsp;&nbsp;• 若機關黑白機實際印量未達每月基本張數，其已繳付基本費之剩餘額度價值（<code>未印張數 × 契約單價</code>），系統會自動等值折抵彩色機之超印租費或黑白加收費，使機關繳付之基本費發揮最大效益。
+        4. <strong>黑彩折抵機制（方式 B 規範）</strong>：<br>
+           &nbsp;&nbsp;• 若機關黑白機實際印量未達每月基本張數，其已繳付基本費之剩餘額度價值（<code>未印張數 × 契約單價</code>），開啟「<strong>🎁 啟用黑彩折抵</strong>」後，系統會自動等值折抵彩色機之超印租費或黑白加收費，為機關發揮最大效益。<br>
+        5. <strong>🛡️ 公務機密與資訊安全保障說明</strong>：<br>
+           &nbsp;&nbsp;• <strong>100% 本機端即時運算（Client-Side Only）</strong>：本系統所有設備資料、抄表讀數、及上傳之收費單 PDF 檔案，<strong>完全僅在使用者本機瀏覽器內部進行解析運算</strong>。<br>
+           &nbsp;&nbsp;• <strong>絕無任何資料外流</strong>：無後端伺服器儲存或傳輸任何公務資訊，完全杜絕資安外洩風險，請各級公家機關與國衛院同仁安心使用。
       `;
     }
   }
@@ -2148,6 +2167,18 @@ const NEW_CONTRACT_ITEMS = {
       container.appendChild(card);
     });
 
+    recalculate();
+  }
+
+  function onOffsetToggleChanged(isChecked) {
+    const label = document.getElementById('offsetToggleLabel');
+    if (label) {
+      if (isChecked) {
+        label.classList.add('active-checked');
+      } else {
+        label.classList.remove('active-checked');
+      }
+    }
     recalculate();
   }
 
