@@ -1952,7 +1952,7 @@ const NEW_CONTRACT_ITEMS = {
     const isUsed = currentMode === 'used';
     const isMergedMode = calcMode === 'merged';
 
-    // 1. 計算每台機器的實際計費張數與黑白加收費
+    // 1. 計算每台機器的實際計費張數、黑白加收費與基本租費
     const calcList = machines.map(m => {
       const priceNum = parseFloat(m.price) || 0;
       const baseNum = parseFloat(m.base) || 0;
@@ -1969,13 +1969,6 @@ const NEW_CONTRACT_ITEMS = {
       }
       const baseFee = baseNum * priceNum;
 
-      let unusedCount = 0;
-      let unusedCredit = 0;
-      if (bwRate === 0 && actualCount < baseNum) {
-        unusedCount = baseNum - actualCount;
-        unusedCredit = unusedCount * priceNum;
-      }
-
       return {
         m,
         priceNum,
@@ -1987,8 +1980,8 @@ const NEW_CONTRACT_ITEMS = {
         bwActual,
         bwFee,
         baseFee,
-        unusedCount,
-        unusedCredit,
+        unusedCount: 0,
+        unusedCredit: 0,
         overFee: 0,
         tier1Count: 0,
         tier2Count: 0,
@@ -1999,8 +1992,10 @@ const NEW_CONTRACT_ITEMS = {
       };
     });
 
+    let totalOffsetCreditPool = 0;
+
     if (isMergedMode) {
-      // 模式 A：多台合併累加
+      // 模式 A：多台合併累加（同項次統籌合併計算總基本額度與總印量）
       const groups = {};
       calcList.forEach(item => {
         const key = item.m.itemKey;
@@ -2031,6 +2026,7 @@ const NEW_CONTRACT_ITEMS = {
         let grpUsedOver = 0;
 
         if (totalActual > totalBase) {
+          // 群組總印量超出群組總基本額度 ➔ 產生群組超印費，無剩餘未印額度可折抵
           const totalOver = totalActual - totalBase;
           if (isUsed) {
             grpUsedOver = totalOver;
@@ -2045,6 +2041,21 @@ const NEW_CONTRACT_ITEMS = {
               grpTier2 = totalOver - tier1Limit;
               grpOverFee = (grpTier1 * (p * 0.85)) + (grpTier2 * (p * 0.75));
             }
+          }
+        } else {
+          // 群組總印量未達總基本額度 ➔ 若為黑白機群組，產生存入折抵池之淨未印價值（供折抵彩色費用）
+          if (grp.bwRate === 0) {
+            const grpUnused = totalBase - totalActual;
+            const grpCredit = grpUnused * p;
+            totalOffsetCreditPool += grpCredit;
+            
+            // 按各台未達比例分配顯示
+            grp.items.forEach(item => {
+              if (item.actualCount < item.baseNum) {
+                item.unusedCount = item.baseNum - item.actualCount;
+                item.unusedCredit = item.unusedCount * p;
+              }
+            });
           }
         }
 
@@ -2083,23 +2094,26 @@ const NEW_CONTRACT_ITEMS = {
               item.overFee = (item.tier1Count * (item.priceNum * 0.85)) + (item.tier2Count * (item.priceNum * 0.75));
             }
           }
+        } else if (item.bwRate === 0 && item.actualCount < item.baseNum) {
+          item.unusedCount = item.baseNum - item.actualCount;
+          item.unusedCredit = item.unusedCount * item.priceNum;
+          totalOffsetCreditPool += item.unusedCredit;
         }
       });
     }
 
-    // 計算總額與折抵
-    let totalOffsetCreditPool = 0;
+    // 計算各項費用加總
     calcList.forEach(item => {
       totalBaseFee += item.baseFee;
       totalOverFee += item.overFee;
       totalBwFee += item.bwFee;
-      totalOffsetCreditPool += item.unusedCredit;
     });
 
-    const overAndBwSum = totalOverFee + totalBwFee;
+    // 方式 B 折抵：黑白未達之淨餘額，優先折抵彩色機之超印費或黑白加收費（亦可折抵其他機台超印）
+    const offsetTargetFee = totalOverFee + totalBwFee;
     let appliedOffset = 0;
-    if (totalOffsetCreditPool > 0 && overAndBwSum > 0) {
-      appliedOffset = Math.min(totalOffsetCreditPool, overAndBwSum);
+    if (totalOffsetCreditPool > 0 && offsetTargetFee > 0) {
+      appliedOffset = Math.min(totalOffsetCreditPool, offsetTargetFee);
     }
 
     grandTotal = (totalBaseFee + totalOverFee + totalBwFee) - appliedOffset;
@@ -2125,14 +2139,14 @@ const NEW_CONTRACT_ITEMS = {
             <span class="chip ${isUsed ? 'chip-green' : ''}">📘 基本租費: <strong>NT$ ${baseFee.toFixed(2)}</strong></span>
             ${overFee > 0 ? `<span class="chip ${isUsed ? 'chip-green' : ''}">🔗 合併超印分攤: <strong>NT$ ${overFee.toFixed(2)}</strong> <small style="opacity:0.85;">(同項次 ${item.poolMachineCount} 台共用額度 ${item.poolTotalBase.toLocaleString()} 張)</small></span>` : `<span class="chip ${isUsed ? 'chip-green' : ''}">✨ 未超印 (同項次 ${item.poolMachineCount} 台共用額度中)</span>`}
             ${bwRate > 0 ? `<span class="chip chip-amber">🎨 黑白加收: <strong>NT$ ${bwFee.toFixed(2)}</strong></span>` : ''}
-            ${unusedCredit > 0 ? `<span class="chip chip-green">🎁 未印滿額度: <strong>${unusedCount.toLocaleString()} 張</strong> (可提撥 NT$ ${unusedCredit.toFixed(2)} 折抵彩色)</span>` : ''}
+            ${unusedCredit > 0 ? `<span class="chip chip-green">🎁 淨未印滿額度: <strong>${unusedCount.toLocaleString()} 張</strong> (可折抵彩色 NT$ ${unusedCredit.toFixed(2)})</span>` : ''}
           `;
         } else if (isUsed) {
           breakdownEl.innerHTML = `
             <span class="chip chip-green">📘 基本租費: <strong>NT$ ${baseFee.toFixed(2)}</strong></span>
             <span class="chip chip-green">♻️ 超印(90%): <strong>${item.usedOverCount.toLocaleString()} 張</strong> (NT$ ${overFee.toFixed(2)})</span>
             ${bwRate > 0 ? `<span class="chip chip-amber">🎨 黑白加收: <strong>NT$ ${bwFee.toFixed(2)}</strong></span>` : ''}
-            ${unusedCredit > 0 ? `<span class="chip chip-green">🎁 未印滿額度: <strong>${unusedCount.toLocaleString()} 張</strong> (可提撥 NT$ ${unusedCredit.toFixed(2)} 折抵彩色)</span>` : ''}
+            ${unusedCredit > 0 ? `<span class="chip chip-green">🎁 未印滿額度: <strong>${unusedCount.toLocaleString()} 張</strong> (可提撥 NT$ ${unusedCredit.toFixed(2)} 折抵)</span>` : ''}
           `;
         } else {
           breakdownEl.innerHTML = `
@@ -2141,7 +2155,7 @@ const NEW_CONTRACT_ITEMS = {
             ${item.tier2Count > 0 ? `<span class="chip">🚀 超印(75%): <strong>${item.tier2Count.toLocaleString()} 張</strong></span>` : ''}
             <span class="chip">⚡ 超印費: <strong>NT$ ${overFee.toFixed(2)}</strong></span>
             ${bwRate > 0 ? `<span class="chip chip-amber">🎨 黑白加收: <strong>NT$ ${bwFee.toFixed(2)}</strong></span>` : ''}
-            ${unusedCredit > 0 ? `<span class="chip chip-green">🎁 未印滿額度: <strong>${unusedCount.toLocaleString()} 張</strong> (可提撥 NT$ ${unusedCredit.toFixed(2)} 折抵彩色)</span>` : ''}
+            ${unusedCredit > 0 ? `<span class="chip chip-green">🎁 未印滿額度: <strong>${unusedCount.toLocaleString()} 張</strong> (可提撥 NT$ ${unusedCredit.toFixed(2)} 折抵)</span>` : ''}
           `;
         }
       }
