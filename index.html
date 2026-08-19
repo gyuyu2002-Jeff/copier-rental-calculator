@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>影印機租賃費用 - 多台合併計算系統</title>
+  <style>
+    :root {
+      --primary: #1e40af;
+      --primary-dark: #1e3a8a;
+      --accent: #b91c1c;
+      --bg: #f1f5f9;
+      --card-bg: #ffffff;
+      --border: #cbd5e1;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --success: #166534;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Microsoft JhengHei", sans-serif;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 24px 16px;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    h1 {
+      color: var(--primary);
+      font-size: 1.6rem;
+      margin-bottom: 6px;
+    }
+    p.subtitle {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* 頂部匯總儀表板 */
+    .summary-card {
+      background: linear-gradient(135deg, #1e40af, #3b82f6);
+      color: #ffffff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 12px;
+    }
+    .summary-item {
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      padding: 12px 16px;
+      backdrop-filter: blur(4px);
+    }
+    .summary-item .label {
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+    .summary-item .value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+    .total-highlight {
+      background: rgba(255, 255, 255, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    /* 控制按鈕列 */
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .btn {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 9px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+    .btn:hover {
+      background-color: var(--primary-dark);
+    }
+    .btn-secondary {
+      background-color: #64748b;
+    }
+    .btn-secondary:hover {
+      background-color: #475569;
+    }
+    .btn-danger {
+      background-color: #ef4444;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+    }
+    .btn-danger:hover {
+      background-color: #dc2626;
+    }
+
+    /* 設備卡片清單 */
+    .machine-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .machine-card {
+      background: var(--card-bg);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      position: relative;
+    }
+    .machine-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+    .machine-title {
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .machine-title input {
+      border: 1px solid transparent;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--primary);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .machine-title input:hover, .machine-title input:focus {
+      border-color: var(--border);
+      background: #f8fafc;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+    label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #334155;
+    }
+    .sub-note {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: normal;
+    }
+    input, select {
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.9rem;
+      outline: none;
+    }
+    input:focus, select:focus {
+      border-color: var(--primary);
+    }
+    input[readonly] {
+      background-color: #f1f5f9;
+      color: #64748b;
+    }
+
+    /* 單台計算小結 */
+    .card-footer {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px dashed #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 0.88rem;
+    }
+    .card-total {
+      font-weight: 700;
+      color: var(--accent);
+      font-size: 1.1rem;
+    }
+    .card-details {
+      color: #475569;
+      font-size: 0.8rem;
+    }
+
+    /* 條款註腳 */
+    .rules-card {
+      margin-top: 24px;
+      background: #e2e8f0;
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-size: 0.8rem;
+      color: #475569;
+      line-height: 1.6;
+    }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .toolbar, .btn-danger, .rules-card { display: none !important; }
+      .machine-card { break-inside: avoid; border: 1px solid #000; box-shadow: none; margin-bottom: 12px; }
+      .summary-card { background: #f8fafc; color: black; border: 1px solid #000; }
+      .summary-item { background: transparent; border: 1px solid #cbd5e1; }
+      .summary-item .value { color: #000; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>影印機租賃計費系統（多台合併管理）</h1>
+    <p class="subtitle">依據共同供應契約條款：自動扣除 1.5% 誤印、階梯累進超額（85% / 75%）及黑白加收試算</p>
+  </header>
+
+  <!-- 總結儀表板 -->
+  <div class="summary-card">
+    <div style="font-weight: 600; font-size: 1.05rem;">全機關本月合計結算</div>
+    <div class="summary-grid">
+      <div class="summary-item">
+        <div class="label">設備總數</div>
+        <div class="value" id="sumDeviceCount">0 台</div>
+      </div>
+      <div class="summary-item">
+        <div class="label">總基本租費</div>
+        <div class="value" id="sumBaseFee">NT$ 0</div>
+      </div>
+      <div class="summary-item">
+        <div class="label">總超額租費 (85%/75%)</div>
+        <div class="value" id="sumOverFee">NT$ 0</div>
+      </div>
+      <div class="summary-item">
+        <div class="label">總黑白加收費</div>
+        <div class="value" id="sumBwFee">NT$ 0</div>
+      </div>
+      <div class="summary-item total-highlight">
+        <div class="label">應付總金額合計</div>
+        <div class="value" id="sumGrandTotal">NT$ 0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 工具列 -->
+  <div class="toolbar">
+    <button class="btn" onclick="addMachine()">＋ 新增一台設備</button>
+    <div>
+      <button class="btn btn-secondary" onclick="window.print()">🖨️ 列印 / 匯出報表</button>
+    </div>
+  </div>
+
+  <!-- 設備動態容器 -->
+  <div class="machine-list" id="machineContainer"></div>
+
+  <!-- 條款備註 -->
+  <div class="rules-card">
+    <strong>📋 契約計費依據摘要：</strong><br>
+    1. <strong>實際張數</strong> = 抄表張數 × (1 - 1.5%)。<br>
+    2. <strong>超額 50% 以內</strong>：超額張數按原單價 <strong>85%</strong> 計收。<br>
+    3. <strong>超額 50% 以上</strong>：超出部分按原單價 <strong>75%</strong> 計收。<br>
+    4. <strong>彩色機加收黑白</strong>：第 17, 19, 20, 23, 25 項加收 $0.4/張；第 18, 21, 22, 24, 26 項加收 $0.38/張。
+  </div>
+</div>
+
+<script>
+  let machines = [
+    { id: 1, name: "1F 總務處彩色機", type: "typeA", price: 0.5, base: 5000, meter: 7500, bwMeter: 3000 },
+    { id: 2, name: "2F 會計室黑白機", type: "standard", price: 0.35, base: 4000, meter: 4200, bwMeter: 0 }
+  ];
+
+  let nextId = 3;
+
+  function render() {
+    const container = document.getElementById('machineContainer');
+    container.innerHTML = '';
+
+    let totalBaseFee = 0;
+    let totalOverFee = 0;
+    let totalBwFee = 0;
+    let grandTotal = 0;
+
+    machines.forEach((m, idx) => {
+      // 1. 扣除 1.5% 誤印張數 (四捨五入取整數)
+      const actualCount = Math.round((m.meter || 0) * 0.985);
+      
+      // 2. 黑白加收費率
+      let bwRate = 0;
+      if (m.type === 'typeA') bwRate = 0.40;
+      if (m.type === 'typeB') bwRate = 0.38;
+
+      let bwActual = 0;
+      let bwFee = 0;
+      if (bwRate > 0) {
+        bwActual = Math.round((m.bwMeter || 0) * 0.985);
+        bwFee = bwActual * bwRate;
+      }
+
+      // 3. 租費階梯計算
+      const baseFee = (m.base || 0) * (m.price || 0);
+      let tier1Count = 0;
+      let tier2Count = 0;
+      let overFee = 0;
+      const tier1Limit = (m.base || 0) * 0.5;
+
+      if (actualCount > (m.base || 0)) {
+        const over = actualCount - (m.base || 0);
+        if (over <= tier1Limit) {
+          tier1Count = over;
+          overFee = tier1Count * ((m.price || 0) * 0.85);
+        } else {
+          tier1Count = tier1Limit;
+          tier2Count = over - tier1Limit;
+          overFee = (tier1Count * ((m.price || 0) * 0.85)) + (tier2Count * ((m.price || 0) * 0.75));
+        }
+      }
+
+      const mTotal = baseFee + overFee + bwFee;
+
+      // 累加匯總
+      totalBaseFee += baseFee;
+      totalOverFee += overFee;
+      totalBwFee += bwFee;
+      grandTotal += mTotal;
+
+      // 建立卡片 DOM
+      const card = document.createElement('div');
+      card.className = 'machine-card';
+      card.innerHTML = `
+        <div class="machine-header">
+          <div class="machine-title">
+            <span>#${idx + 1}</span>
+            <input type="text" value="${m.name}" onchange="updateMachine(${m.id}, 'name', this.value)">
+          </div>
+          <div>
+            <button class="btn btn-danger" onclick="deleteMachine(${m.id})">刪除設備</button>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>契約項次類別</label>
+            <select onchange="updateMachine(${m.id}, 'type', this.value)">
+              <option value="standard" ${m.type === 'standard' ? 'selected' : ''}>一般/黑白 (免加收黑白)</option>
+              <option value="typeA" ${m.type === 'typeA' ? 'selected' : ''}>17, 19, 20, 23, 25項 (+0.4元)</option>
+              <option value="typeB" ${m.type === 'typeB' ? 'selected' : ''}>18, 21, 22, 24, 26項 (+0.38元)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>每張原單價 (NT$)</label>
+            <input type="number" step="0.01" min="0" value="${m.price}" oninput="updateMachine(${m.id}, 'price', parseFloat(this.value)||0)">
+          </div>
+          <div class="form-group">
+            <label>每月基本張數</label>
+            <input type="number" step="1" min="0" value="${m.base}" oninput="updateMachine(${m.id}, 'base', parseFloat(this.value)||0)">
+          </div>
+          <div class="form-group">
+            <label>抄表張數 <span class="sub-note">(扣1.5%誤印)</span></label>
+            <input type="number" step="1" min="0" value="${m.meter}" oninput="updateMachine(${m.id}, 'meter', parseFloat(this.value)||0)">
+          </div>
+          <div class="form-group">
+            <label>實際計費張數</label>
+            <input type="text" readonly value="${actualCount.toLocaleString()} 張">
+          </div>
+        </div>
+
+        ${bwRate > 0 ? `
+          <div class="form-grid" style="margin-top: 10px; background: #fffbeb; padding: 10px; border-radius: 6px; border: 1px solid #fef3c7;">
+            <div class="form-group">
+              <label>黑白抄表張數 <span class="sub-note">(加收 NT$${bwRate}/張)</span></label>
+              <input type="number" step="1" min="0" value="${m.bwMeter}" oninput="updateMachine(${m.id}, 'bwMeter', parseFloat(this.value)||0)">
+            </div>
+            <div class="form-group">
+              <label>黑白計費張數</label>
+              <input type="text" readonly value="${bwActual.toLocaleString()} 張">
+            </div>
+            <div class="form-group">
+              <label>黑白加收金額</label>
+              <input type="text" readonly value="NT$ ${bwFee.toFixed(2)}">
+            </div>
+          </div>
+        ` : ''}
+
+        <div class="card-footer">
+          <div class="card-details">
+            基本費: NT$ ${baseFee.toFixed(2)} | 
+            超額(85%): ${tier1Count.toLocaleString()}張 ($${(tier1Count * (m.price || 0) * 0.85).toFixed(2)}) | 
+            超額(75%): ${tier2Count.toLocaleString()}張 ($${(tier2Count * (m.price || 0) * 0.75).toFixed(2)})
+          </div>
+          <div class="card-total">
+            本台小計: NT$ ${Math.round(mTotal).toLocaleString()}
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+
+    // 更新儀表板
+    document.getElementById('sumDeviceCount').innerText = `${machines.length} 台`;
+    document.getElementById('sumBaseFee').innerText = `NT$ ${Math.round(totalBaseFee).toLocaleString()}`;
+    document.getElementById('sumOverFee').innerText = `NT$ ${Math.round(totalOverFee).toLocaleString()}`;
+    document.getElementById('sumBwFee').innerText = `NT$ ${Math.round(totalBwFee).toLocaleString()}`;
+    document.getElementById('sumGrandTotal').innerText = `NT$ ${Math.round(grandTotal).toLocaleString()}`;
+  }
+
+  function addMachine() {
+    machines.push({
+      id: nextId++,
+      name: `設備 #${machines.length + 1}`,
+      type: "standard",
+      price: 0.5,
+      base: 5000,
+      meter: 5000,
+      bwMeter: 0
+    });
+    render();
+  }
+
+  function deleteMachine(id) {
+    if (machines.length <= 1) {
+      alert("請至少保留一台設備！");
+      return;
+    }
+    machines = machines.filter(m => m.id !== id);
+    render();
+  }
+
+  function updateMachine(id, field, value) {
+    const machine = machines.find(m => m.id === id);
+    if (machine) {
+      machine[field] = value;
+      render();
+    }
+  }
+
+  // 初始載入渲染
+  render();
+</script>
+
+</body>
+</html>
