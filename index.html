@@ -670,7 +670,7 @@
         <div class="value" id="sumBaseFee">NT$ 0</div>
       </div>
       <div class="summary-item">
-        <div class="label" id="labelOverFee">⚡ 總超額租費 (85%/75%)</div>
+        <div class="label" id="labelOverFee">⚡ 總超印租費 (85%/75%)</div>
         <div class="value" id="sumOverFee">NT$ 0</div>
       </div>
       <div class="summary-item">
@@ -708,8 +708,9 @@
   <div class="rules-card" id="rulesCardBox"></div>
 
   <!-- 底部備註署名 -->
-  <footer style="text-align: center; margin-top: 32px; padding: 12px 0 6px 0; color: #94a3b8; font-size: 0.85rem; font-weight: 500; letter-spacing: 0.5px;">
-    by Antigravity 吳漢君
+    <footer style="text-align: center; margin-top: 36px; padding: 16px 0 10px 0; color: #64748b; font-size: 0.85rem; line-height: 1.8;">
+    <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 6px; font-weight: 500;">⚠️ 網站算式僅供參考 實際請依ERP與台銀公告資訊為準</p>
+    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">by Antigravity 吳漢君</p>
   </footer>
 </div>
 
@@ -910,14 +911,14 @@
       document.getElementById('pageMainTitle').innerText = '影印機租賃印量計算系統 — 全新機';
       document.getElementById('pageSubTitle').innerText = '依據臺灣銀行 LP5-114034 契約：自動1.5%誤印率・超印階梯累進（85% / 75%）・彩色機黑白加收試算';
       document.getElementById('summaryReportTitle').innerText = '📊 全機關全新影印機本月合計結算報告';
-      document.getElementById('labelOverFee').innerText = '⚡ 總超額租費 (85%/75%)';
+      document.getElementById('labelOverFee').innerText = '⚡ 總超印租費 (85%/75%)';
       summaryCard.className = 'summary-card theme-new-bg';
       addBtn.className = 'btn btn-new';
     } else {
       document.getElementById('pageMainTitle').innerText = '影印機租賃印量計算系統 — 二手機';
-      document.getElementById('pageSubTitle').innerText = '依據臺灣銀行 LP5-114035 契約：自動1.5%誤印率・固定超額折扣（90%）・彩色機黑白加收試算';
+      document.getElementById('pageSubTitle').innerText = '依據臺灣銀行 LP5-114035 契約：自動1.5%誤印率・固定超印折扣（90%）・彩色機黑白加收試算';
       document.getElementById('summaryReportTitle').innerText = '📊 全機關二手影印機本月合計結算報告';
-      document.getElementById('labelOverFee').innerText = '⚡ 總超額租費 (90%)';
+      document.getElementById('labelOverFee').innerText = '⚡ 總超印租費 (90%)';
       summaryCard.className = 'summary-card theme-used-bg';
       addBtn.className = 'btn btn-used';
     }
@@ -934,9 +935,9 @@
       box.innerHTML = `
         <strong>📋 臺灣銀行採購部 LP5-114034 全新影印機租賃計費依據摘要：</strong><br>
         1. <strong>實際計費張數</strong>：每台設備依抄表張數自動扣除 <strong>1.5% 誤印率</strong>（四捨五入計算至整數）。<br>
-        2. <strong>階梯累進超額計費</strong>：<br>
-           &nbsp;&nbsp;• <strong>超額 50% 以內</strong>：超額張數按原單價 <strong>85%</strong> 計收。<br>
-           &nbsp;&nbsp;• <strong>超額 50% 以上</strong>：超出 50% 之部分按原單價 <strong>75%</strong> 計收。<br>
+        2. <strong>階梯累進超印計費</strong>：<br>
+           &nbsp;&nbsp;• <strong>超印 50% 以內</strong>：超印張數按原單價 <strong>85%</strong> 計收。<br>
+           &nbsp;&nbsp;• <strong>超印 50% 以上</strong>：超出 50% 之部分按原單價 <strong>75%</strong> 計收。<br>
         3. <strong>基本張數型彩色機黑白加收費率</strong>：<br>
            &nbsp;&nbsp;• <strong>第 1 組雷射彩色機</strong>：第 17, 19, 20, 23, 25 項加收 <strong>NT$ 0.40 / 張</strong>；第 18, 21, 22, 24, 26 項加收 <strong>NT$ 0.38 / 張</strong>。<br>
            &nbsp;&nbsp;• <strong>第 3 組噴墨彩色機</strong>：第 1, 3, 5 項加收 <strong>NT$ 0.30 / 張</strong>；第 2, 4, 6 項加收 <strong>NT$ 0.285 / 張</strong>。
@@ -946,7 +947,7 @@
       box.innerHTML = `
         <strong>📋 臺灣銀行採購部 LP5-114035 二手影印機租賃計費依據摘要：</strong><br>
         1. <strong>實際計費張數</strong>：每台設備依抄表張數自動扣除 <strong>1.5% 誤印率</strong>（四捨五入計算至整數）。<br>
-        2. <strong>固定超額計費 (無階梯)</strong>：<br>
+        2. <strong>固定超印計費 (無階梯)</strong>：<br>
            &nbsp;&nbsp;• <strong>超出基本張數部分</strong>：一律按原單價 <strong>90% (0.9)</strong> 計收。<br>
         3. <strong>基本張數型彩色機黑白加收費率</strong>：<br>
            &nbsp;&nbsp;• <strong>第 2 組雷射彩色機</strong>：第 1 ~ 6 項一律加收 <strong>NT$ 0.253 / 張</strong>。<br>
@@ -1104,7 +1105,7 @@
         bwFee = bwActual * bwRate;
       }
 
-      // 3. 租費基本費與超額計算
+      // 3. 租費基本費與超印計算
       const baseFee = baseNum * priceNum;
       let overFee = 0;
       let tier1Count = 0;
@@ -1112,13 +1113,13 @@
       let usedOverCount = 0;
 
       if (isUsed) {
-        // 【二手影印機 LP5-114035】超額部分一律按原單價 90% (0.9) 計收
+        // 【二手影印機 LP5-114035】超印部分一律按原單價 90% (0.9) 計收
         if (actualCount > baseNum) {
           usedOverCount = actualCount - baseNum;
           overFee = usedOverCount * (priceNum * 0.90);
         }
       } else {
-        // 【全新影印機 LP5-114034】階梯累進超額：超額 50% 以內 85%、超額 50% 以上 75%
+        // 【全新影印機 LP5-114034】階梯累進超印：超印 50% 以內 85%、超印 50% 以上 75%
         const tier1Limit = baseNum * 0.5;
         if (actualCount > baseNum) {
           const over = actualCount - baseNum;
@@ -1164,14 +1165,14 @@
         if (isUsed) {
           breakdownEl.innerHTML = `
             <span class="chip chip-purple">📘 基本租費: <strong>NT$ ${baseFee.toFixed(2)}</strong></span>
-            <span class="chip chip-purple">♻️ 超額(90%): <strong>${usedOverCount.toLocaleString()} 張</strong> (NT$ ${(usedOverCount * priceNum * 0.90).toFixed(2)})</span>
+            <span class="chip chip-purple">♻️ 超印(90%): <strong>${usedOverCount.toLocaleString()} 張</strong> (NT$ ${(usedOverCount * priceNum * 0.90).toFixed(2)})</span>
             ${bwRate > 0 ? `<span class="chip chip-amber">🎨 黑白加收: <strong>NT$ ${bwFee.toFixed(2)}</strong></span>` : ''}
           `;
         } else {
           breakdownEl.innerHTML = `
             <span class="chip">📘 基本租費: <strong>NT$ ${baseFee.toFixed(2)}</strong></span>
-            <span class="chip">📈 超額(85%): <strong>${tier1Count.toLocaleString()} 張</strong> (NT$ ${(tier1Count * priceNum * 0.85).toFixed(2)})</span>
-            <span class="chip">🚀 超額(75%): <strong>${tier2Count.toLocaleString()} 張</strong> (NT$ ${(tier2Count * priceNum * 0.75).toFixed(2)})</span>
+            <span class="chip">📈 超印(85%): <strong>${tier1Count.toLocaleString()} 張</strong> (NT$ ${(tier1Count * priceNum * 0.85).toFixed(2)})</span>
+            <span class="chip">🚀 超印(75%): <strong>${tier2Count.toLocaleString()} 張</strong> (NT$ ${(tier2Count * priceNum * 0.75).toFixed(2)})</span>
             ${bwRate > 0 ? `<span class="chip chip-amber">🎨 黑白加收: <strong>NT$ ${bwFee.toFixed(2)}</strong></span>` : ''}
           `;
         }
