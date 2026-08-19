@@ -636,6 +636,170 @@
         border: 1px solid #cbd5e1 !important;
       }
     }
+
+    /* 計費模式切換控制區 */
+    .billing-mode-container {
+      background: #ffffff;
+      border: 1px solid var(--slate-200);
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 18px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .billing-mode-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .billing-mode-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--slate-800);
+    }
+    .billing-mode-options {
+      display: inline-flex;
+      background: var(--slate-100);
+      padding: 4px;
+      border-radius: 9px;
+      gap: 4px;
+    }
+    .calc-mode-btn {
+      padding: 6px 14px;
+      border-radius: 7px;
+      border: none;
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: transparent;
+      color: var(--slate-600);
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .calc-mode-btn.active {
+      background: #ffffff;
+      color: var(--primary);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+      font-weight: 700;
+    }
+    .calc-mode-btn.active.mode-used-active {
+      color: var(--emerald-700);
+    }
+
+    /* 複製設備按鈕 */
+    .btn-copy-outline {
+      background-color: transparent;
+      color: var(--slate-600);
+      border: 1px solid var(--slate-300);
+      padding: 6px 12px;
+      font-size: 0.82rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.15s;
+      margin-right: 6px;
+    }
+    .btn-copy-outline:hover {
+      background-color: var(--slate-100);
+      border-color: var(--slate-400);
+      color: var(--slate-900);
+    }
+
+    /* 批量新增 Modal 彈窗樣式 */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-dialog {
+      background: #ffffff;
+      border-radius: 14px;
+      max-width: 520px;
+      width: 100%;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2), 0 10px 10px -5px rgba(0,0,0,0.1);
+      overflow: hidden;
+      transform: scale(0.95);
+      transition: transform 0.2s ease;
+    }
+    .modal-backdrop.open .modal-dialog {
+      transform: scale(1);
+    }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--slate-200);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--slate-50);
+    }
+    .modal-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--slate-900);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .modal-close {
+      background: transparent;
+      border: none;
+      font-size: 1.3rem;
+      color: var(--slate-400);
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+    }
+    .modal-close:hover {
+      color: var(--slate-700);
+    }
+    .modal-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--slate-200);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: var(--slate-50);
+    }
+    .group-pool-badge {
+      font-size: 0.72rem;
+      padding: 2px 7px;
+      border-radius: 5px;
+      background: #dbeafe;
+      color: #1e40af;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
   </style>
 </head>
 <body>
@@ -654,6 +818,22 @@
       </button>
       <button class="mode-btn" id="btnModeUsed" onclick="switchContractMode('used')">
         <span>♻️ 二手影印機 (LP5-114035)</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 計費模式切換控制區 (多台合併累加 vs 單機獨立) -->
+  <div class="billing-mode-container">
+    <div class="billing-mode-info">
+      <span class="billing-mode-title">⚙️ 印量計費模式：</span>
+      <span id="billingModeDesc" style="font-size: 0.82rem; color: var(--slate-500);">同規格設備自動合併總基本張數與總印量統籌計費</span>
+    </div>
+    <div class="billing-mode-options">
+      <button type="button" class="calc-mode-btn active" id="btnCalcMerged" onclick="switchCalcMode('merged')">
+        <span>🔗 多台合併累加 (共用總額度)</span>
+      </button>
+      <button type="button" class="calc-mode-btn" id="btnCalcSingle" onclick="switchCalcMode('single')">
+        <span>🖨️ 單機獨立計費</span>
       </button>
     </div>
   </div>
@@ -692,7 +872,10 @@
   <div class="toolbar">
     <div class="toolbar-left">
       <button class="btn btn-new" id="btnAddMachine" onclick="addMachine()">
-        <span>＋</span> 新增一台設備
+        <span>＋</span> 新增 1 台設備
+      </button>
+      <button class="btn btn-secondary" id="btnBatchAdd" onclick="openBatchModal()">
+        <span>📑</span> 批量新增多台 (相同項次)
       </button>
       <button class="btn btn-secondary" onclick="resetDefault()">
         <span>🔄</span> 重設範例資料
@@ -1407,6 +1590,7 @@
     }
 
     updateRulesCard();
+    switchCalcMode(calcMode);
     render();
   }
 
@@ -1444,6 +1628,101 @@
   const dateStr = today.getFullYear() + ' 年 ' + (today.getMonth() + 1) + ' 月 ' + today.getDate() + ' 日';
   document.getElementById('currentDateText').innerText = `結算日期：${dateStr}`;
 
+
+  // 計費模式：'merged' (多台合併累加共用額度) 或 'single' (單機獨立核算)
+  let calcMode = 'merged';
+
+  function switchCalcMode(mode) {
+    calcMode = mode;
+    const isUsed = currentMode === 'used';
+    const btnMerged = document.getElementById('btnCalcMerged');
+    const btnSingle = document.getElementById('btnCalcSingle');
+    const desc = document.getElementById('billingModeDesc');
+
+    if (mode === 'merged') {
+      btnMerged.className = `calc-mode-btn active ${isUsed ? 'mode-used-active' : ''}`;
+      btnSingle.className = 'calc-mode-btn';
+      desc.innerText = '同規格設備自動合併總基本張數與總印量統籌計費（台銀合約常態）';
+    } else {
+      btnMerged.className = 'calc-mode-btn';
+      btnSingle.className = `calc-mode-btn active ${isUsed ? 'mode-used-active' : ''}`;
+      desc.innerText = '各台設備各自獨立核算基本張數與超印階梯';
+    }
+    recalculate();
+  }
+
+  // 快速複製指定設備
+  function duplicateMachine(id) {
+    const machines = getCurrentMachines();
+    const source = machines.find(m => m.id === id);
+    if (!source) return;
+
+    const isUsed = currentMode === 'used';
+    const newMachine = {
+      id: nextId++,
+      name: `${source.name} (複製)`,
+      itemKey: source.itemKey,
+      price: source.price,
+      base: source.base,
+      meter: source.meter,
+      bwMeter: source.bwMeter,
+      bwRate: source.bwRate
+    };
+
+    const index = machines.findIndex(m => m.id === id);
+    machines.splice(index + 1, 0, newMachine);
+    render();
+  }
+
+  // 批量新增 Modal 控制
+  function openBatchModal() {
+    const isUsed = currentMode === 'used';
+    const defaultKey = isUsed ? 'u_g1_1' : 'n_g1_1';
+    const select = document.getElementById('batchItemSelect');
+    select.innerHTML = generateOptionsHtml(defaultKey);
+    
+    const confirmBtn = document.getElementById('btnConfirmBatch');
+    confirmBtn.className = `btn ${isUsed ? 'btn-used' : 'btn-new'}`;
+    
+    document.getElementById('batchNamePrefix').value = isUsed ? '二手設備' : '設備';
+    document.getElementById('batchModal').classList.add('open');
+  }
+
+  function closeBatchModal() {
+    document.getElementById('batchModal').classList.remove('open');
+  }
+
+  function confirmBatchAdd() {
+    const count = parseInt(document.getElementById('batchCount').value, 10) || 1;
+    if (count <= 0) {
+      alert("請輸入大於 0 的台數！");
+      return;
+    }
+    const itemKey = document.getElementById('batchItemSelect').value;
+    const prefix = document.getElementById('batchNamePrefix').value.trim() || '設備';
+    const itemsDict = getCurrentItemsDict();
+    const itemInfo = itemsDict[itemKey] || { price: "0.500", base: 5000, bwRate: 0 };
+
+    const machines = getCurrentMachines();
+    const startNum = machines.length + 1;
+
+    for (let i = 0; i < count; i++) {
+      machines.push({
+        id: nextId++,
+        name: `${prefix} #${startNum + i}`,
+        itemKey: itemKey,
+        price: itemInfo.price,
+        base: itemInfo.base,
+        meter: itemInfo.base,
+        bwMeter: 0,
+        bwRate: itemInfo.bwRate
+      });
+    }
+
+    closeBatchModal();
+    render();
+  }
+
   // 渲染所有設備卡片 DOM
   function render() {
     const container = document.getElementById('machineContainer');
@@ -1462,8 +1741,9 @@
             <span class="machine-badge" style="background:${isUsed ? '#065f46' : '#1e293b'};">#${idx + 1}</span>
             <input type="text" class="machine-name-input" value="${m.name}" title="點擊可修改名稱" oninput="updateFieldValue(${m.id}, 'name', this.value)">
           </div>
-          <div>
-            <button class="btn-danger-outline" onclick="deleteMachine(${m.id})">🗑️ 刪除設備</button>
+          <div style="display: flex; align-items: center;">
+            <button type="button" class="btn-copy-outline" onclick="duplicateMachine(${m.id})" title="快速複製此台設備規格">📋 複製此台</button>
+            <button type="button" class="btn-danger-outline" onclick="deleteMachine(${m.id})">🗑️ 刪除</button>
           </div>
         </div>
 
@@ -1561,6 +1841,7 @@
   }
 
   // 實時計算並原地更新各卡片與頂部儀表板
+  // 實時計算並原地更新各卡片與頂部儀表板 (支援多台合併累加 與 單機獨立)
   function recalculate() {
     let totalBaseFee = 0;
     let totalOverFee = 0;
@@ -1569,54 +1850,144 @@
 
     const machines = getCurrentMachines();
     const isUsed = currentMode === 'used';
+    const isMergedMode = calcMode === 'merged';
 
-    machines.forEach((m) => {
+    // 1. 先計算每台機器的實際計費張數與黑白加收費
+    const calcList = machines.map(m => {
       const priceNum = parseFloat(m.price) || 0;
       const baseNum = parseFloat(m.base) || 0;
       const meterNum = parseFloat(m.meter) || 0;
       const bwMeterNum = parseFloat(m.bwMeter) || 0;
       const bwRate = parseFloat(m.bwRate) || 0;
 
-      // 1. 扣除 1.5% 誤印張數 (四捨五入取整數)
       const actualCount = Math.round(meterNum * 0.985);
-      
-      // 2. 黑白加收金額
       let bwActual = 0;
       let bwFee = 0;
       if (bwRate > 0) {
         bwActual = Math.round(bwMeterNum * 0.985);
         bwFee = bwActual * bwRate;
       }
-
-      // 3. 租費基本費與超印計算
       const baseFee = baseNum * priceNum;
-      let overFee = 0;
-      let tier1Count = 0;
-      let tier2Count = 0;
-      let usedOverCount = 0;
 
-      if (isUsed) {
-        // 【二手影印機 LP5-114035】超印部分一律按原單價 90% (0.9) 計收
-        if (actualCount > baseNum) {
-          usedOverCount = actualCount - baseNum;
-          overFee = usedOverCount * (priceNum * 0.90);
+      return {
+        m,
+        priceNum,
+        baseNum,
+        meterNum,
+        actualCount,
+        bwMeterNum,
+        bwRate,
+        bwActual,
+        bwFee,
+        baseFee,
+        overFee: 0,
+        tier1Count: 0,
+        tier2Count: 0,
+        usedOverCount: 0,
+        poolTotalBase: baseNum,
+        poolTotalActual: actualCount,
+        poolMachineCount: 1
+      };
+    });
+
+    if (isMergedMode) {
+      // ══════════════════════════════════════════════════
+      // 【模式 A：多台合併累加（共用總額度）】
+      // 依 itemKey 分組，合併計算總基本額度與總超印階梯，再按印量分攤
+      // ══════════════════════════════════════════════════
+      const groups = {};
+      calcList.forEach(item => {
+        const key = item.m.itemKey;
+        if (!groups[key]) {
+          groups[key] = {
+            items: [],
+            totalBase: 0,
+            totalActual: 0,
+            priceNum: item.priceNum,
+            bwRate: item.bwRate
+          };
         }
-      } else {
-        // 【全新影印機 LP5-114034】階梯累進超印：超印 50% 以內 85%、超印 50% 以上 75%
-        const tier1Limit = baseNum * 0.5;
-        if (actualCount > baseNum) {
-          const over = actualCount - baseNum;
-          if (over <= tier1Limit) {
-            tier1Count = over;
-            overFee = tier1Count * (priceNum * 0.85);
+        groups[key].items.push(item);
+        groups[key].totalBase += item.baseNum;
+        groups[key].totalActual += item.actualCount;
+      });
+
+      // 針對每一組計算合併超印費
+      Object.keys(groups).forEach(key => {
+        const grp = groups[key];
+        const count = grp.items.length;
+        const totalBase = grp.totalBase;
+        const totalActual = grp.totalActual;
+        const p = grp.priceNum;
+
+        let grpOverFee = 0;
+        let grpTier1 = 0;
+        let grpTier2 = 0;
+        let grpUsedOver = 0;
+
+        if (totalActual > totalBase) {
+          const totalOver = totalActual - totalBase;
+          if (isUsed) {
+            grpUsedOver = totalOver;
+            grpOverFee = totalOver * (p * 0.90);
           } else {
-            tier1Count = tier1Limit;
-            tier2Count = over - tier1Limit;
-            overFee = (tier1Count * (priceNum * 0.85)) + (tier2Count * (priceNum * 0.75));
+            const tier1Limit = totalBase * 0.5;
+            if (totalOver <= tier1Limit) {
+              grpTier1 = totalOver;
+              grpOverFee = grpTier1 * (p * 0.85);
+            } else {
+              grpTier1 = tier1Limit;
+              grpTier2 = totalOver - tier1Limit;
+              grpOverFee = (grpTier1 * (p * 0.85)) + (grpTier2 * (p * 0.75));
+            }
           }
         }
-      }
 
+        // 分攤超印費給組內各設備 (依實際印量比例)
+        grp.items.forEach(item => {
+          item.poolTotalBase = totalBase;
+          item.poolTotalActual = totalActual;
+          item.poolMachineCount = count;
+
+          if (grpOverFee > 0 && totalActual > 0) {
+            item.overFee = grpOverFee * (item.actualCount / totalActual);
+          } else {
+            item.overFee = 0;
+          }
+          item.tier1Count = grpTier1;
+          item.tier2Count = grpTier2;
+          item.usedOverCount = grpUsedOver;
+        });
+      });
+
+    } else {
+      // ══════════════════════════════════════════════════
+      // 【模式 B：單機獨立計費】各台獨立計算超印
+      // ══════════════════════════════════════════════════
+      calcList.forEach(item => {
+        if (item.actualCount > item.baseNum) {
+          const over = item.actualCount - item.baseNum;
+          if (isUsed) {
+            item.usedOverCount = over;
+            item.overFee = over * (item.priceNum * 0.90);
+          } else {
+            const tier1Limit = item.baseNum * 0.5;
+            if (over <= tier1Limit) {
+              item.tier1Count = over;
+              item.overFee = item.tier1Count * (item.priceNum * 0.85);
+            } else {
+              item.tier1Count = tier1Limit;
+              item.tier2Count = over - tier1Limit;
+              item.overFee = (item.tier1Count * (item.priceNum * 0.85)) + (item.tier2Count * (item.priceNum * 0.75));
+            }
+          }
+        }
+      });
+    }
+
+    // 更新 DOM 與匯總
+    calcList.forEach(item => {
+      const { m, baseFee, overFee, bwFee, actualCount, bwActual, bwRate, priceNum } = item;
       const mTotal = baseFee + overFee + bwFee;
 
       totalBaseFee += baseFee;
@@ -1645,17 +2016,25 @@
 
       const breakdownEl = document.getElementById(`breakdown-${m.id}`);
       if (breakdownEl) {
-        if (isUsed) {
+        if (isMergedMode && item.poolMachineCount > 1) {
+          // 合併累加模式且有多台同規格
+          breakdownEl.innerHTML = `
+            <span class="chip ${isUsed ? 'chip-green' : ''}">📘 基本租費: <strong>NT$ ${baseFee.toFixed(2)}</strong></span>
+            <span class="chip ${isUsed ? 'chip-green' : ''}">🔗 合併超印分攤: <strong>NT$ ${overFee.toFixed(2)}</strong> <small style="opacity:0.85;">(同項次 ${item.poolMachineCount} 台共用額度 ${item.poolTotalBase.toLocaleString()} 張)</small></span>
+            ${bwRate > 0 ? `<span class="chip chip-amber">🎨 黑白加收: <strong>NT$ ${bwFee.toFixed(2)}</strong></span>` : ''}
+          `;
+        } else if (isUsed) {
           breakdownEl.innerHTML = `
             <span class="chip chip-green">📘 基本租費: <strong>NT$ ${baseFee.toFixed(2)}</strong></span>
-            <span class="chip chip-green">♻️ 超印(90%): <strong>${usedOverCount.toLocaleString()} 張</strong> (NT$ ${(usedOverCount * priceNum * 0.90).toFixed(2)})</span>
+            <span class="chip chip-green">♻️ 超印(90%): <strong>${item.usedOverCount.toLocaleString()} 張</strong> (NT$ ${overFee.toFixed(2)})</span>
             ${bwRate > 0 ? `<span class="chip chip-amber">🎨 黑白加收: <strong>NT$ ${bwFee.toFixed(2)}</strong></span>` : ''}
           `;
         } else {
           breakdownEl.innerHTML = `
             <span class="chip">📘 基本租費: <strong>NT$ ${baseFee.toFixed(2)}</strong></span>
-            <span class="chip">📈 超印(85%): <strong>${tier1Count.toLocaleString()} 張</strong> (NT$ ${(tier1Count * priceNum * 0.85).toFixed(2)})</span>
-            <span class="chip">🚀 超印(75%): <strong>${tier2Count.toLocaleString()} 張</strong> (NT$ ${(tier2Count * priceNum * 0.75).toFixed(2)})</span>
+            <span class="chip">📈 超印(85%): <strong>${item.tier1Count.toLocaleString()} 張</strong></span>
+            ${item.tier2Count > 0 ? `<span class="chip">🚀 超印(75%): <strong>${item.tier2Count.toLocaleString()} 張</strong></span>` : ''}
+            <span class="chip">⚡ 超印費: <strong>NT$ ${overFee.toFixed(2)}</strong></span>
             ${bwRate > 0 ? `<span class="chip chip-amber">🎨 黑白加收: <strong>NT$ ${bwFee.toFixed(2)}</strong></span>` : ''}
           `;
         }
@@ -1756,6 +2135,41 @@
   updateRulesCard();
   render();
 </script>
+
+  <!-- 批量新增相同項次設備 Modal 彈窗 -->
+  <div class="modal-backdrop" id="batchModal" onclick="if(event.target===this) closeBatchModal()">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">📑 批量新增多台相同項次設備</div>
+        <button type="button" class="modal-close" onclick="closeBatchModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>選擇契約項次規格</label>
+          <select id="batchItemSelect">
+            <!-- options will be injected dynamically -->
+          </select>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label>新增設備台數</label>
+            <input type="number" id="batchCount" min="1" max="50" value="5" class="num-align">
+          </div>
+          <div class="form-group">
+            <label>設備名稱前綴</label>
+            <input type="text" id="batchNamePrefix" value="辦公室設備" placeholder="例如：總務處、辦公室">
+          </div>
+        </div>
+        <p style="font-size: 0.8rem; color: var(--slate-500); line-height: 1.5; margin-top: 4px;">
+          💡 系統將自動一次建立指定數量的設備，並自動代入所選項次之契約單價與基本張數。
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeBatchModal()">取消</button>
+        <button type="button" class="btn btn-new" id="btnConfirmBatch" onclick="confirmBatchAdd()">確認批量新增</button>
+      </div>
+    </div>
+  </div>
 
 </body>
 </html>
