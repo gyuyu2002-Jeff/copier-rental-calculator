@@ -796,12 +796,13 @@
       background-color: #ffffff !important;
     }
 
-    /* 系統自動計算唯讀欄位 (與操作欄位形成強烈對比) */
-    .readonly-box {
-      background-color: #f1f5f9 !important;
-      color: #475569 !important;
-      font-weight: 700 !important;
-      border: 1px solid #cbd5e1 !important;
+    /* 系統自動帶入/計算欄位 (紅框顯眼標示) */
+    .readonly-box-red {
+      background-color: #fff5f5 !important;
+      color: #991b1b !important;
+      font-weight: 800 !important;
+      border: 2px solid #ef4444 !important;
+      box-shadow: 0 1px 2px rgba(239, 68, 68, 0.08) !important;
       cursor: default !important;
     }
 
@@ -858,7 +859,7 @@
       <div class="step-pill">
         <span><strong>第 1 步</strong> 選擇契約項次</span>
         <span style="color:var(--slate-400);">➔</span>
-        <span style="color:var(--slate-500);">自動帶入牌價與基本張數</span>
+        <span style="color:var(--slate-500);">自動帶入單價與基本張數</span>
       </div>
       <div class="step-pill">
         <span><strong>第 2 步</strong> 輸入抄表張數</span>
@@ -903,9 +904,9 @@
   <!-- 視覺圖例指示條 -->
   <div class="ui-legend-bar">
     <span style="font-weight:700; color:var(--slate-700);">📌 操作提示：</span>
-    <span class="legend-item"><span class="legend-dot" style="background:#2563eb;"></span> <strong>藍色外框</strong>：點選契約項次規格</span>
-    <span class="legend-item"><span class="legend-dot" style="background:#059669;"></span> <strong>綠色外框</strong>：填入計數器抄表讀數</span>
-    <span class="legend-item"><span class="legend-dot" style="background:#94a3b8;"></span> <strong>灰色欄位</strong>：系統全自動帶入與計算</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#2563eb;"></span> <strong>🔵 藍色外框</strong>：點選契約項次規格</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#059669;"></span> <strong>🟢 綠色外框</strong>：填入計數器抄表讀數</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#ef4444;"></span> <strong>🔴 紅色外框</strong>：系統自動帶入單價與張數（免手動計算）</span>
   </div>
   <!-- 設備動態容器 -->
   <div class="machine-list" id="machineContainer"></div>
@@ -1865,7 +1866,7 @@ const NEW_CONTRACT_ITEMS = {
               <label id="priceLabel-${m.id}">${isColor ? '彩色原單價' : '契約原單價 (NT$)'}</label>
               <span class="sub-note">自動</span>
             </div>
-            <input type="text" id="price-${m.id}" inputmode="decimal" class="num-align" placeholder="0.500" value="${m.price}" oninput="updateFieldValue(${m.id}, 'price', this.value)">
+            <input type="text" id="price-${m.id}" inputmode="decimal" class="num-align readonly-box-red" placeholder="0.500" value="${m.price}" oninput="updateFieldValue(${m.id}, 'price', this.value)">
           </div>
 
           <div class="form-group">
@@ -1873,7 +1874,7 @@ const NEW_CONTRACT_ITEMS = {
               <label id="baseLabel-${m.id}">${isColor ? '彩色基本張數' : '每月基本張數'}</label>
               <span class="sub-note">自動</span>
             </div>
-            <input type="number" id="base-${m.id}" inputmode="numeric" class="num-align" step="1" min="0" placeholder="5000" value="${m.base}" oninput="updateFieldValue(${m.id}, 'base', this.value)">
+            <input type="number" id="base-${m.id}" inputmode="numeric" class="num-align readonly-box-red" step="1" min="0" placeholder="5000" value="${m.base}" oninput="updateFieldValue(${m.id}, 'base', this.value)">
           </div>
 
           <div class="form-group">
@@ -1889,7 +1890,7 @@ const NEW_CONTRACT_ITEMS = {
               <label id="actualLabel-${m.id}">${isColor ? '實際彩色計費' : '實際計費張數'}</label>
               <span class="sub-note">扣1.5%</span>
             </div>
-            <input type="text" id="actual-${m.id}" class="num-align readonly-box" readonly value="0 張">
+            <input type="text" id="actual-${m.id}" class="num-align readonly-box-red" readonly value="0 張">
           </div>
         </div>
 
@@ -1913,7 +1914,7 @@ const NEW_CONTRACT_ITEMS = {
                 <label style="color: var(--amber-700);"><span class="tag-auto">🔒 扣1.5%</span> 黑白計費張數</label>
                 <span class="sub-note">黑白抄表 × 98.5%</span>
               </div>
-              <input type="text" id="bwActual-${m.id}" class="num-align readonly-box" readonly value="0 張">
+              <input type="text" id="bwActual-${m.id}" class="num-align readonly-box-red" readonly value="0 張">
             </div>
 
             <div class="form-group">
