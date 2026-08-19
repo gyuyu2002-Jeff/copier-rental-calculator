@@ -944,6 +944,134 @@
       box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2) !important;
     }
 
+
+    /* 容器底部預留懸浮列空間 */
+    .container {
+      padding-bottom: 85px;
+    }
+
+    /* 螢幕底部懸浮即時總額列 (Sticky Bar) */
+    .floating-sticky-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(15, 23, 42, 0.94);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1.5px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.28);
+      z-index: 999;
+      padding: 9px 18px;
+      transition: all 0.2s ease;
+    }
+    .sticky-bar-inner {
+      max-width: 1300px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .sticky-info-group {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+    .sticky-stat {
+      display: flex;
+      flex-direction: column;
+    }
+    .sticky-label {
+      font-size: 0.68rem;
+      color: #94a3b8;
+      font-weight: 600;
+    }
+    .sticky-val {
+      font-size: 0.92rem;
+      color: #f8fafc;
+      font-weight: 700;
+    }
+    .sticky-divider {
+      width: 1px;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.15);
+    }
+    .sticky-total-box {
+      display: flex;
+      flex-direction: column;
+      background: rgba(37, 99, 235, 0.28);
+      border: 1px solid rgba(59, 130, 246, 0.45);
+      padding: 3px 12px;
+      border-radius: 8px;
+    }
+    .sticky-total-val {
+      font-size: 1.15rem;
+      font-weight: 900;
+      color: #38bdf8;
+      letter-spacing: 0.3px;
+    }
+    .sticky-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-sticky-summary {
+      background: rgba(255, 255, 255, 0.12);
+      color: #f8fafc;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 6px 12px;
+      border-radius: 7px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-sticky-summary:hover {
+      background: rgba(255, 255, 255, 0.22);
+    }
+    .btn-sticky-print {
+      background: #2563eb;
+      color: #ffffff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 7px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 0 2px 5px rgba(37, 99, 235, 0.3);
+    }
+    .btn-sticky-print:hover {
+      background: #1d4ed8;
+    }
+    @media (max-width: 768px) {
+      .sticky-divider {
+        display: none;
+      }
+      .sticky-info-group {
+        gap: 8px;
+      }
+      .sticky-stat {
+        display: none;
+      }
+      .sticky-total-box {
+        padding: 2px 8px;
+      }
+      .container {
+        padding-bottom: 95px;
+      }
+    }
+    @media print {
+      .floating-sticky-bar {
+        display: none !important;
+      }
+      .container {
+        padding-bottom: 0 !important;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -1012,17 +1140,7 @@
     </div>
   </div>
 
-  <!-- 頂部匯總儀表板 -->
-  <div class="summary-card theme-new-bg" id="summaryCardContainer">
-    <div class="summary-header">
-      <span id="summaryReportTitle">📊 公家機關全新影印機本月合計結算報告</span>
-      <span id="currentDateText" style="font-size: 0.85rem; font-weight: normal; opacity: 0.9;"></span>
-    </div>
-    <div class="summary-grid">
-      <div class="summary-item">
-        <div class="label">🏢 設備總數</div>
-        <div class="value" id="sumDeviceCount">0 台</div>
-      </div>
+
       <div class="summary-item">
         <div class="label">📄 總基本租費</div>
         <div class="value" id="sumBaseFee">NT$ 0</div>
@@ -1068,6 +1186,18 @@
 
   <!-- 設備動態容器 -->
   <div class="machine-list" id="machineContainer"></div>
+
+  <!-- 底部合計結算報告大卡片 -->
+  <div class="summary-card theme-new-bg" id="summaryCardContainer">
+    <div class="summary-header">
+      <span id="summaryReportTitle">📊 公家機關全新影印機本月合計結算報告</span>
+      <span id="currentDateText" style="font-size: 0.85rem; font-weight: normal; opacity: 0.9;"></span>
+    </div>
+    <div class="summary-grid">
+      <div class="summary-item">
+        <div class="label">🏢 設備總數</div>
+        <div class="value" id="sumDeviceCount">0 台</div>
+      </div>
 
   <!-- 條款說明卡片 -->
   <div class="rules-card" id="rulesCardBox"></div>
@@ -1906,6 +2036,15 @@
     render();
   }
 
+
+  // 平滑滾動至底部結算總表
+  function scrollToSummary() {
+    const summaryEl = document.getElementById('summaryCardContainer');
+    if (summaryEl) {
+      summaryEl.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+
   // 渲染所有設備卡片 DOM
   function render() {
     const container = document.getElementById('machineContainer');
@@ -2274,6 +2413,33 @@
     }
 
     document.getElementById('sumGrandTotal').innerText = `NT$ ${Math.round(grandTotal).toLocaleString()}`;
+
+    // 同步更新底部懸浮即時總額列 (Sticky Bar)
+    const stickyDevEl = document.getElementById('stickyDeviceCount');
+    if (stickyDevEl) stickyDevEl.innerText = `${machines.length} 台`;
+
+    const stickyBaseEl = document.getElementById('stickyBaseFee');
+    if (stickyBaseEl) stickyBaseEl.innerText = `NT$ ${Math.round(totalBaseFee).toLocaleString()}`;
+
+    const stickyOverBwEl = document.getElementById('stickyOverBwFee');
+    if (stickyOverBwEl) stickyOverBwEl.innerText = `NT$ ${Math.round(totalOverFee + totalBwFee).toLocaleString()}`;
+
+    const stickyGrandEl = document.getElementById('stickyGrandTotal');
+    if (stickyGrandEl) stickyGrandEl.innerText = `NT$ ${Math.round(grandTotal).toLocaleString()}`;
+
+    const stickyOffsetGroup = document.getElementById('stickyOffsetGroup');
+    const stickyOffsetDivider = document.getElementById('stickyOffsetDivider');
+    const stickyOffsetEl = document.getElementById('stickyOffsetFee');
+    if (stickyOffsetGroup && stickyOffsetDivider && stickyOffsetEl) {
+      if (appliedOffset > 0) {
+        stickyOffsetGroup.style.display = 'flex';
+        stickyOffsetDivider.style.display = 'block';
+        stickyOffsetEl.innerText = `- NT$ ${Math.round(appliedOffset).toLocaleString()}`;
+      } else {
+        stickyOffsetGroup.style.display = 'none';
+        stickyOffsetDivider.style.display = 'none';
+      }
+    }
   }
 
   // 選擇契約項次規格：自動帶入基本張數、單價與黑白費率
@@ -2391,6 +2557,42 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" onclick="closeBatchModal()">取消</button>
         <button type="button" class="btn btn-new" id="btnConfirmBatch" onclick="confirmBatchAdd()">確認批量新增</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 螢幕底部懸浮即時總額列 (Sticky Bar) -->
+  <div class="floating-sticky-bar" id="floatingStickyBar">
+    <div class="sticky-bar-inner">
+      <div class="sticky-info-group">
+        <div class="sticky-stat">
+          <span class="sticky-label">🏢 設備總數</span>
+          <span class="sticky-val" id="stickyDeviceCount">0 台</span>
+        </div>
+        <div class="sticky-divider"></div>
+        <div class="sticky-stat">
+          <span class="sticky-label">📄 總基本租費</span>
+          <span class="sticky-val" id="stickyBaseFee">NT$ 0</span>
+        </div>
+        <div class="sticky-divider"></div>
+        <div class="sticky-stat">
+          <span class="sticky-label">⚡ 超印與加收</span>
+          <span class="sticky-val" id="stickyOverBwFee">NT$ 0</span>
+        </div>
+        <div class="sticky-divider" id="stickyOffsetDivider" style="display:none;"></div>
+        <div class="sticky-stat" id="stickyOffsetGroup" style="display:none;">
+          <span class="sticky-label" style="color: #a7f3d0;">🎁 方式B折抵</span>
+          <span class="sticky-val" id="stickyOffsetFee" style="color: #6ee7b7;">- NT$ 0</span>
+        </div>
+        <div class="sticky-divider"></div>
+        <div class="sticky-total-box">
+          <span class="sticky-label" style="color: #bae6fd;">💰 實付總金額</span>
+          <span class="sticky-total-val" id="stickyGrandTotal">NT$ 0</span>
+        </div>
+      </div>
+      <div class="sticky-actions">
+        <button type="button" class="btn-sticky-summary" onclick="scrollToSummary()">📊 檢視結算總表</button>
+        <button type="button" class="btn-sticky-print" onclick="window.print()">🖨️ 列印報表</button>
       </div>
     </div>
   </div>
