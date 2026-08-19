@@ -979,21 +979,21 @@
         <div class="step-num-circle">1</div>
         <div class="step-content">
           <div class="step-heading">第 1 步：選擇契約項次</div>
-          <div class="step-desc">點擊下拉選單選取項次，系統<strong>自動帶入</strong>每張契約單價與基本張數。</div>
+          <div class="step-desc">點擊選單選取項次，系統<strong>自動帶入</strong>契約單價與基本張數。</div>
         </div>
       </div>
       <div class="guide-step-item step-item-2">
         <div class="step-num-circle">2</div>
         <div class="step-content">
           <div class="step-heading">第 2 步：輸入抄表張數</div>
-          <div class="step-desc">填入計數器抄表讀數（自動扣 1.5% 誤印、階梯超印與合併共用將<strong>即時結算</strong>）。</div>
+          <div class="step-desc">填入計數器抄表數（自動扣 1.5% 誤印、階梯超印與合併統籌將<strong>即時結算</strong>）。</div>
         </div>
       </div>
       <div class="guide-step-item step-item-3">
         <div class="step-num-circle" style="background:#d97706;">+</div>
         <div class="step-content">
           <div class="step-heading">彩色機加填（若適用）</div>
-          <div class="step-desc">若選彩色機，下方會展開專區，再多填一個<strong>黑白抄表張數</strong>即可。</div>
+          <div class="step-desc">若選彩色機，下方展開專區再多填一個<strong>黑白抄表數</strong>即可。</div>
         </div>
       </div>
     </div>
@@ -1012,30 +1012,6 @@
       <button type="button" class="calc-mode-btn" id="btnCalcSingle" onclick="switchCalcMode('single')">
         <span>🖨️ 單機獨立計費</span>
       </button>
-    </div>
-  </div>
-
-
-      <div class="summary-item">
-        <div class="label">📄 總基本租費</div>
-        <div class="value" id="sumBaseFee">NT$ 0</div>
-      </div>
-      <div class="summary-item">
-        <div class="label" id="labelOverFee">⚡ 總超印租費 (85%/75%)</div>
-        <div class="value" id="sumOverFee">NT$ 0</div>
-      </div>
-      <div class="summary-item">
-        <div class="label">🎨 總黑白加收費</div>
-        <div class="value" id="sumBwFee">NT$ 0</div>
-      </div>
-      <div class="summary-item" id="offsetSummaryCard" style="background: rgba(16, 185, 129, 0.22); border-color: rgba(52, 211, 153, 0.4);">
-        <div class="label" style="color: #d1fae5;">🎁 黑白未達折抵(方式B)</div>
-        <div class="value" id="sumOffsetFee" style="color: #a7f3d0; font-size: 1.2rem;">- NT$ 0</div>
-      </div>
-      <div class="summary-item total-highlight">
-        <div class="label">💰 實付總金額合計</div>
-        <div class="value" id="sumGrandTotal">NT$ 0</div>
-      </div>
     </div>
   </div>
 
@@ -1073,18 +1049,38 @@
         <div class="label">🏢 設備總數</div>
         <div class="value" id="sumDeviceCount">0 台</div>
       </div>
+      <div class="summary-item">
+        <div class="label">📄 總基本租費</div>
+        <div class="value" id="sumBaseFee">NT$ 0</div>
+      </div>
+      <div class="summary-item">
+        <div class="label" id="labelOverFee">⚡ 總超印租費 (85%/75%)</div>
+        <div class="value" id="sumOverFee">NT$ 0</div>
+      </div>
+      <div class="summary-item">
+        <div class="label">🎨 總黑白加收費</div>
+        <div class="value" id="sumBwFee">NT$ 0</div>
+      </div>
+      <div class="summary-item" id="offsetSummaryCard" style="background: rgba(16, 185, 129, 0.22); border-color: rgba(52, 211, 153, 0.4);">
+        <div class="label" style="color: #d1fae5;">🎁 黑白未達折抵(方式B)</div>
+        <div class="value" id="sumOffsetFee" style="color: #a7f3d0; font-size: 1.2rem;">- NT$ 0</div>
+      </div>
+      <div class="summary-item total-highlight">
+        <div class="label">💰 實付總金額合計</div>
+        <div class="value" id="sumGrandTotal">NT$ 0</div>
+      </div>
+    </div>
+  </div>
 
   <!-- 條款說明卡片 -->
   <div class="rules-card" id="rulesCardBox"></div>
 
   <!-- 底部備註署名 -->
-    <footer style="text-align: center; margin-top: 36px; padding: 16px 0 10px 0; color: #64748b; font-size: 0.85rem; line-height: 1.8;">
+  <footer style="text-align: center; margin-top: 36px; padding: 16px 0 10px 0; color: #64748b; font-size: 0.85rem; line-height: 1.8;">
     <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 6px; font-weight: 500;">⚠️ 網站算式僅供參考 實際請依ERP與台銀公告資訊為準</p>
     <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">by Antigravity 吳漢君</p>
   </footer>
-</div>
-
-<script>
+</div><script>
   // 目前選取的契約模式 ('new' 全新機 或 'used' 二手機)
   let currentMode = 'new';
 
