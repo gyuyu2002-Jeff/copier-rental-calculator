@@ -2029,17 +2029,20 @@ const NEW_CONTRACT_ITEMS = {
           // 群組總印量超出群組總基本額度 ➔ 產生群組超印費，無剩餘未印額度可折抵
           const totalOver = totalActual - totalBase;
           if (isUsed) {
+            const r90 = Math.round(p * 0.90 * 10000) / 10000;
             grpUsedOver = totalOver;
-            grpOverFee = totalOver * (p * 0.90);
+            grpOverFee = totalOver * r90;
           } else {
+            const r85 = Math.round(p * 0.85 * 10000) / 10000;
+            const r75 = Math.round(p * 0.75 * 10000) / 10000;
             const tier1Limit = totalBase * 0.5;
             if (totalOver <= tier1Limit) {
               grpTier1 = totalOver;
-              grpOverFee = grpTier1 * (p * 0.85);
+              grpOverFee = grpTier1 * r85;
             } else {
               grpTier1 = tier1Limit;
               grpTier2 = totalOver - tier1Limit;
-              grpOverFee = (grpTier1 * (p * 0.85)) + (grpTier2 * (p * 0.75));
+              grpOverFee = (grpTier1 * r85) + (grpTier2 * r75);
             }
           }
         } else {
@@ -2080,18 +2083,22 @@ const NEW_CONTRACT_ITEMS = {
       calcList.forEach(item => {
         if (item.actualCount > item.baseNum) {
           const over = item.actualCount - item.baseNum;
+          const p = item.priceNum;
           if (isUsed) {
+            const r90 = Math.round(p * 0.90 * 10000) / 10000;
             item.usedOverCount = over;
-            item.overFee = over * (item.priceNum * 0.90);
+            item.overFee = over * r90;
           } else {
+            const r85 = Math.round(p * 0.85 * 10000) / 10000;
+            const r75 = Math.round(p * 0.75 * 10000) / 10000;
             const tier1Limit = item.baseNum * 0.5;
             if (over <= tier1Limit) {
               item.tier1Count = over;
-              item.overFee = item.tier1Count * (item.priceNum * 0.85);
+              item.overFee = item.tier1Count * r85;
             } else {
               item.tier1Count = tier1Limit;
               item.tier2Count = over - tier1Limit;
-              item.overFee = (item.tier1Count * (item.priceNum * 0.85)) + (item.tier2Count * (item.priceNum * 0.75));
+              item.overFee = (item.tier1Count * r85) + (item.tier2Count * r75);
             }
           }
         } else if (item.bwRate === 0 && item.actualCount < item.baseNum) {
