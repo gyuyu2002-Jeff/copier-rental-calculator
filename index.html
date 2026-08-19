@@ -125,9 +125,9 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.03);
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-start;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 12px;
     }
     .guide-banner-title {
       font-size: 0.84rem;
@@ -370,20 +370,28 @@
     .label-box {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      min-height: 20px;
+      align-items: baseline;
+      min-height: 18px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .label-box label {
-      font-size: 0.76rem;
+      font-size: 0.78rem;
       font-weight: 700;
       color: var(--slate-700);
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .sub-note {
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       color: var(--slate-400);
+      white-space: nowrap;
+      margin-left: 4px;
     }
 
     /* 標籤徽章 */
@@ -1643,20 +1651,20 @@ const NEW_CONTRACT_ITEMS = {
     const isColor = m.bwRate > 0;
     const meterLabelEl = document.getElementById(`meterLabel-${id}`);
     if (meterLabelEl) {
-      meterLabelEl.innerHTML = `<span class="step-tag-green">👉 步驟 2</span> 輸入${isColor ? '🎨 彩色抄表張數' : '黑白抄表張數'}`;
+      meterLabelEl.innerHTML = `<span class="step-tag-green">👉 步驟 2</span> ${isColor ? '🎨 彩色抄表' : '抄表讀數'}`;
     }
 
     const priceLabelEl = document.getElementById(`priceLabel-${id}`);
-    if (priceLabelEl) priceLabelEl.innerText = isColor ? '彩色原單價' : '每張原單價';
+    if (priceLabelEl) priceLabelEl.innerText = isColor ? '彩色原單價' : '契約原單價 (NT$)';
 
     const baseLabelEl = document.getElementById(`baseLabel-${id}`);
-    if (baseLabelEl) baseLabelEl.innerText = isColor ? '每月彩色基本張數' : '每月基本張數';
+    if (baseLabelEl) baseLabelEl.innerText = isColor ? '彩色基本張數' : '每月基本張數';
 
     const actualLabelEl = document.getElementById(`actualLabel-${id}`);
-    if (actualLabelEl) actualLabelEl.innerText = isColor ? '實際彩色計費張數' : '實際計費張數';
+    if (actualLabelEl) actualLabelEl.innerText = isColor ? '實際彩色計費' : '實際計費張數';
 
     const meterInputEl = document.getElementById(`meter-${id}`);
-    if (meterInputEl) meterInputEl.placeholder = isColor ? '請填寫彩色抄表數' : '請填寫黑白抄表數';
+    if (meterInputEl) meterInputEl.placeholder = isColor ? '填彩色抄表' : '填抄表讀數';
 
     const bwPanel = document.getElementById(`bwPanel-${id}`);
     if (bwPanel) {
@@ -1700,12 +1708,12 @@ const NEW_CONTRACT_ITEMS = {
           </div>
         </div>
 
-        <!-- 主參數 5 欄式網格 (清楚標記步驟 1、步驟 2 與自動帶入欄位) -->
+        <!-- 主參數 5 欄式網格 (簡潔對齊、不折行) -->
         <div class="form-grid-5">
           <div class="form-group">
             <div class="label-box">
               <label><span class="step-tag-blue">👉 步驟 1</span> 選擇契約項次</label>
-              <span class="sub-note" style="color:#2563eb; font-weight:600;">自動帶入單價</span>
+              <span class="sub-note" style="color:#2563eb;">⚡自動帶入</span>
             </div>
             <select class="input-action-select" onchange="updateMachineItem(${m.id}, this.value)">
               ${generateOptionsHtml(m.itemKey)}
@@ -1714,32 +1722,32 @@ const NEW_CONTRACT_ITEMS = {
 
           <div class="form-group">
             <div class="label-box">
-              <label><span class="tag-auto">⚡ 自動帶入</span> <span id="priceLabel-${m.id}">${isColor ? '彩色' : '每張'}原單價</span></label>
-              <span class="sub-note">依項次帶入</span>
+              <label id="priceLabel-${m.id}">${isColor ? '彩色原單價' : '契約原單價 (NT$)'}</label>
+              <span class="sub-note">自動</span>
             </div>
             <input type="text" id="price-${m.id}" inputmode="decimal" class="num-align" placeholder="0.500" value="${m.price}" oninput="updateFieldValue(${m.id}, 'price', this.value)">
           </div>
 
           <div class="form-group">
             <div class="label-box">
-              <label><span class="tag-auto">⚡ 自動帶入</span> <span id="baseLabel-${m.id}">${isColor ? '每月彩色基本張數' : '每月基本張數'}</span></label>
-              <span class="sub-note">依項次帶入</span>
+              <label id="baseLabel-${m.id}">${isColor ? '彩色基本張數' : '每月基本張數'}</label>
+              <span class="sub-note">自動</span>
             </div>
             <input type="number" id="base-${m.id}" inputmode="numeric" class="num-align" step="1" min="0" placeholder="5000" value="${m.base}" oninput="updateFieldValue(${m.id}, 'base', this.value)">
           </div>
 
           <div class="form-group">
             <div class="label-box">
-              <label id="meterLabel-${m.id}"><span class="step-tag-green">👉 步驟 2</span> 輸入${isColor ? '🎨 彩色抄表張數' : '黑白抄表張數'}</label>
-              <span class="sub-note" style="color:#059669; font-weight:600;">${isColor ? '彩色計數器讀數' : '計數器讀數'}</span>
+              <label id="meterLabel-${m.id}"><span class="step-tag-green">👉 步驟 2</span> ${isColor ? '🎨 彩色抄表' : '抄表讀數'}</label>
+              <span class="sub-note" style="color:#059669; font-weight:700;">填寫處</span>
             </div>
-            <input type="number" id="meter-${m.id}" inputmode="numeric" class="num-align input-action-meter" step="1" min="0" placeholder="${isColor ? '請填寫彩色抄表數' : '請填寫黑白抄表數'}" value="${m.meter}" oninput="updateFieldValue(${m.id}, 'meter', this.value)">
+            <input type="number" id="meter-${m.id}" inputmode="numeric" class="num-align input-action-meter" step="1" min="0" placeholder="${isColor ? '填彩色抄表' : '填抄表讀數'}" value="${m.meter}" oninput="updateFieldValue(${m.id}, 'meter', this.value)">
           </div>
 
           <div class="form-group">
             <div class="label-box">
-              <label><span class="tag-auto">🔒 扣1.5%</span> <span id="actualLabel-${m.id}">${isColor ? '實際彩色計費張數' : '實際計費張數'}</span></label>
-              <span class="sub-note">抄表 × 98.5%</span>
+              <label id="actualLabel-${m.id}">${isColor ? '實際彩色計費' : '實際計費張數'}</label>
+              <span class="sub-note">扣1.5%</span>
             </div>
             <input type="text" id="actual-${m.id}" class="num-align readonly-box" readonly value="0 張">
           </div>
