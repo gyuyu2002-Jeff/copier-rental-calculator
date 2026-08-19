@@ -1691,11 +1691,18 @@ const NEW_CONTRACT_ITEMS = {
       return;
     }
     const itemKey = document.getElementById('batchItemSelect').value;
-    const prefix = document.getElementById('batchNamePrefix').value.trim() || '設備';
+    const prefix = document.getElementById('batchNamePrefix').value.trim() || (currentMode === 'used' ? '二手設備' : '設備');
     const itemsDict = getCurrentItemsDict();
     const itemInfo = itemsDict[itemKey] || { price: "0.500", base: 5000, bwRate: 0 };
 
     const machines = getCurrentMachines();
+
+    // 若當前只有 1 台預設設備，自動替換移除，避免多出一台未設定的預設設備
+    if (machines.length === 1 && (machines[0].name === "設備 #1" || machines[0].name === "二手設備 #1" || machines[0].id === 1)) {
+      machines.length = 0;
+      nextId = 1;
+    }
+
     const startNum = machines.length + 1;
 
     for (let i = 0; i < count; i++) {
