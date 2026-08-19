@@ -2523,7 +2523,7 @@ const NEW_CONTRACT_ITEMS = {
     const numPages = pdf.numPages;
 
     for (let i = 1; i <= numPages; i++) {
-      statusText.innerText = `正在本機 OCR 辨識第 ${i} / ${numPages} 頁收費單 (自動去重存根聯)...`;
+      statusText.innerText = `正在本機 OCR 辨識第 ${i} / ${numPages} 頁收費單 (自動過濾存根聯)...`;
       const page = await pdf.getPage(i);
       const viewport = page.getViewport({ scale: 1.5 });
       const canvas = document.createElement('canvas');
@@ -2537,26 +2537,39 @@ const NEW_CONTRACT_ITEMS = {
     parseRawText(ocrCombinedText);
   }
 
-  // 100% 通用數學提取演算法 (精準計算 本期抄表增量 = 本次抄表 - 前次抄表)
+  function isValidCopierSn(sn) {
+    if (!sn || typeof sn !== 'string') return false;
+    const clean = sn.trim().toUpperCase();
+    if (/^\d+$/.test(clean)) return false; // 純數字為本單編號或統編，非設備機號
+    if (clean.startsWith('DB') || clean.startsWith('RT') || clean.startsWith('LP') || clean.startsWith('NT')) return false; // 發票或合約前綴
+    return /^[0-9A-Z]{7,15}$/.test(clean) && /[A-Z]/.test(clean) && /[0-9]/.test(clean);
+  }
+
+  // 100% 精準通用提取演算法 (過濾發票編號、精準計算抄表增量、名稱無括號)
   function parseRawText(text) {
     const statusBox = document.getElementById('parseStatusBox');
     const statusText = document.getElementById('parseStatusText');
     statusBox.style.display = 'flex';
-    statusText.innerText = '正在進行機號去重、抄表增量計算與契約規格媒合...';
+    statusText.innerText = '正在進行機號過濾、抄表增量計算與契約規格媒合...';
 
     const machinesMap = new Map();
-    const blocks = text.split(/(?=\b[0-9]{4}[A-Z0-9]{5,10}\b)/);
+    // 依設備機號特徵切塊 (必須包含英文與數字)
+    const blocks = text.split(/(?=\b[0-9]{2,6}[A-Z]{1,4}[0-9A-Z]{3,8}\b)/);
 
     blocks.forEach(block => {
-      const snMatch = block.match(/\b([0-9]{4}[A-Z0-9]{5,10})\b/);
+      const snMatch = block.match(/\b([0-9]{2,6}[A-Z]{1,4}[0-9A-Z]{3,8})\b/);
       if (!snMatch) return;
-      const sn = snMatch[1];
+      const sn = snMatch[1].toUpperCase();
 
-      // 自動過濾第二聯重複機號
+      // 嚴格檢驗是否為真正設備機號 (排除本單編號 0039060726 等)
+      if (!isValidCopierSn(sn)) return;
+
+      // 自動去重 (第二聯重複機號自動過濾)
       if (machinesMap.has(sn)) return;
 
-      // 提取斜線數值對 (格式如: 34081/6597, 40459/8874, 6282/2243)
-      const slashMatches = block.match(/(\d{1,7})\/(\d{1,7})/g) || [];
+      // 提取非零數值對 (如 34081/6597, 40459/8874, 6282/2243)
+      const slashMatches = (block.match(/(\d{1,7})\/(\d{1,7})/g) || []).filter(s => s !== '0/0');
+      
       let mainUsage = 0;
       let bwUsage = 0;
       let baseCount = 7000;
@@ -2583,10 +2596,23 @@ const NEW_CONTRACT_ITEMS = {
           bwUsage = deltaBw;
           bwRate = block.includes('0.38') ? 0.38 : 0.40;
           price = block.includes('3.193') ? "3.193" : "3.340";
-          baseCount = block.includes('2000') ? 2000 : (block.includes('3500') ? 3500 : 3000);
+          baseCount = (block.includes('2000') || block.includes('/2000')) ? 2000 : (block.includes('3500') ? 3500 : 3000);
         } else {
           mainUsage = deltaBw > 0 ? deltaBw : deltaC;
           bwUsage = 0;
+        }
+      } else if (slashMatches.length === 1) {
+        const pair = slashMatches[0].split('/');
+        const p1 = parseInt(pair[0], 10) || 0;
+        const p2 = parseInt(pair[1], 10) || 0;
+        if (isColor) {
+          mainUsage = p2 > 0 ? p2 : p1;
+          bwUsage = p2 > 0 ? p1 : 0;
+          bwRate = block.includes('0.38') ? 0.38 : 0.40;
+          price = block.includes('3.193') ? "3.193" : "3.340";
+          baseCount = (block.includes('2000') || block.includes('/2000')) ? 2000 : 3000;
+        } else {
+          mainUsage = p1;
         }
       }
 
@@ -2604,8 +2630,9 @@ const NEW_CONTRACT_ITEMS = {
         baseCount = 10000;
       }
 
+      // 名稱去除括號文字
       machinesMap.set(sn, {
-        name: `機號 ${sn}${isColor ? ' (彩色)' : ''}`,
+        name: `機號 ${sn}`,
         itemKey: matchedKey,
         price: price,
         base: baseCount,
@@ -2624,7 +2651,8 @@ const NEW_CONTRACT_ITEMS = {
     document.getElementById('parsePreviewArea').style.display = 'block';
     document.getElementById('btnConfirmImport').style.display = 'inline-flex';
 
-    document.getElementById('parseResultSummary').innerText = `✅ 成功辨識 ${parsedMachinesCache.length} 台設備資料 (已完成去重與增量計算)！`;
+    // 標題去除括號文字
+    document.getElementById('parseResultSummary').innerText = `✅ 成功辨識 ${parsedMachinesCache.length} 台設備資料！`;
     const tbody = document.getElementById('parsePreviewTbody');
     tbody.innerHTML = '';
 
@@ -2637,7 +2665,7 @@ const NEW_CONTRACT_ITEMS = {
         <td>${idx + 1}</td>
         <td><strong>${m.name}</strong></td>
         <td>${itemInfo.name}</td>
-        <td><span style="color:#059669; font-weight:700;">${m.meter.toLocaleString()} 張</span> ${m.bwMeter > 0 ? `<small style="color:#d97706;">(黑白: ${m.bwMeter.toLocaleString()})</small>` : ''}</td>
+        <td><span style="color:#059669; font-weight:700;">${m.meter.toLocaleString()} 張</span></td>
         <td>${m.base.toLocaleString()} 張</td>
         <td>NT$ ${m.price}</td>
       `;
