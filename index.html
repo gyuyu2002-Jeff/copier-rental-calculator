@@ -849,7 +849,7 @@
   <!-- 頂部匯總儀表板 -->
   <div class="summary-card theme-new-bg" id="summaryCardContainer">
     <div class="summary-header">
-      <span id="summaryReportTitle">📊 全機關全新影印機本月合計結算報告</span>
+      <span id="summaryReportTitle">📊 公家機關全新影印機本月合計結算報告</span>
       <span id="currentDateText" style="font-size: 0.85rem; font-weight: normal; opacity: 0.9;"></span>
     </div>
     <div class="summary-grid">
@@ -1589,14 +1589,14 @@
     if (mode === 'new') {
       document.getElementById('pageMainTitle').innerText = '台銀影印機租賃印量計算系統 — 全新機';
       document.getElementById('pageSubTitle').innerText = '依據臺灣銀行 LP5-114034 契約：自動1.5%誤印率・超印階梯累進（85% / 75%）・彩色機黑白加收試算';
-      document.getElementById('summaryReportTitle').innerText = '📊 全機關全新影印機本月合計結算報告';
+      document.getElementById('summaryReportTitle').innerText = '📊 公家機關全新影印機本月合計結算報告';
       document.getElementById('labelOverFee').innerText = '⚡ 總超印租費 (85%/75%)';
       summaryCard.className = 'summary-card theme-new-bg';
       addBtn.className = 'btn btn-new';
     } else {
       document.getElementById('pageMainTitle').innerText = '台銀影印機租賃印量計算系統 — 二手機';
       document.getElementById('pageSubTitle').innerText = '依據臺灣銀行 LP5-114035 契約：自動1.5%誤印率・固定超印折扣（90%）・彩色機黑白加收試算';
-      document.getElementById('summaryReportTitle').innerText = '📊 全機關二手影印機本月合計結算報告';
+      document.getElementById('summaryReportTitle').innerText = '📊 公家機關二手影印機本月合計結算報告';
       document.getElementById('labelOverFee').innerText = '⚡ 總超印租費 (90%)';
       summaryCard.className = 'summary-card theme-used-bg';
       addBtn.className = 'btn btn-used';
