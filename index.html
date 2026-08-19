@@ -121,8 +121,8 @@
     }
     .mode-btn.active-used {
       background: #ffffff;
-      color: #7e22ce;
-      box-shadow: 0 4px 12px rgba(126, 34, 206, 0.2);
+      color: #047857;
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
     }
 
     /* 頂部匯總儀表板 */
@@ -138,8 +138,8 @@
       box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.25);
     }
     .theme-used-bg {
-      background: linear-gradient(135deg, #4c1d95 0%, #7e22ce 100%);
-      box-shadow: 0 10px 25px -5px rgba(126, 34, 206, 0.25);
+      background: linear-gradient(135deg, #065f46 0%, #059669 50%, #10b981 100%);
+      box-shadow: 0 10px 25px -5px rgba(5, 150, 105, 0.25);
     }
 
     .summary-header {
@@ -233,11 +233,11 @@
       background-color: var(--primary-dark);
     }
     .btn-used {
-      background-color: var(--purple-700);
-      box-shadow: 0 2px 4px rgba(126, 34, 206, 0.2);
+      background-color: var(--emerald-600);
+      box-shadow: 0 2px 4px rgba(5, 150, 105, 0.25);
     }
     .btn-used:hover {
-      background-color: #6b21a8;
+      background-color: var(--emerald-700);
     }
     .btn-secondary {
       background-color: #ffffff;
@@ -471,13 +471,13 @@
     .chip strong {
       color: var(--slate-800);
     }
-    .chip-purple {
-      background: var(--purple-50);
-      border-color: var(--purple-100);
-      color: var(--purple-700);
+    .chip-green {
+      background: var(--emerald-50);
+      border-color: #a7f3d0;
+      color: var(--emerald-700);
     }
-    .chip-purple strong {
-      color: var(--purple-700);
+    .chip-green strong {
+      color: #065f46;
     }
     .chip-amber {
       background: var(--amber-50);
@@ -947,7 +947,7 @@
            &nbsp;&nbsp;• <strong>第 3 組噴墨彩色機</strong>：第 1, 3, 5 項加收 <strong>NT$ 0.30 / 張</strong>；第 2, 4, 6 項加收 <strong>NT$ 0.285 / 張</strong>。
       `;
     } else {
-      box.style.borderLeftColor = '#9333ea';
+      box.style.borderLeftColor = '#059669';
       box.innerHTML = `
         <strong>📋 臺灣銀行採購部 LP5-114035 二手影印機租賃計費依據摘要：</strong><br>
         1. <strong>實際計費張數</strong>：每台設備依抄表張數自動扣除 <strong>1.5% 誤印率</strong>（四捨五入計算至整數）。<br>
@@ -980,7 +980,7 @@
       card.innerHTML = `
         <div class="machine-header">
           <div class="machine-title-wrap">
-            <span class="machine-badge" style="background:${isUsed ? '#581c87' : '#1e293b'};">#${idx + 1}</span>
+            <span class="machine-badge" style="background:${isUsed ? '#065f46' : '#1e293b'};">#${idx + 1}</span>
             <input type="text" class="machine-name-input" value="${m.name}" title="點擊可修改名稱" oninput="updateFieldValue(${m.id}, 'name', this.value)">
           </div>
           <div>
@@ -1168,8 +1168,8 @@
       if (breakdownEl) {
         if (isUsed) {
           breakdownEl.innerHTML = `
-            <span class="chip chip-purple">📘 基本租費: <strong>NT$ ${baseFee.toFixed(2)}</strong></span>
-            <span class="chip chip-purple">♻️ 超印(90%): <strong>${usedOverCount.toLocaleString()} 張</strong> (NT$ ${(usedOverCount * priceNum * 0.90).toFixed(2)})</span>
+            <span class="chip chip-green">📘 基本租費: <strong>NT$ ${baseFee.toFixed(2)}</strong></span>
+            <span class="chip chip-green">♻️ 超印(90%): <strong>${usedOverCount.toLocaleString()} 張</strong> (NT$ ${(usedOverCount * priceNum * 0.90).toFixed(2)})</span>
             ${bwRate > 0 ? `<span class="chip chip-amber">🎨 黑白加收: <strong>NT$ ${bwFee.toFixed(2)}</strong></span>` : ''}
           `;
         } else {
