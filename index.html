@@ -696,6 +696,136 @@
     .modal-close { background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: var(--slate-400); }
     .modal-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
     .modal-footer { padding: 12px 18px; border-top: 1px solid var(--slate-200); display: flex; justify-content: flex-end; gap: 8px; background: var(--slate-50); }
+
+    /* ══════════════════════════════════════════════════════
+       UI/UX 高可視性互動元件系統 (Affordance & Clarity)
+       ══════════════════════════════════════════════════════ */
+    
+    /* 設備名稱可編輯提示 */
+    .machine-name-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+    }
+    .machine-name-input {
+      font-size: 0.98rem;
+      font-weight: 800;
+      color: var(--slate-900);
+      border: 1.5px dashed var(--slate-300);
+      border-radius: 6px;
+      padding: 4px 10px 4px 8px;
+      background: #ffffff;
+      outline: none;
+      transition: all 0.15s;
+      cursor: text;
+    }
+    .machine-name-input:hover {
+      border-color: #2563eb;
+      background: #eff6ff;
+    }
+    .machine-name-input:focus {
+      border-style: solid;
+      border-color: #2563eb;
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+    }
+    .edit-hint-icon {
+      font-size: 0.72rem;
+      color: var(--slate-400);
+      pointer-events: none;
+      margin-left: -24px;
+      z-index: 2;
+    }
+
+    /* 需操作欄位：1. 藍色選單 (強烈點選可視性) */
+    .input-action-select {
+      border: 2px solid #2563eb !important;
+      background-color: #f0f7ff !important;
+      color: #1e3a8a !important;
+      font-weight: 700 !important;
+      cursor: pointer !important;
+      box-shadow: 0 1px 3px rgba(37, 99, 235, 0.12) !important;
+    }
+    .input-action-select:hover {
+      background-color: #e0effe !important;
+      border-color: #1d4ed8 !important;
+    }
+    .input-action-select:focus {
+      border-color: #1e40af !important;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25) !important;
+    }
+
+    /* 需操作欄位：2. 綠色抄表輸入框 (強烈輸入引導) */
+    .input-action-meter {
+      border: 2px solid #059669 !important;
+      background-color: #f0fdf4 !important;
+      color: #064e3b !important;
+      font-weight: 800 !important;
+      font-size: 0.98rem !important;
+      box-shadow: 0 1px 3px rgba(5, 150, 105, 0.12) !important;
+      cursor: text !important;
+    }
+    .input-action-meter:hover {
+      background-color: #dcfce7 !important;
+      border-color: #047857 !important;
+    }
+    .input-action-meter:focus {
+      border-color: #047857 !important;
+      box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.25) !important;
+      background-color: #ffffff !important;
+    }
+
+    /* 需操作欄位：3. 琥珀色黑白抄表輸入框 (彩色機加填) */
+    .input-action-color {
+      border: 2px solid #d97706 !important;
+      background-color: #fffbeb !important;
+      color: #78350f !important;
+      font-weight: 800 !important;
+      font-size: 0.98rem !important;
+      box-shadow: 0 1px 3px rgba(217, 119, 6, 0.12) !important;
+      cursor: text !important;
+    }
+    .input-action-color:hover {
+      background-color: #fef3c7 !important;
+      border-color: #b45309 !important;
+    }
+    .input-action-color:focus {
+      border-color: #b45309 !important;
+      box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.25) !important;
+      background-color: #ffffff !important;
+    }
+
+    /* 系統自動計算唯讀欄位 (與操作欄位形成強烈對比) */
+    .readonly-box {
+      background-color: #f1f5f9 !important;
+      color: #475569 !important;
+      font-weight: 700 !important;
+      border: 1px solid #cbd5e1 !important;
+      cursor: default !important;
+    }
+
+    /* 視覺圖例小提示條 */
+    .ui-legend-bar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 0.75rem;
+      color: var(--slate-500);
+      margin-bottom: 10px;
+      padding: 0 4px;
+    }
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+
   </style>
 </head>
 <body>
@@ -770,6 +900,13 @@
     </div>
   </div>
 
+  <!-- 視覺圖例指示條 -->
+  <div class="ui-legend-bar">
+    <span style="font-weight:700; color:var(--slate-700);">📌 操作提示：</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#2563eb;"></span> <strong>藍色外框</strong>：點選契約項次規格</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#059669;"></span> <strong>綠色外框</strong>：填入計數器抄表讀數</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#94a3b8;"></span> <strong>灰色欄位</strong>：系統全自動帶入與計算</span>
+  </div>
   <!-- 設備動態容器 -->
   <div class="machine-list" id="machineContainer"></div>
 
@@ -1700,7 +1837,10 @@ const NEW_CONTRACT_ITEMS = {
         <div class="machine-header">
           <div class="machine-title-wrap">
             <span class="machine-badge" style="background:${isUsed ? '#065f46' : '#1e293b'};">#${idx + 1}</span>
-            <input type="text" class="machine-name-input" value="${m.name}" title="點擊可修改科室/設備名稱" oninput="updateFieldValue(${m.id}, 'name', this.value)">
+            <div class="machine-name-wrap">
+              <input type="text" class="machine-name-input" value="${m.name}" title="點擊可修改科室或設備名稱" oninput="updateFieldValue(${m.id}, 'name', this.value)">
+              <span class="edit-hint-icon" title="點擊可修改名稱">✏️</span>
+            </div>
           </div>
           <div>
             <button type="button" class="btn-copy-sm" onclick="duplicateMachine(${m.id})" title="快速複製此台設備規格">📋 複製此台</button>
