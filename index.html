@@ -790,18 +790,16 @@
     "custom_used": { name: "自訂項次 / 自訂張數與費率", base: 5000, bwRate: 0, price: "0.400" }
   };
 
-  // 獨立保存各自的設備清單（全新機與二手機不混用）
+  // 獨立保存各自的設備清單（全新機與二手機不混用，預設 1 台）
   let newMachinesData = [
-    { id: 1, name: "1F 總務處彩色機", itemKey: "n_g1_17", price: "0.500", base: 3000, meter: 4500, bwMeter: 2000, bwRate: 0.40 },
-    { id: 2, name: "2F 會計室黑白機", itemKey: "n_g1_2", price: "0.350", base: 7000, meter: 7200, bwMeter: 0, bwRate: 0 }
+    { id: 1, name: "設備 #1", itemKey: "n_g1_17", price: "0.500", base: 3000, meter: 4500, bwMeter: 2000, bwRate: 0.40 }
   ];
 
   let usedMachinesData = [
-    { id: 1, name: "1F 總務處二手彩色機", itemKey: "u_g2_1", price: "0.450", base: 3000, meter: 4500, bwMeter: 2000, bwRate: 0.253 },
-    { id: 2, name: "2F 會計室二手黑白機", itemKey: "u_g1_3", price: "0.300", base: 7000, meter: 7200, bwMeter: 0, bwRate: 0 }
+    { id: 1, name: "二手設備 #1", itemKey: "u_g2_1", price: "0.450", base: 3000, meter: 4500, bwMeter: 2000, bwRate: 0.253 }
   ];
 
-  let nextId = 3;
+  let nextId = 2;
 
   function getCurrentMachines() {
     return currentMode === 'new' ? newMachinesData : usedMachinesData;
@@ -1255,19 +1253,17 @@
   }
 
   function resetDefault() {
-    if (confirm(`確定要重設為預設的${currentMode === 'new' ? '全新機' : '二手機'}範例資料嗎？`)) {
+    if (confirm(`確定要重設為預設的${currentMode === 'new' ? '全新機' : '二手機'}資料嗎？`)) {
       if (currentMode === 'new') {
         newMachinesData = [
-          { id: 1, name: "1F 總務處彩色機", itemKey: "n_g1_17", price: "0.500", base: 3000, meter: 4500, bwMeter: 2000, bwRate: 0.40 },
-          { id: 2, name: "2F 會計室黑白機", itemKey: "n_g1_2", price: "0.350", base: 7000, meter: 7200, bwMeter: 0, bwRate: 0 }
+          { id: 1, name: "設備 #1", itemKey: "n_g1_17", price: "0.500", base: 3000, meter: 4500, bwMeter: 2000, bwRate: 0.40 }
         ];
       } else {
         usedMachinesData = [
-          { id: 1, name: "1F 總務處二手彩色機", itemKey: "u_g2_1", price: "0.450", base: 3000, meter: 4500, bwMeter: 2000, bwRate: 0.253 },
-          { id: 2, name: "2F 會計室二手黑白機", itemKey: "u_g1_3", price: "0.300", base: 7000, meter: 7200, bwMeter: 0, bwRate: 0 }
+          { id: 1, name: "二手設備 #1", itemKey: "u_g2_1", price: "0.450", base: 3000, meter: 4500, bwMeter: 2000, bwRate: 0.253 }
         ];
       }
-      nextId = 3;
+      nextId = 2;
       render();
     }
   }
