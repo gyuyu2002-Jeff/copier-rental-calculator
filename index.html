@@ -808,6 +808,142 @@
       gap: 3px;
     }
 
+
+    /* 快速操作步驟導引橫幅 */
+    .operation-guide-card {
+      background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+      border: 1.5px solid #bfdbfe;
+      border-radius: 14px;
+      padding: 14px 18px;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.05);
+    }
+    .guide-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #1e3a8a;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .guide-steps-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 860px) {
+      .guide-steps-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+    }
+    .guide-step-item {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .step-item-1 {
+      border-left: 4px solid #2563eb;
+    }
+    .step-item-2 {
+      border-left: 4px solid #059669;
+    }
+    .step-item-3 {
+      border-left: 4px solid #d97706;
+    }
+    .step-num-circle {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #2563eb;
+      color: #ffffff;
+      font-size: 0.78rem;
+      font-weight: 800;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .step-item-2 .step-num-circle {
+      background: #059669;
+    }
+    .step-heading {
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: var(--slate-900);
+      margin-bottom: 2px;
+    }
+    .step-desc {
+      font-size: 0.78rem;
+      color: var(--slate-600);
+      line-height: 1.4;
+    }
+
+    /* 操作步驟標籤 (Action Step Badges) */
+    .step-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 5px;
+      margin-right: 4px;
+      letter-spacing: 0.3px;
+    }
+    .step-badge-1 {
+      background-color: #dbeafe;
+      color: #1d4ed8;
+      border: 1px solid #93c5fd;
+    }
+    .step-badge-2 {
+      background-color: #dcfce7;
+      color: #15803d;
+      border: 1px solid #86efac;
+    }
+    .step-badge-color {
+      background-color: #fef3c7;
+      color: #b45309;
+      border: 1px solid #fde68a;
+    }
+
+    /* 需手動輸入欄位的高亮提示樣式 */
+    .input-action-step1 {
+      border: 1.8px solid #3b82f6 !important;
+      background-color: #f8faff !important;
+      font-weight: 600 !important;
+      cursor: pointer;
+    }
+    .input-action-step1:focus {
+      border-color: #1d4ed8 !important;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18) !important;
+    }
+    .input-action-step2 {
+      border: 1.8px solid #10b981 !important;
+      background-color: #f0fdf4 !important;
+      font-weight: 700 !important;
+      color: #065f46 !important;
+    }
+    .input-action-step2:focus {
+      border-color: #059669 !important;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+    }
+    .input-action-color {
+      border: 1.8px solid #f59e0b !important;
+      background-color: #fffbeb !important;
+      font-weight: 700 !important;
+      color: #92400e !important;
+    }
+    .input-action-color:focus {
+      border-color: #d97706 !important;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2) !important;
+    }
+
   </style>
 </head>
 <body>
@@ -827,6 +963,36 @@
       <button class="mode-btn" id="btnModeUsed" onclick="switchContractMode('used')">
         <span>♻️ 二手影印機 (LP5-114035)</span>
       </button>
+    </div>
+  </div>
+
+  <!-- 💡 顯眼的操作步驟指引橫幅 -->
+  <div class="operation-guide-card">
+    <div class="guide-title">
+      <span>💡 快速使用 2 步驟（僅需操作 2 處，其餘全由系統自動運算）</span>
+    </div>
+    <div class="guide-steps-grid">
+      <div class="guide-step-item step-item-1">
+        <div class="step-num-circle">1</div>
+        <div class="step-content">
+          <div class="step-heading">第 1 步：選擇契約項次</div>
+          <div class="step-desc">點擊下拉選單選取項次，系統<strong>自動帶入</strong>每張契約單價與基本張數。</div>
+        </div>
+      </div>
+      <div class="guide-step-item step-item-2">
+        <div class="step-num-circle">2</div>
+        <div class="step-content">
+          <div class="step-heading">第 2 步：輸入抄表張數</div>
+          <div class="step-desc">填入計數器抄表讀數（自動扣 1.5% 誤印、階梯超印與合併共用將<strong>即時結算</strong>）。</div>
+        </div>
+      </div>
+      <div class="guide-step-item step-item-3">
+        <div class="step-num-circle" style="background:#d97706;">+</div>
+        <div class="step-content">
+          <div class="step-heading">彩色機加填（若適用）</div>
+          <div class="step-desc">若選彩色機，下方會展開專區，再多填一個<strong>黑白抄表張數</strong>即可。</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1764,46 +1930,46 @@
           </div>
         </div>
 
-        <!-- 主參數 5 欄式網格 -->
+        <!-- 主參數 5 欄式網格 (明確標記步驟 1、步驟 2 與自動帶入欄位) -->
         <div class="form-grid-5">
           <div class="form-group">
             <div class="label-box">
-              <label>契約項次規格選單</label>
-              <span class="sub-note">選擇後自動帶入張數與單價</span>
+              <label><span class="step-badge step-badge-1">👉 步驟 1</span> 選擇契約項次</label>
+              <span class="sub-note" style="color: #2563eb; font-weight: 600;">點擊選單自動帶入</span>
             </div>
-            <select onchange="updateMachineItem(${m.id}, this.value)">
+            <select class="input-action-step1" onchange="updateMachineItem(${m.id}, this.value)">
               ${generateOptionsHtml(m.itemKey)}
             </select>
           </div>
 
           <div class="form-group">
             <div class="label-box">
-              <label>每張原單價 (NT$)</label>
-              <span class="sub-note">支援三位小數如 0.501</span>
+              <label><span class="badge-tag badge-auto">⚡ 自動帶入</span> 每張原單價</label>
+              <span class="sub-note">依項次自動填入</span>
             </div>
             <input type="text" id="price-${m.id}" inputmode="decimal" class="num-align" placeholder="0.500" value="${m.price}" oninput="updateFieldValue(${m.id}, 'price', this.value)">
           </div>
 
           <div class="form-group">
             <div class="label-box">
-              <label>每月基本張數</label>
-              <span class="sub-note">選擇項次自動帶入</span>
+              <label><span class="badge-tag badge-auto">⚡ 自動帶入</span> 每月基本張數</label>
+              <span class="sub-note">依項次自動填入</span>
             </div>
             <input type="number" id="base-${m.id}" inputmode="numeric" class="num-align" step="1" min="0" placeholder="5000" value="${m.base}" oninput="updateFieldValue(${m.id}, 'base', this.value)">
           </div>
 
           <div class="form-group">
             <div class="label-box">
-              <label>抄表張數</label>
-              <span class="sub-note">原始計數器讀數</span>
+              <label><span class="step-badge step-badge-2">👉 步驟 2</span> 輸入抄表張數</label>
+              <span class="sub-note" style="color: #059669; font-weight: 600;">請填寫計數器讀數</span>
             </div>
-            <input type="number" id="meter-${m.id}" inputmode="numeric" class="num-align" step="1" min="0" placeholder="0" value="${m.meter}" oninput="updateFieldValue(${m.id}, 'meter', this.value)">
+            <input type="number" id="meter-${m.id}" inputmode="numeric" class="num-align input-action-step2" step="1" min="0" placeholder="填寫抄表數" value="${m.meter}" oninput="updateFieldValue(${m.id}, 'meter', this.value)">
           </div>
 
           <div class="form-group">
             <div class="label-box">
-              <label>實際計費張數 <span class="badge-tag badge-calc">扣1.5%</span></label>
-              <span class="sub-note">抄表 × 98.5%</span>
+              <label><span class="badge-tag badge-calc">🔒 自動計算</span> 實際計費張數</label>
+              <span class="sub-note">自動扣 1.5% 誤印</span>
             </div>
             <input type="text" id="actual-${m.id}" class="num-align readonly-highlight" readonly value="0 張">
           </div>
@@ -1818,10 +1984,10 @@
           <div class="form-grid-3">
             <div class="form-group">
               <div class="label-box">
-                <label style="color: var(--amber-700);">黑白抄表張數</label>
-                <span class="sub-note">黑白計數器讀數</span>
+                <label style="color: var(--amber-700);"><span class="step-badge step-badge-color">👉 彩色機加填</span> 黑白抄表張數</label>
+                <span class="sub-note" style="color: #b45309; font-weight: 600;">填寫彩色機之黑白讀數</span>
               </div>
-              <input type="number" id="bwMeter-${m.id}" inputmode="numeric" class="num-align" step="1" min="0" placeholder="0" value="${m.bwMeter}" oninput="updateFieldValue(${m.id}, 'bwMeter', this.value)">
+              <input type="number" id="bwMeter-${m.id}" inputmode="numeric" class="num-align input-action-color" step="1" min="0" placeholder="填寫黑白抄表" value="${m.bwMeter}" oninput="updateFieldValue(${m.id}, 'bwMeter', this.value)">
             </div>
 
             <div class="form-group">
