@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title>影印機租賃印量計算系統（可多台合併）</title>
+  <title>影印機租賃印量計算系統（全新機 / 二手機・多台合併）</title>
   <style>
     :root {
       --primary: #2563eb;
@@ -28,6 +28,11 @@
       --amber-100: #fef3c7;
       --amber-600: #d97706;
       --amber-700: #b45309;
+      
+      --purple-50: #faf5ff;
+      --purple-100: #f3e8ff;
+      --purple-600: #9333ea;
+      --purple-700: #7e22ce;
       
       --rose-50: #fff1f2;
       --rose-600: #e11d48;
@@ -59,6 +64,13 @@
       text-align: center;
       margin-bottom: 24px;
     }
+    .header-badges {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
     .header-badge {
       display: inline-block;
       background: #dbeafe;
@@ -67,8 +79,11 @@
       font-weight: 600;
       padding: 4px 12px;
       border-radius: 9999px;
-      margin-bottom: 8px;
       letter-spacing: 0.5px;
+    }
+    .badge-used {
+      background: #ede9fe;
+      color: #6b21a8;
     }
     h1 {
       color: var(--slate-900);
@@ -250,6 +265,20 @@
       letter-spacing: 0.5px;
       flex-shrink: 0;
     }
+    .machine-type-tag {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .type-new {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    .type-used {
+      background: #ede9fe;
+      color: #6b21a8;
+    }
     .machine-name-input {
       font-weight: 700;
       font-size: 1.05rem;
@@ -260,7 +289,7 @@
       background: transparent;
       transition: all 0.2s;
       width: 100%;
-      max-width: 320px;
+      max-width: 300px;
     }
     .machine-name-input:hover {
       background: var(--slate-100);
@@ -273,10 +302,10 @@
       outline: none;
     }
 
-    /* 統一整齊的 5 欄式表單佈局 (項次選單佔 1.8fr 寬度) */
+    /* 統一整齊的 5 欄式表單佈局 */
     .form-grid-5 {
       display: grid;
-      grid-template-columns: 1.8fr 1fr 1fr 1fr 1.1fr;
+      grid-template-columns: 2fr 1fr 1fr 1fr 1.1fr;
       gap: 12px;
       align-items: start;
     }
@@ -317,7 +346,7 @@
       color: #1e40af;
     }
 
-    /* 輸入框與下拉選單樣式 (font-size 16px 防止 iOS 放大) */
+    /* 輸入框與下拉選單樣式 */
     input, select {
       height: 42px;
       padding: 8px 10px;
@@ -330,7 +359,7 @@
       width: 100%;
     }
     select {
-      font-size: 14px;
+      font-size: 13.5px;
       text-overflow: ellipsis;
       cursor: pointer;
     }
@@ -412,6 +441,14 @@
     .chip strong {
       color: var(--slate-800);
     }
+    .chip-used {
+      background: var(--purple-50);
+      border-color: var(--purple-100);
+      color: var(--purple-700);
+    }
+    .chip-used strong {
+      color: var(--purple-700);
+    }
     .chip-amber {
       background: var(--amber-50);
       border-color: var(--amber-100);
@@ -442,7 +479,7 @@
       font-variant-numeric: tabular-nums;
     }
 
-    /* 條款註腳區 */
+    /* 條款比較註腳區 */
     .rules-card {
       margin-top: 24px;
       background: #ffffff;
@@ -458,8 +495,27 @@
     .rules-card strong {
       color: var(--slate-800);
     }
+    .rules-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 10px;
+    }
+    .rule-box {
+      background: var(--slate-50);
+      border: 1px solid var(--slate-200);
+      border-radius: 6px;
+      padding: 12px 14px;
+    }
+    .rule-box-title {
+      font-weight: 700;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
 
-    /* 響應式佈局適應 (手機與平板) */
+    /* 響應式佈局適應 */
     @media (max-width: 980px) {
       .summary-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -471,6 +527,9 @@
         grid-template-columns: 1fr 1fr;
       }
       .form-grid-3 {
+        grid-template-columns: 1fr;
+      }
+      .rules-grid {
         grid-template-columns: 1fr;
       }
     }
@@ -517,7 +576,7 @@
         padding: 0;
         color: #000000;
       }
-      .toolbar, .btn-danger-outline, .rules-card, .header-badge {
+      .toolbar, .btn-danger-outline, .rules-card, .header-badges, footer {
         display: none !important;
       }
       .container {
@@ -566,9 +625,12 @@
 
 <div class="container">
   <header>
-    <div class="header-badge">臺灣銀行招標案號 LP5-114034 標準規範</div>
-    <h1>影印機租賃印量計算系統（可多台合併）</h1>
-    <p class="subtitle">自動1.5%誤印率・超印階梯累進係數（85% / 75%）・彩色機黑白加收費率試算</p>
+    <div class="header-badges">
+      <span class="header-badge">🌟 全新機標案 LP5-114034</span>
+      <span class="header-badge badge-used">♻️ 二手機標案 LP5-114035</span>
+    </div>
+    <h1>影印機租賃印量計算系統（全新機 / 二手機・多台合併）</h1>
+    <p class="subtitle">自動1.5%誤印率・全新機階梯超額（85%/75%）・二手機固定超額（90%）・彩色機黑白加收費率試算</p>
   </header>
 
   <!-- 頂部匯總儀表板 -->
@@ -587,7 +649,7 @@
         <div class="value" id="sumBaseFee">NT$ 0</div>
       </div>
       <div class="summary-item">
-        <div class="label">⚡ 總超額租費 (85%/75%)</div>
+        <div class="label">⚡ 總超額租費 (85%/75%/90%)</div>
         <div class="value" id="sumOverFee">NT$ 0</div>
       </div>
       <div class="summary-item">
@@ -604,8 +666,11 @@
   <!-- 控制工具列 -->
   <div class="toolbar">
     <div class="toolbar-left">
-      <button class="btn" onclick="addMachine()">
-        <span>＋</span> 新增一台設備
+      <button class="btn" onclick="addMachine('new')">
+        <span>＋</span> 新增全新機
+      </button>
+      <button class="btn" style="background:#7e22ce;" onclick="addMachine('used')">
+        <span>＋</span> 新增二手機
       </button>
       <button class="btn btn-secondary" onclick="resetDefault()">
         <span>🔄</span> 重設範例資料
@@ -621,16 +686,37 @@
   <!-- 設備動態容器 -->
   <div class="machine-list" id="machineContainer"></div>
 
-  <!-- 條款備註卡片 -->
+  <!-- 條款比較備註卡片 -->
   <div class="rules-card">
-    <strong>📋 臺灣銀行採購部 LP5-114034 契約計費依據摘要：</strong><br>
-    1. <strong>實際計費張數</strong>：每台設備依抄表張數自動扣除 <strong>1.5% 誤印率</strong>（四捨五入計算至整數）。<br>
-    2. <strong>階梯累進超額計費</strong>：<br>
-       &nbsp;&nbsp;• <strong>超額 50% 以內</strong>：超額張數按原單價 <strong>85%</strong> 計收。<br>
-       &nbsp;&nbsp;• <strong>超額 50% 以上</strong>：超出 50% 之部分按原單價 <strong>75%</strong> 計收。<br>
-    3. <strong>基本張數型彩色機黑白加收費率</strong>：<br>
-       &nbsp;&nbsp;• <strong>第 1 組雷射彩色機</strong>：第 17, 19, 20, 23, 25 項加收 <strong>NT$ 0.40 / 張</strong>；第 18, 21, 22, 24, 26 項加收 <strong>NT$ 0.38 / 張</strong>。<br>
-       &nbsp;&nbsp;• <strong>第 3 組噴墨彩色機</strong>：第 1, 3, 5 項加收 <strong>NT$ 0.30 / 張</strong>；第 2, 4, 6 項加收 <strong>NT$ 0.285 / 張</strong>。
+    <strong>📋 臺灣銀行採購部 影印機租賃共同供應契約計費依據摘要：</strong>
+    <div class="rules-grid">
+      <!-- 全新機說明 -->
+      <div class="rule-box" style="border-left: 3px solid #2563eb;">
+        <div class="rule-box-title" style="color: #1e40af;">
+          <span>🌟 全新影印機 (LP5-114034)</span>
+        </div>
+        1. <strong>實際張數</strong>：抄表扣除 <strong>1.5% 誤印率</strong>。<br>
+        2. <strong>階梯累進超額計費</strong>：<br>
+           &nbsp;&nbsp;• 超額 50% 以內：按單價 <strong>85%</strong> 計收。<br>
+           &nbsp;&nbsp;• 超額 50% 以上：按單價 <strong>75%</strong> 計收。<br>
+        3. <strong>彩色機加收黑白</strong>：<br>
+           &nbsp;&nbsp;• 第 1 組雷射：<strong>$0.40</strong> 或 <strong>$0.38</strong> / 張。<br>
+           &nbsp;&nbsp;• 第 3 組噴墨：<strong>$0.30</strong> 或 <strong>$0.285</strong> / 張。
+      </div>
+
+      <!-- 二手機說明 -->
+      <div class="rule-box" style="border-left: 3px solid #9333ea;">
+        <div class="rule-box-title" style="color: #6b21a8;">
+          <span>♻️ 二手影印機 (LP5-114035)</span>
+        </div>
+        1. <strong>實際張數</strong>：抄表扣除 <strong>1.5% 誤印率</strong>。<br>
+        2. <strong>固定超額計費 (無階梯)</strong>：<br>
+           &nbsp;&nbsp;• 超出基本張數部分：一律按單價 <strong>90% (0.9)</strong> 計收。<br>
+        3. <strong>彩色機加收黑白</strong>：<br>
+           &nbsp;&nbsp;• 第 2 組雷射彩色：加收 <strong>$0.253 / 張</strong>。<br>
+           &nbsp;&nbsp;• 第 3 組噴墨彩色：加收 <strong>$0.202 / 張</strong>。
+      </div>
+    </div>
   </div>
 
   <!-- 底部備註署名 -->
@@ -640,93 +726,153 @@
 </div>
 
 <script>
-  // 契約項次規格定義表 (臺銀 LP5-114034)
+  // 契約項次規格定義表 (全新機 LP5-114034 + 二手機 LP5-114035)
   const CONTRACT_ITEMS = {
-    // === 第 1 組：雷射黑白複合機 (免加收黑白) ===
-    "g1_1":  { name: "第1組第1項：黑白 20張 (2年期)", base: 7000, bwRate: 0, price: "0.350" },
-    "g1_2":  { name: "第1組第2項：黑白 20張 (3年期)", base: 7000, bwRate: 0, price: "0.350" },
-    "g1_3":  { name: "第1組第3項：黑白 30張 (2年期)", base: 10000, bwRate: 0, price: "0.350" },
-    "g1_4":  { name: "第1組第4項：黑白 30張 (2年期)", base: 10000, bwRate: 0, price: "0.350" },
-    "g1_5":  { name: "第1組第5項：黑白 30張 含掃描 (2年期)", base: 10000, bwRate: 0, price: "0.350" },
-    "g1_6":  { name: "第1組第6項：黑白 30張 (3年期)", base: 10000, bwRate: 0, price: "0.350" },
-    "g1_7":  { name: "第1組第7項：黑白 30張 (3年期)", base: 10000, bwRate: 0, price: "0.350" },
-    "g1_8":  { name: "第1組第8項：黑白 30張 含掃描 (3年期)", base: 10000, bwRate: 0, price: "0.350" },
-    "g1_9":  { name: "第1組第9項：黑白 40張 (2年期)", base: 15000, bwRate: 0, price: "0.350" },
-    "g1_10": { name: "第1組第10項：黑白 40張 (3年期)", base: 15000, bwRate: 0, price: "0.350" },
-    "g1_11": { name: "第1組第11項：黑白 50張 (2年期)", base: 20000, bwRate: 0, price: "0.350" },
-    "g1_12": { name: "第1組第12項：黑白 50張 含掃描 (2年期)", base: 20000, bwRate: 0, price: "0.350" },
-    "g1_13": { name: "第1組第13項：黑白 50張 (3年期)", base: 20000, bwRate: 0, price: "0.350" },
-    "g1_14": { name: "第1組第14項：黑白 50張 含掃描 (3年期)", base: 20000, bwRate: 0, price: "0.350" },
-    "g1_15": { name: "第1組第15項：黑白 60張 (2年期)", base: 25000, bwRate: 0, price: "0.350" },
-    "g1_16": { name: "第1組第16項：黑白 60張 (3年期)", base: 25000, bwRate: 0, price: "0.350" },
+    // ══════════════════════════════════════════════════════
+    // 【全新影印機 LP5-114034】(超印 85%/75% 階梯累進)
+    // ══════════════════════════════════════════════════════
+    // 第 1 組 雷射黑白 (免加收黑白)
+    "n_g1_1":  { contract: "new", name: "全新 第1組第1項：黑白 20張 (2年期)", base: 7000, bwRate: 0, price: "0.350" },
+    "n_g1_2":  { contract: "new", name: "全新 第1組第2項：黑白 20張 (3年期)", base: 7000, bwRate: 0, price: "0.350" },
+    "n_g1_3":  { contract: "new", name: "全新 第1組第3項：黑白 30張 (2年期)", base: 10000, bwRate: 0, price: "0.350" },
+    "n_g1_4":  { contract: "new", name: "全新 第1組第4項：黑白 30張 (2年期)", base: 10000, bwRate: 0, price: "0.350" },
+    "n_g1_5":  { contract: "new", name: "全新 第1組第5項：黑白 30張 含掃描 (2年期)", base: 10000, bwRate: 0, price: "0.350" },
+    "n_g1_6":  { contract: "new", name: "全新 第1組第6項：黑白 30張 (3年期)", base: 10000, bwRate: 0, price: "0.350" },
+    "n_g1_7":  { contract: "new", name: "全新 第1組第7項：黑白 30張 (3年期)", base: 10000, bwRate: 0, price: "0.350" },
+    "n_g1_8":  { contract: "new", name: "全新 第1組第8項：黑白 30張 含掃描 (3年期)", base: 10000, bwRate: 0, price: "0.350" },
+    "n_g1_9":  { contract: "new", name: "全新 第1組第9項：黑白 40張 (2年期)", base: 15000, bwRate: 0, price: "0.350" },
+    "n_g1_10": { contract: "new", name: "全新 第1組第10項：黑白 40張 (3年期)", base: 15000, bwRate: 0, price: "0.350" },
+    "n_g1_11": { contract: "new", name: "全新 第1組第11項：黑白 50張 (2年期)", base: 20000, bwRate: 0, price: "0.350" },
+    "n_g1_12": { contract: "new", name: "全新 第1組第12項：黑白 50張 含掃描 (2年期)", base: 20000, bwRate: 0, price: "0.350" },
+    "n_g1_13": { contract: "new", name: "全新 第1組第13項：黑白 50張 (3年期)", base: 20000, bwRate: 0, price: "0.350" },
+    "n_g1_14": { contract: "new", name: "全新 第1組第14項：黑白 50張 含掃描 (3年期)", base: 20000, bwRate: 0, price: "0.350" },
+    "n_g1_15": { contract: "new", name: "全新 第1組第15項：黑白 60張 (2年期)", base: 25000, bwRate: 0, price: "0.350" },
+    "n_g1_16": { contract: "new", name: "全新 第1組第16項：黑白 60張 (3年期)", base: 25000, bwRate: 0, price: "0.350" },
 
-    // === 第 1 組：雷射彩色複合機 (加收黑白) ===
-    "g1_17": { name: "第1組第17項：彩色 20張 (2年期)", base: 3000, bwRate: 0.40, price: "0.500" },
-    "g1_18": { name: "第1組第18項：彩色 20張 (3年期)", base: 3000, bwRate: 0.38, price: "0.500" },
-    "g1_19": { name: "第1組第19項：彩色 30張 (2年期)", base: 3000, bwRate: 0.40, price: "0.500" },
-    "g1_20": { name: "第1組第20項：彩色 30張 含掃描 (2年期)", base: 3000, bwRate: 0.40, price: "0.500" },
-    "g1_21": { name: "第1組第21項：彩色 30張 (3年期)", base: 3000, bwRate: 0.38, price: "0.500" },
-    "g1_22": { name: "第1組第22項：彩色 30張 含掃描 (3年期)", base: 3000, bwRate: 0.38, price: "0.500" },
-    "g1_23": { name: "第1組第23項：彩色 40張 (2年期)", base: 3500, bwRate: 0.40, price: "0.500" },
-    "g1_24": { name: "第1組第24項：彩色 40張 (3年期)", base: 3500, bwRate: 0.38, price: "0.500" },
-    "g1_25": { name: "第1組第25項：彩色 50張 (2年期)", base: 3500, bwRate: 0.40, price: "0.500" },
-    "g1_26": { name: "第1組第26項：彩色 50張 (3年期)", base: 3500, bwRate: 0.38, price: "0.500" },
+    // 第 1 組 雷射彩色 (加收黑白)
+    "n_g1_17": { contract: "new", name: "全新 第1組第17項：彩色 20張 (2年期)", base: 3000, bwRate: 0.40, price: "0.500" },
+    "n_g1_18": { contract: "new", name: "全新 第1組第18項：彩色 20張 (3年期)", base: 3000, bwRate: 0.38, price: "0.500" },
+    "n_g1_19": { contract: "new", name: "全新 第1組第19項：彩色 30張 (2年期)", base: 3000, bwRate: 0.40, price: "0.500" },
+    "n_g1_20": { contract: "new", name: "全新 第1組第20項：彩色 30張 含掃描 (2年期)", base: 3000, bwRate: 0.40, price: "0.500" },
+    "n_g1_21": { contract: "new", name: "全新 第1組第21項：彩色 30張 (3年期)", base: 3000, bwRate: 0.38, price: "0.500" },
+    "n_g1_22": { contract: "new", name: "全新 第1組第22項：彩色 30張 含掃描 (3年期)", base: 3000, bwRate: 0.38, price: "0.500" },
+    "n_g1_23": { contract: "new", name: "全新 第1組第23項：彩色 40張 (2年期)", base: 3500, bwRate: 0.40, price: "0.500" },
+    "n_g1_24": { contract: "new", name: "全新 第1組第24項：彩色 40張 (3年期)", base: 3500, bwRate: 0.38, price: "0.500" },
+    "n_g1_25": { contract: "new", name: "全新 第1組第25項：彩色 50張 (2年期)", base: 3500, bwRate: 0.40, price: "0.500" },
+    "n_g1_26": { contract: "new", name: "全新 第1組第26項：彩色 50張 (3年期)", base: 3500, bwRate: 0.38, price: "0.500" },
 
-    // === 第 3 組：噴墨彩色複合機 (加收黑白) ===
-    "g3_1":  { name: "第3組第1項：噴墨彩色 20張 (2年期)", base: 3000, bwRate: 0.30, price: "3.000" },
-    "g3_2":  { name: "第3組第2項：噴墨彩色 20張 (3年期)", base: 3000, bwRate: 0.285, price: "3.000" },
-    "g3_3":  { name: "第3組第3項：噴墨彩色 40張 (2年期)", base: 3500, bwRate: 0.30, price: "3.000" },
-    "g3_4":  { name: "第3組第4項：噴墨彩色 40張 (3年期)", base: 3500, bwRate: 0.285, price: "3.000" },
-    "g3_5":  { name: "第3組第5項：噴墨彩色 50張 (2年期)", base: 3500, bwRate: 0.30, price: "3.000" },
-    "g3_6":  { name: "第3組第6項：噴墨彩色 50張 (3年期)", base: 3500, bwRate: 0.285, price: "3.000" },
+    // 第 3 組 噴墨彩色 (加收黑白)
+    "n_g3_1":  { contract: "new", name: "全新 第3組第1項：噴墨彩色 20張 (2年期)", base: 3000, bwRate: 0.30, price: "3.000" },
+    "n_g3_2":  { contract: "new", name: "全新 第3組第2項：噴墨彩色 20張 (3年期)", base: 3000, bwRate: 0.285, price: "3.000" },
+    "n_g3_3":  { contract: "new", name: "全新 第3組第3項：噴墨彩色 40張 (2年期)", base: 3500, bwRate: 0.30, price: "3.000" },
+    "n_g3_4":  { contract: "new", name: "全新 第3組第4項：噴墨彩色 40張 (3年期)", base: 3500, bwRate: 0.285, price: "3.000" },
+    "n_g3_5":  { contract: "new", name: "全新 第3組第5項：噴墨彩色 50張 (2年期)", base: 3500, bwRate: 0.30, price: "3.000" },
+    "n_g3_6":  { contract: "new", name: "全新 第3組第6項：噴墨彩色 50張 (3年期)", base: 3500, bwRate: 0.285, price: "3.000" },
+
+    // ══════════════════════════════════════════════════════
+    // 【二手影印機 LP5-114035】(超印 90% 固定計收)
+    // ══════════════════════════════════════════════════════
+    // 第 1 組 雷射黑白 (免加收黑白)
+    "u_g1_1":  { contract: "used", name: "二手 第1組第1、2項：黑白 20張 (2/3年期)", base: 5000, bwRate: 0, price: "0.300" },
+    "u_g1_3":  { contract: "used", name: "二手 第1組第3、4項：黑白 20張 (2/3年期)", base: 7000, bwRate: 0, price: "0.300" },
+    "u_g1_5":  { contract: "used", name: "二手 第1組第5~8項：黑白 30張 (2/3年期含掃描)", base: 7000, bwRate: 0, price: "0.300" },
+    "u_g1_9":  { contract: "used", name: "二手 第1組第9~12項：黑白 30張 (2/3年期含掃描)", base: 10000, bwRate: 0, price: "0.300" },
+    "u_g1_13": { contract: "used", name: "二手 第1組第13、14項：黑白 40張 (2/3年期)", base: 7000, bwRate: 0, price: "0.300" },
+    "u_g1_15": { contract: "used", name: "二手 第1組第15、16項：黑白 40張 (2/3年期)", base: 10000, bwRate: 0, price: "0.300" },
+    "u_g1_17": { contract: "used", name: "二手 第1組第17、18項：黑白 40張 (2/3年期)", base: 15000, bwRate: 0, price: "0.300" },
+    "u_g1_19": { contract: "used", name: "二手 第1組第19~22項：黑白 50張 (2/3年期含掃描)", base: 10000, bwRate: 0, price: "0.300" },
+    "u_g1_23": { contract: "used", name: "二手 第1組第23~26項：黑白 50張 (2/3年期含掃描)", base: 15000, bwRate: 0, price: "0.300" },
+    "u_g1_27": { contract: "used", name: "二手 第1組第27~30項：黑白 50張 (2/3年期含掃描)", base: 20000, bwRate: 0, price: "0.300" },
+    "u_g1_31": { contract: "used", name: "二手 第1組第31、32項：黑白 60張 (2/3年期)", base: 12500, bwRate: 0, price: "0.300" },
+    "u_g1_33": { contract: "used", name: "二手 第1組第33、34項：黑白 60張 (2/3年期)", base: 18500, bwRate: 0, price: "0.300" },
+    "u_g1_35": { contract: "used", name: "二手 第1組第35、36項：黑白 60張 (2/3年期)", base: 25000, bwRate: 0, price: "0.300" },
+
+    // 第 2 組 雷射彩色 (加收黑白 @NT$ 0.253)
+    "u_g2_1":  { contract: "used", name: "二手 第2組第1、2項：彩色 20張 (2/3年期)", base: 3000, bwRate: 0.253, price: "0.450" },
+    "u_g2_3":  { contract: "used", name: "二手 第2組第3~6項：彩色 30張 (2/3年期含掃描)", base: 3000, bwRate: 0.253, price: "0.450" },
+
+    // 第 3 組 噴墨彩色 (加收黑白 @NT$ 0.202)
+    "u_g3_1":  { contract: "used", name: "二手 第3組第1、2項：噴墨彩色 20張 (2/3年期)", base: 3000, bwRate: 0.202, price: "2.500" },
+    "u_g3_3":  { contract: "used", name: "二手 第3組第3、4項：噴墨彩色 40張 (2/3年期)", base: 3500, bwRate: 0.202, price: "2.500" },
+    "u_g3_5":  { contract: "used", name: "二手 第3組第5、6項：噴墨彩色 50張 (2/3年期)", base: 3500, bwRate: 0.202, price: "2.500" },
+    "u_g3_7":  { contract: "used", name: "二手 第3組第7、8項：噴墨彩色 60張 (2/3年期)", base: 4000, bwRate: 0.202, price: "2.500" },
 
     // === 自訂 ===
-    "custom": { name: "自訂項次 / 自訂張數與費率", base: 5000, bwRate: 0, price: "0.500" }
+    "custom_new":  { contract: "new",  name: "自訂項次（全新機規範：階梯超印 85%/75%）", base: 5000, bwRate: 0, price: "0.500" },
+    "custom_used": { contract: "used", name: "自訂項次（二手機規範：固定超印 90%）",     base: 5000, bwRate: 0, price: "0.400" }
   };
 
   // 產生項次下拉選單 HTML
   function generateOptionsHtml(selectedKey) {
     return `
-      <optgroup label="── 第 1 組：雷射黑白複合機（免加收黑白） ──">
-        <option value="g1_1" ${selectedKey === 'g1_1' ? 'selected' : ''}>第1項：黑白 20張 (2年期) - 基本 7,000張</option>
-        <option value="g1_2" ${selectedKey === 'g1_2' ? 'selected' : ''}>第2項：黑白 20張 (3年期) - 基本 7,000張</option>
-        <option value="g1_3" ${selectedKey === 'g1_3' ? 'selected' : ''}>第3項：黑白 30張 (2年期) - 基本 10,000張</option>
-        <option value="g1_4" ${selectedKey === 'g1_4' ? 'selected' : ''}>第4項：黑白 30張 (2年期) - 基本 10,000張</option>
-        <option value="g1_5" ${selectedKey === 'g1_5' ? 'selected' : ''}>第5項：黑白 30張 含掃描 (2年期) - 基本 10,000張</option>
-        <option value="g1_6" ${selectedKey === 'g1_6' ? 'selected' : ''}>第6項：黑白 30張 (3年期) - 基本 10,000張</option>
-        <option value="g1_7" ${selectedKey === 'g1_7' ? 'selected' : ''}>第7項：黑白 30張 (3年期) - 基本 10,000張</option>
-        <option value="g1_8" ${selectedKey === 'g1_8' ? 'selected' : ''}>第8項：黑白 30張 含掃描 (3年期) - 基本 10,000張</option>
-        <option value="g1_9" ${selectedKey === 'g1_9' ? 'selected' : ''}>第9項：黑白 40張 (2年期) - 基本 15,000張</option>
-        <option value="g1_10" ${selectedKey === 'g1_10' ? 'selected' : ''}>第10項：黑白 40張 (3年期) - 基本 15,000張</option>
-        <option value="g1_11" ${selectedKey === 'g1_11' ? 'selected' : ''}>第11項：黑白 50張 (2年期) - 基本 20,000張</option>
-        <option value="g1_12" ${selectedKey === 'g1_12' ? 'selected' : ''}>第12項：黑白 50張 含掃描 (2年期) - 基本 20,000張</option>
-        <option value="g1_13" ${selectedKey === 'g1_13' ? 'selected' : ''}>第13項：黑白 50張 (3年期) - 基本 20,000張</option>
-        <option value="g1_14" ${selectedKey === 'g1_14' ? 'selected' : ''}>第14項：黑白 50張 含掃描 (3年期) - 基本 20,000張</option>
-        <option value="g1_15" ${selectedKey === 'g1_15' ? 'selected' : ''}>第15項：黑白 60張 (2年期) - 基本 25,000張</option>
-        <option value="g1_16" ${selectedKey === 'g1_16' ? 'selected' : ''}>第16項：黑白 60張 (3年期) - 基本 25,000張</option>
+      <optgroup label="🌟 ──【全新影印機 LP5-114034】第 1 組 雷射黑白（免加收黑白）──">
+        <option value="n_g1_1" ${selectedKey === 'n_g1_1' ? 'selected' : ''}>全新 #1：黑白 20張 (2年期) - 基本 7,000張</option>
+        <option value="n_g1_2" ${selectedKey === 'n_g1_2' ? 'selected' : ''}>全新 #2：黑白 20張 (3年期) - 基本 7,000張</option>
+        <option value="n_g1_3" ${selectedKey === 'n_g1_3' ? 'selected' : ''}>全新 #3：黑白 30張 (2年期) - 基本 10,000張</option>
+        <option value="n_g1_4" ${selectedKey === 'n_g1_4' ? 'selected' : ''}>全新 #4：黑白 30張 (2年期) - 基本 10,000張</option>
+        <option value="n_g1_5" ${selectedKey === 'n_g1_5' ? 'selected' : ''}>全新 #5：黑白 30張 含掃描 (2年期) - 基本 10,000張</option>
+        <option value="n_g1_6" ${selectedKey === 'n_g1_6' ? 'selected' : ''}>全新 #6：黑白 30張 (3年期) - 基本 10,000張</option>
+        <option value="n_g1_7" ${selectedKey === 'n_g1_7' ? 'selected' : ''}>全新 #7：黑白 30張 (3年期) - 基本 10,000張</option>
+        <option value="n_g1_8" ${selectedKey === 'n_g1_8' ? 'selected' : ''}>全新 #8：黑白 30張 含掃描 (3年期) - 基本 10,000張</option>
+        <option value="n_g1_9" ${selectedKey === 'n_g1_9' ? 'selected' : ''}>全新 #9：黑白 40張 (2年期) - 基本 15,000張</option>
+        <option value="n_g1_10" ${selectedKey === 'n_g1_10' ? 'selected' : ''}>全新 #10：黑白 40張 (3年期) - 基本 15,000張</option>
+        <option value="n_g1_11" ${selectedKey === 'n_g1_11' ? 'selected' : ''}>全新 #11：黑白 50張 (2年期) - 基本 20,000張</option>
+        <option value="n_g1_12" ${selectedKey === 'n_g1_12' ? 'selected' : ''}>全新 #12：黑白 50張 含掃描 (2年期) - 基本 20,000張</option>
+        <option value="n_g1_13" ${selectedKey === 'n_g1_13' ? 'selected' : ''}>全新 #13：黑白 50張 (3年期) - 基本 20,000張</option>
+        <option value="n_g1_14" ${selectedKey === 'n_g1_14' ? 'selected' : ''}>全新 #14：黑白 50張 含掃描 (3年期) - 基本 20,000張</option>
+        <option value="n_g1_15" ${selectedKey === 'n_g1_15' ? 'selected' : ''}>全新 #15：黑白 60張 (2年期) - 基本 25,000張</option>
+        <option value="n_g1_16" ${selectedKey === 'n_g1_16' ? 'selected' : ''}>全新 #16：黑白 60張 (3年期) - 基本 25,000張</option>
       </optgroup>
-      <optgroup label="── 第 1 組：雷射彩色複合機（加收黑白） ──">
-        <option value="g1_17" ${selectedKey === 'g1_17' ? 'selected' : ''}>第17項：彩色 20張 (2年期) - 基本 3,000張 (黑白+$0.40)</option>
-        <option value="g1_18" ${selectedKey === 'g1_18' ? 'selected' : ''}>第18項：彩色 20張 (3年期) - 基本 3,000張 (黑白+$0.38)</option>
-        <option value="g1_19" ${selectedKey === 'g1_19' ? 'selected' : ''}>第19項：彩色 30張 (2年期) - 基本 3,000張 (黑白+$0.40)</option>
-        <option value="g1_20" ${selectedKey === 'g1_20' ? 'selected' : ''}>第20項：彩色 30張 含掃描 (2年期) - 基本 3,000張 (黑白+$0.40)</option>
-        <option value="g1_21" ${selectedKey === 'g1_21' ? 'selected' : ''}>第21項：彩色 30張 (3年期) - 基本 3,000張 (黑白+$0.38)</option>
-        <option value="g1_22" ${selectedKey === 'g1_22' ? 'selected' : ''}>第22項：彩色 30張 含掃描 (3年期) - 基本 3,000張 (黑白+$0.38)</option>
-        <option value="g1_23" ${selectedKey === 'g1_23' ? 'selected' : ''}>第23項：彩色 40張 (2年期) - 基本 3,500張 (黑白+$0.40)</option>
-        <option value="g1_24" ${selectedKey === 'g1_24' ? 'selected' : ''}>第24項：彩色 40張 (3年期) - 基本 3,500張 (黑白+$0.38)</option>
-        <option value="g1_25" ${selectedKey === 'g1_25' ? 'selected' : ''}>第25項：彩色 50張 (2年期) - 基本 3,500張 (黑白+$0.40)</option>
-        <option value="g1_26" ${selectedKey === 'g1_26' ? 'selected' : ''}>第26項：彩色 50張 (3年期) - 基本 3,500張 (黑白+$0.38)</option>
+      <optgroup label="🌟 ──【全新影印機 LP5-114034】第 1 組 雷射彩色（加收黑白）──">
+        <option value="n_g1_17" ${selectedKey === 'n_g1_17' ? 'selected' : ''}>全新 #17：彩色 20張 (2年期) - 基本 3,000張 (黑白+$0.40)</option>
+        <option value="n_g1_18" ${selectedKey === 'n_g1_18' ? 'selected' : ''}>全新 #18：彩色 20張 (3年期) - 基本 3,000張 (黑白+$0.38)</option>
+        <option value="n_g1_19" ${selectedKey === 'n_g1_19' ? 'selected' : ''}>全新 #19：彩色 30張 (2年期) - 基本 3,000張 (黑白+$0.40)</option>
+        <option value="n_g1_20" ${selectedKey === 'n_g1_20' ? 'selected' : ''}>全新 #20：彩色 30張 含掃描 (2年期) - 基本 3,000張 (黑白+$0.40)</option>
+        <option value="n_g1_21" ${selectedKey === 'n_g1_21' ? 'selected' : ''}>全新 #21：彩色 30張 (3年期) - 基本 3,000張 (黑白+$0.38)</option>
+        <option value="n_g1_22" ${selectedKey === 'n_g1_22' ? 'selected' : ''}>全新 #22：彩色 30張 含掃描 (3年期) - 基本 3,000張 (黑白+$0.38)</option>
+        <option value="n_g1_23" ${selectedKey === 'n_g1_23' ? 'selected' : ''}>全新 #23：彩色 40張 (2年期) - 基本 3,500張 (黑白+$0.40)</option>
+        <option value="n_g1_24" ${selectedKey === 'n_g1_24' ? 'selected' : ''}>全新 #24：彩色 40張 (3年期) - 基本 3,500張 (黑白+$0.38)</option>
+        <option value="n_g1_25" ${selectedKey === 'n_g1_25' ? 'selected' : ''}>全新 #25：彩色 50張 (2年期) - 基本 3,500張 (黑白+$0.40)</option>
+        <option value="n_g1_26" ${selectedKey === 'n_g1_26' ? 'selected' : ''}>全新 #26：彩色 50張 (3年期) - 基本 3,500張 (黑白+$0.38)</option>
       </optgroup>
-      <optgroup label="── 第 3 組：噴墨彩色複合機（加收黑白） ──">
-        <option value="g3_1" ${selectedKey === 'g3_1' ? 'selected' : ''}>第1項：噴墨彩色 20張 (2年期) - 基本 3,000張 (黑白+$0.30)</option>
-        <option value="g3_2" ${selectedKey === 'g3_2' ? 'selected' : ''}>第2項：噴墨彩色 20張 (3年期) - 基本 3,000張 (黑白+$0.285)</option>
-        <option value="g3_3" ${selectedKey === 'g3_3' ? 'selected' : ''}>第3項：噴墨彩色 40張 (2年期) - 基本 3,500張 (黑白+$0.30)</option>
-        <option value="g3_4" ${selectedKey === 'g3_4' ? 'selected' : ''}>第4項：噴墨彩色 40張 (3年期) - 基本 3,500張 (黑白+$0.285)</option>
-        <option value="g3_5" ${selectedKey === 'g3_5' ? 'selected' : ''}>第5項：噴墨彩色 50張 (2年期) - 基本 3,500張 (黑白+$0.30)</option>
-        <option value="g3_6" ${selectedKey === 'g3_6' ? 'selected' : ''}>第6項：噴墨彩色 50張 (3年期) - 基本 3,500張 (黑白+$0.285)</option>
+      <optgroup label="🌟 ──【全新影印機 LP5-114034】第 3 組 噴墨彩色（加收黑白）──">
+        <option value="n_g3_1" ${selectedKey === 'n_g3_1' ? 'selected' : ''}>全新 噴墨#1：彩色 20張 (2年期) - 基本 3,000張 (黑白+$0.30)</option>
+        <option value="n_g3_2" ${selectedKey === 'n_g3_2' ? 'selected' : ''}>全新 噴墨#2：彩色 20張 (3年期) - 基本 3,000張 (黑白+$0.285)</option>
+        <option value="n_g3_3" ${selectedKey === 'n_g3_3' ? 'selected' : ''}>全新 噴墨#3：彩色 40張 (2年期) - 基本 3,500張 (黑白+$0.30)</option>
+        <option value="n_g3_4" ${selectedKey === 'n_g3_4' ? 'selected' : ''}>全新 噴墨#4：彩色 40張 (3年期) - 基本 3,500張 (黑白+$0.285)</option>
+        <option value="n_g3_5" ${selectedKey === 'n_g3_5' ? 'selected' : ''}>全新 噴墨#5：彩色 50張 (2年期) - 基本 3,500張 (黑白+$0.30)</option>
+        <option value="n_g3_6" ${selectedKey === 'n_g3_6' ? 'selected' : ''}>全新 噴墨#6：彩色 50張 (3年期) - 基本 3,500張 (黑白+$0.285)</option>
       </optgroup>
-      <optgroup label="── 其他 ──">
-        <option value="custom" ${selectedKey === 'custom' ? 'selected' : ''}>自訂項次 / 自訂張數與費率</option>
+
+      <optgroup label="♻️ ──【二手影印機 LP5-114035】第 1 組 雷射黑白（超印90%）──">
+        <option value="u_g1_1" ${selectedKey === 'u_g1_1' ? 'selected' : ''}>二手 #1、2項：黑白 20張 - 基本 5,000張</option>
+        <option value="u_g1_3" ${selectedKey === 'u_g1_3' ? 'selected' : ''}>二手 #3、4項：黑白 20張 - 基本 7,000張</option>
+        <option value="u_g1_5" ${selectedKey === 'u_g1_5' ? 'selected' : ''}>二手 #5~8項：黑白 30張 - 基本 7,000張</option>
+        <option value="u_g1_9" ${selectedKey === 'u_g1_9' ? 'selected' : ''}>二手 #9~12項：黑白 30張 - 基本 10,000張</option>
+        <option value="u_g1_13" ${selectedKey === 'u_g1_13' ? 'selected' : ''}>二手 #13、14項：黑白 40張 - 基本 7,000張</option>
+        <option value="u_g1_15" ${selectedKey === 'u_g1_15' ? 'selected' : ''}>二手 #15、16項：黑白 40張 - 基本 10,000張</option>
+        <option value="u_g1_17" ${selectedKey === 'u_g1_17' ? 'selected' : ''}>二手 #17、18項：黑白 40張 - 基本 15,000張</option>
+        <option value="u_g1_19" ${selectedKey === 'u_g1_19' ? 'selected' : ''}>二手 #19~22項：黑白 50張 - 基本 10,000張</option>
+        <option value="u_g1_23" ${selectedKey === 'u_g1_23' ? 'selected' : ''}>二手 #23~26項：黑白 50張 - 基本 15,000張</option>
+        <option value="u_g1_27" ${selectedKey === 'u_g1_27' ? 'selected' : ''}>二手 #27~30項：黑白 50張 - 基本 20,000張</option>
+        <option value="u_g1_31" ${selectedKey === 'u_g1_31' ? 'selected' : ''}>二手 #31、32項：黑白 60張 - 基本 12,500張</option>
+        <option value="u_g1_33" ${selectedKey === 'u_g1_33' ? 'selected' : ''}>二手 #33、34項：黑白 60張 - 基本 18,500張</option>
+        <option value="u_g1_35" ${selectedKey === 'u_g1_35' ? 'selected' : ''}>二手 #35、36項：黑白 60張 - 基本 25,000張</option>
+      </optgroup>
+      <optgroup label="♻️ ──【二手影印機 LP5-114035】第 2 組 雷射彩色（黑白+$0.253）──">
+        <option value="u_g2_1" ${selectedKey === 'u_g2_1' ? 'selected' : ''}>二手 彩色#1、2項：彩色 20張 - 基本 3,000張 (黑白+$0.253)</option>
+        <option value="u_g2_3" ${selectedKey === 'u_g2_3' ? 'selected' : ''}>二手 彩色#3~6項：彩色 30張 - 基本 3,000張 (黑白+$0.253)</option>
+      </optgroup>
+      <optgroup label="♻️ ──【二手影印機 LP5-114035】第 3 組 噴墨彩色（黑白+$0.202）──">
+        <option value="u_g3_1" ${selectedKey === 'u_g3_1' ? 'selected' : ''}>二手 噴墨#1、2項：彩色 20張 - 基本 3,000張 (黑白+$0.202)</option>
+        <option value="u_g3_3" ${selectedKey === 'u_g3_3' ? 'selected' : ''}>二手 噴墨#3、4項：彩色 40張 - 基本 3,500張 (黑白+$0.202)</option>
+        <option value="u_g3_5" ${selectedKey === 'u_g3_5' ? 'selected' : ''}>二手 噴墨#5、6項：彩色 50張 - 基本 3,500張 (黑白+$0.202)</option>
+        <option value="u_g3_7" ${selectedKey === 'u_g3_7' ? 'selected' : ''}>二手 噴墨#7、8項：彩色 60張 - 基本 4,000張 (黑白+$0.202)</option>
+      </optgroup>
+
+      <optgroup label="⚙️ ── 其他自訂 ──">
+        <option value="custom_new" ${selectedKey === 'custom_new' ? 'selected' : ''}>自訂規格（套用全新機 85%/75% 階梯超額）</option>
+        <option value="custom_used" ${selectedKey === 'custom_used' ? 'selected' : ''}>自訂規格（套用二手機 90% 固定超額）</option>
       </optgroup>
     `;
   }
@@ -737,11 +883,12 @@
   document.getElementById('currentDateText').innerText = `結算日期：${dateStr}`;
 
   let machines = [
-    { id: 1, name: "1F 總務處彩色機", itemKey: "g1_17", price: "0.500", base: 3000, meter: 4500, bwMeter: 2000, bwRate: 0.40 },
-    { id: 2, name: "2F 會計室黑白機", itemKey: "g1_2", price: "0.350", base: 7000, meter: 7200, bwMeter: 0, bwRate: 0 }
+    { id: 1, name: "1F 總務處全新彩色機", itemKey: "n_g1_17", price: "0.500", base: 3000, meter: 4500, bwMeter: 2000, bwRate: 0.40 },
+    { id: 2, name: "2F 會計室全新黑白機", itemKey: "n_g1_2", price: "0.350", base: 7000, meter: 7200, bwMeter: 0, bwRate: 0 },
+    { id: 3, name: "3F 檔案室二手黑白機", itemKey: "u_g1_9", price: "0.300", base: 10000, meter: 12000, bwMeter: 0, bwRate: 0 }
   ];
 
-  let nextId = 3;
+  let nextId = 4;
 
   // 渲染所有設備卡片 DOM
   function render() {
@@ -749,6 +896,9 @@
     container.innerHTML = '';
 
     machines.forEach((m, idx) => {
+      const itemInfo = CONTRACT_ITEMS[m.itemKey] || CONTRACT_ITEMS["custom_new"];
+      const isUsed = itemInfo.contract === "used";
+
       const card = document.createElement('div');
       card.className = 'machine-card';
       card.id = `card-${m.id}`;
@@ -756,6 +906,9 @@
         <div class="machine-header">
           <div class="machine-title-wrap">
             <span class="machine-badge">#${idx + 1}</span>
+            <span id="typeTag-${m.id}" class="machine-type-tag ${isUsed ? 'type-used' : 'type-new'}">
+              ${isUsed ? '♻️ 二手機 (LP5-114035)' : '🌟 全新機 (LP5-114034)'}
+            </span>
             <input type="text" class="machine-name-input" value="${m.name}" title="點擊可修改名稱" oninput="updateFieldValue(${m.id}, 'name', this.value)">
           </div>
           <div>
@@ -768,10 +921,10 @@
           <div class="form-group">
             <div class="label-box">
               <label>契約項次規格選單</label>
-              <span class="sub-note">選擇後自動帶入張數與單價</span>
+              <span class="sub-note" id="contractNote-${m.id}">${isUsed ? '二手機超印 90%' : '全新機階梯 85%/75%'}</span>
             </div>
             <select onchange="updateMachineItem(${m.id}, this.value)">
-              ${generateOptionsHtml(m.itemKey || 'custom')}
+              ${generateOptionsHtml(m.itemKey || 'custom_new')}
             </select>
           </div>
 
@@ -786,7 +939,7 @@
           <div class="form-group">
             <div class="label-box">
               <label>每月基本張數</label>
-              <span class="sub-note">依項次自動帶入或手動修</span>
+              <span class="sub-note">選擇項次自動帶入</span>
             </div>
             <input type="number" id="base-${m.id}" inputmode="numeric" class="num-align" step="1" min="0" placeholder="5000" value="${m.base}" oninput="updateFieldValue(${m.id}, 'base', this.value)">
           </div>
@@ -864,6 +1017,9 @@
     let grandTotal = 0;
 
     machines.forEach((m) => {
+      const itemInfo = CONTRACT_ITEMS[m.itemKey] || CONTRACT_ITEMS["custom_new"];
+      const isUsed = itemInfo.contract === "used";
+
       const priceNum = parseFloat(m.price) || 0;
       const baseNum = parseFloat(m.base) || 0;
       const meterNum = parseFloat(m.meter) || 0;
@@ -881,22 +1037,32 @@
         bwFee = bwActual * bwRate;
       }
 
-      // 3. 租費階梯計算
+      // 3. 租費基本費與超額計算
       const baseFee = baseNum * priceNum;
+      let overFee = 0;
       let tier1Count = 0;
       let tier2Count = 0;
-      let overFee = 0;
-      const tier1Limit = baseNum * 0.5;
+      let usedOverCount = 0;
 
-      if (actualCount > baseNum) {
-        const over = actualCount - baseNum;
-        if (over <= tier1Limit) {
-          tier1Count = over;
-          overFee = tier1Count * (priceNum * 0.85);
-        } else {
-          tier1Count = tier1Limit;
-          tier2Count = over - tier1Limit;
-          overFee = (tier1Count * (priceNum * 0.85)) + (tier2Count * (priceNum * 0.75));
+      if (isUsed) {
+        // 【二手影印機 LP5-114035】超額部分一律按原單價 90% (0.9) 計收
+        if (actualCount > baseNum) {
+          usedOverCount = actualCount - baseNum;
+          overFee = usedOverCount * (priceNum * 0.90);
+        }
+      } else {
+        // 【全新影印機 LP5-114034】階梯累進超額：超額 50% 以內 85%、超額 50% 以上 75%
+        const tier1Limit = baseNum * 0.5;
+        if (actualCount > baseNum) {
+          const over = actualCount - baseNum;
+          if (over <= tier1Limit) {
+            tier1Count = over;
+            overFee = tier1Count * (priceNum * 0.85);
+          } else {
+            tier1Count = tier1Limit;
+            tier2Count = over - tier1Limit;
+            overFee = (tier1Count * (priceNum * 0.85)) + (tier2Count * (priceNum * 0.75));
+          }
         }
       }
 
@@ -911,11 +1077,22 @@
       const actualEl = document.getElementById(`actual-${m.id}`);
       if (actualEl) actualEl.value = `${actualCount.toLocaleString()} 張`;
 
+      const typeTag = document.getElementById(`typeTag-${m.id}`);
+      if (typeTag) {
+        typeTag.className = `machine-type-tag ${isUsed ? 'type-used' : 'type-new'}`;
+        typeTag.innerText = isUsed ? '♻️ 二手機 (LP5-114035)' : '🌟 全新機 (LP5-114034)';
+      }
+
+      const contractNote = document.getElementById(`contractNote-${m.id}`);
+      if (contractNote) {
+        contractNote.innerText = isUsed ? '二手機超印 90%' : '全新機階梯 85%/75%';
+      }
+
       const bwPanel = document.getElementById(`bwPanel-${m.id}`);
       if (bwPanel) {
         bwPanel.style.display = bwRate > 0 ? 'block' : 'none';
         const rateNote = document.getElementById(`bwRateNote-${m.id}`);
-        if (rateNote) rateNote.innerText = `（適用費率：NT$ ${bwRate.toFixed(2)} / 張）`;
+        if (rateNote) rateNote.innerText = `（適用費率：NT$ ${bwRate.toFixed(3)} / 張）`;
         const subNote = document.getElementById(`bwSubNote-${m.id}`);
         if (subNote) subNote.innerText = `計費張數 × ${bwRate}`;
       }
@@ -928,12 +1105,20 @@
 
       const breakdownEl = document.getElementById(`breakdown-${m.id}`);
       if (breakdownEl) {
-        breakdownEl.innerHTML = `
-          <span class="chip">📘 基本租費: <strong>NT$ ${baseFee.toFixed(2)}</strong></span>
-          <span class="chip">📈 超額(85%): <strong>${tier1Count.toLocaleString()} 張</strong> (NT$ ${(tier1Count * priceNum * 0.85).toFixed(2)})</span>
-          <span class="chip">🚀 超額(75%): <strong>${tier2Count.toLocaleString()} 張</strong> (NT$ ${(tier2Count * priceNum * 0.75).toFixed(2)})</span>
-          ${bwRate > 0 ? `<span class="chip chip-amber">🎨 黑白加收: <strong>NT$ ${bwFee.toFixed(2)}</strong></span>` : ''}
-        `;
+        if (isUsed) {
+          breakdownEl.innerHTML = `
+            <span class="chip chip-used">♻️ 二手基本租費: <strong>NT$ ${baseFee.toFixed(2)}</strong></span>
+            <span class="chip chip-used">超額(90%): <strong>${usedOverCount.toLocaleString()} 張</strong> (NT$ ${(usedOverCount * priceNum * 0.90).toFixed(2)})</span>
+            ${bwRate > 0 ? `<span class="chip chip-amber">🎨 黑白加收: <strong>NT$ ${bwFee.toFixed(2)}</strong></span>` : ''}
+          `;
+        } else {
+          breakdownEl.innerHTML = `
+            <span class="chip">📘 全新基本租費: <strong>NT$ ${baseFee.toFixed(2)}</strong></span>
+            <span class="chip">📈 超額(85%): <strong>${tier1Count.toLocaleString()} 張</strong> (NT$ ${(tier1Count * priceNum * 0.85).toFixed(2)})</span>
+            <span class="chip">🚀 超額(75%): <strong>${tier2Count.toLocaleString()} 張</strong> (NT$ ${(tier2Count * priceNum * 0.75).toFixed(2)})</span>
+            ${bwRate > 0 ? `<span class="chip chip-amber">🎨 黑白加收: <strong>NT$ ${bwFee.toFixed(2)}</strong></span>` : ''}
+          `;
+        }
       }
 
       const totalEl = document.getElementById(`total-${m.id}`);
@@ -978,16 +1163,20 @@
     recalculate();
   }
 
-  function addMachine() {
+  function addMachine(contractType = 'new') {
+    const isUsed = contractType === 'used';
+    const defaultKey = isUsed ? 'u_g1_1' : 'n_g1_1';
+    const itemInfo = CONTRACT_ITEMS[defaultKey];
+
     machines.push({
       id: nextId++,
-      name: `設備 #${machines.length + 1}`,
-      itemKey: "g1_1",
-      price: "0.350",
-      base: 7000,
-      meter: 7000,
+      name: `${isUsed ? '二手設備' : '全新設備'} #${machines.length + 1}`,
+      itemKey: defaultKey,
+      price: itemInfo.price,
+      base: itemInfo.base,
+      meter: itemInfo.base,
       bwMeter: 0,
-      bwRate: 0
+      bwRate: itemInfo.bwRate
     });
     render();
   }
@@ -1002,12 +1191,13 @@
   }
 
   function resetDefault() {
-    if (confirm("確定要重設為預設範例資料嗎？")) {
+    if (confirm("確定要重設為預設範例資料（包含全新機與二手機）嗎？")) {
       machines = [
-        { id: 1, name: "1F 總務處彩色機", itemKey: "g1_17", price: "0.500", base: 3000, meter: 4500, bwMeter: 2000, bwRate: 0.40 },
-        { id: 2, name: "2F 會計室黑白機", itemKey: "g1_2", price: "0.350", base: 7000, meter: 7200, bwMeter: 0, bwRate: 0 }
+        { id: 1, name: "1F 總務處全新彩色機", itemKey: "n_g1_17", price: "0.500", base: 3000, meter: 4500, bwMeter: 2000, bwRate: 0.40 },
+        { id: 2, name: "2F 會計室全新黑白機", itemKey: "n_g1_2", price: "0.350", base: 7000, meter: 7200, bwMeter: 0, bwRate: 0 },
+        { id: 3, name: "3F 檔案室二手黑白機", itemKey: "u_g1_9", price: "0.300", base: 10000, meter: 12000, bwMeter: 0, bwRate: 0 }
       ];
-      nextId = 3;
+      nextId = 4;
       render();
     }
   }
