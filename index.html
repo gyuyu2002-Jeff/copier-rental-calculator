@@ -1100,11 +1100,10 @@
       <button type="button" class="modal-close" onclick="closeUploadModal()">✕</button>
     </div>
     <div class="modal-body">
-      <!-- 標籤切換 (檔案上傳 / 文字貼上 / 範例載入) -->
+      <!-- 標籤切換 (檔案上傳 / 文字貼上) -->
       <div class="upload-tabs">
-        <button type="button" class="upload-tab-btn active" id="tabUploadFile" onclick="switchUploadTab('file')">📄 上傳 PDF / 圖片</button>
-        <button type="button" class="upload-tab-btn" id="tabUploadText" onclick="switchUploadTab('text')">📋 複製文字貼上</button>
-        <button type="button" class="upload-tab-btn" id="tabUploadDemo" onclick="switchUploadTab('demo')">⚡ 載入公文範例</button>
+        <button type="button" class="upload-tab-btn active" id="tabUploadFile" onclick="switchUploadTab('file')">📄 上傳收費單 PDF / 圖片</button>
+        <button type="button" class="upload-tab-btn" id="tabUploadText" onclick="switchUploadTab('text')">📋 複製表格文字貼上</button>
       </div>
 
       <!-- Tab 1: 檔案拖曳上傳區 -->
@@ -1124,20 +1123,7 @@
         <button type="button" class="btn" style="background:#7c3aed; color:#fff; margin-top:8px; width:100%; justify-content:center;" onclick="parseRawText(document.getElementById('pasteInvoiceText').value)">🔍 開始解析文字內容</button>
       </div>
 
-      <!-- Tab 3: 快速示範區 -->
-      <div id="tabPanelDemo" style="display:none; display:flex; flex-direction:column; gap:10px;">
-        <div style="background:var(--slate-50); border:1px solid var(--slate-200); border-radius:8px; padding:12px; font-size:0.82rem; line-height:1.6;">
-          <strong>🏛️ 桃園市政府秘書處 互盛收費單範例（全單 19 台全新彩色機）：</strong><br>
-          • 19 台全新彩色複合機（機號 9175RB..., 9175RA..., 9155R...）<br>
-          • 合併總彩色基本額度 39,000 張，實付總金額 <strong>NT$ 124,527 元</strong><br>
-          <button type="button" class="btn" style="background:#7c3aed; color:#fff; margin-top:8px; width:100%; justify-content:center;" onclick="loadDemoDataset('taoyuan')">⚡ 一鍵載入 桃園市政府 19 台設備並計算</button>
-        </div>
-        <div style="background:var(--slate-50); border:1px solid var(--slate-200); border-radius:8px; padding:12px; font-size:0.82rem; line-height:1.6;">
-          <strong>🏢 國家衛生研究院 互盛收費單範例（全單 16 台設備）：</strong><br>
-          • 1 台 全新彩色機 ＋ 15 台黑白機，實付總額 <strong>NT$ 109,864 元</strong><br>
-          <button type="button" class="btn" style="background:#2563eb; color:#fff; margin-top:8px; width:100%; justify-content:center;" onclick="loadDemoDataset('nphi')">⚡ 一鍵載入 國衛院 16 台設備並計算</button>
-        </div>
-      </div>
+
 
       <!-- 解析進度指示 -->
       <div id="parseStatusBox" style="display:none; align-items:center; gap:10px; padding:10px; background:#f5f3ff; border-radius:8px; margin-top:10px;">
@@ -2451,7 +2437,7 @@ const NEW_CONTRACT_ITEMS = {
 
 
   // ══════════════════════════════════════════════════════
-  // 全通用高精度收費單解析器 (支援不限台數、自動去重碳抄聯)
+  // 全通用純本機收費單解析器 (100% 離線運算，零機密上傳)
   // ══════════════════════════════════════════════════════
   let parsedMachinesCache = [];
 
@@ -2471,11 +2457,9 @@ const NEW_CONTRACT_ITEMS = {
   function switchUploadTab(tab) {
     document.getElementById('tabUploadFile').className = `upload-tab-btn ${tab === 'file' ? 'active' : ''}`;
     document.getElementById('tabUploadText').className = `upload-tab-btn ${tab === 'text' ? 'active' : ''}`;
-    document.getElementById('tabUploadDemo').className = `upload-tab-btn ${tab === 'demo' ? 'active' : ''}`;
 
     document.getElementById('tabPanelFile').style.display = tab === 'file' ? 'block' : 'none';
     document.getElementById('tabPanelText').style.display = tab === 'text' ? 'block' : 'none';
-    document.getElementById('tabPanelDemo').style.display = tab === 'demo' ? 'block' : 'none';
   }
 
   const dropzone = document.getElementById('dropzone');
@@ -2497,13 +2481,12 @@ const NEW_CONTRACT_ITEMS = {
     statusBox.style.display = 'flex';
 
     if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-      statusText.innerText = '正在讀取 PDF 文件結構與多頁資料...';
+      statusText.innerText = '正在讀取本機 PDF 文件表格與文字結構...';
       try {
         const arrayBuffer = await file.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
         let fullText = '';
         
-        // 遍歷所有頁面 (支援多達數十頁)
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
           const textContent = await page.getTextContent();
@@ -2514,17 +2497,16 @@ const NEW_CONTRACT_ITEMS = {
         if (fullText.trim().replace(/--- Page \d+ ---/g, '').trim().length > 50) {
           parseRawText(fullText);
         } else {
-          // 掃描版 PDF 啟動 OCR
-          statusText.innerText = `偵測為掃描版 PDF (共 ${pdf.numPages} 頁)，正在啟動高精度 OCR 文字辨識...`;
+          statusText.innerText = `偵測為掃描版 PDF (共 ${pdf.numPages} 頁)，正在啟動本機 OCR 文字辨識...`;
           await runOcrOnPdf(pdf);
         }
       } catch (err) {
         console.error(err);
-        statusText.innerText = 'PDF 文字讀取中，正在套用智慧特徵解析...';
-        parseRawText(file.name);
+        alert('PDF 解析異常，請確認檔案格式或改用複製文字貼上。');
+        statusBox.style.display = 'none';
       }
     } else if (file.type.startsWith('image/')) {
-      statusText.innerText = '正在啟動 OCR 影像光學字元辨識...';
+      statusText.innerText = '正在本機啟動 OCR 影像光學字元辨識...';
       try {
         const res = await Tesseract.recognize(file, 'chi_tra+eng');
         parseRawText(res.data.text);
@@ -2541,7 +2523,7 @@ const NEW_CONTRACT_ITEMS = {
     const numPages = pdf.numPages;
 
     for (let i = 1; i <= numPages; i++) {
-      statusText.innerText = `正在 OCR 辨識第 ${i} / ${numPages} 頁收費單 (已自動過濾重複存根聯)...`;
+      statusText.innerText = `正在本機 OCR 辨識第 ${i} / ${numPages} 頁收費單 (自動去重存根聯)...`;
       const page = await pdf.getPage(i);
       const viewport = page.getViewport({ scale: 1.5 });
       const canvas = document.createElement('canvas');
@@ -2555,31 +2537,14 @@ const NEW_CONTRACT_ITEMS = {
     parseRawText(ocrCombinedText);
   }
 
-  // 全通用智慧比對解析演算法 (精準支援數十台設備、自動去重重複存根聯)
+  // 100% 通用數學提取演算法 (精準計算 本期抄表增量 = 本次抄表 - 前次抄表)
   function parseRawText(text) {
     const statusBox = document.getElementById('parseStatusBox');
     const statusText = document.getElementById('parseStatusText');
     statusBox.style.display = 'flex';
-    statusText.innerText = '正在進行機號去重、抄表萃取與契約項次規格自動媒合...';
+    statusText.innerText = '正在進行機號去重、抄表增量計算與契約規格媒合...';
 
-    const itemsDict = currentMode === 'new' ? NEW_CONTRACT_ITEMS : USED_CONTRACT_ITEMS;
     const machinesMap = new Map();
-
-    // 案例 1：桃園市政府秘書處收費單 (19 台全新彩色機，含 9175RB, 9175RA, 9155R 等機號)
-    if (text.includes('桃園') || text.includes('9175RB') || text.includes('9155R') || text.includes('0039060726') || text.includes('RT260000200')) {
-      parsedMachinesCache = getDemoTaoyuan19Machines();
-      renderParsePreview();
-      return;
-    }
-
-    // 案例 2：國家衛生研究院收費單 (16 台黑白/彩色複合機)
-    if (text.includes('國衛院') || text.includes('國家衛生') || text.includes('9136R540012') || text.includes('4445RB50011') || text.includes('0053069721')) {
-      parsedMachinesCache = getDemo16Machines();
-      renderParsePreview();
-      return;
-    }
-
-    // 通用結構化解析引擎：
     const blocks = text.split(/(?=\b[0-9]{4}[A-Z0-9]{5,10}\b)/);
 
     blocks.forEach(block => {
@@ -2587,38 +2552,48 @@ const NEW_CONTRACT_ITEMS = {
       if (!snMatch) return;
       const sn = snMatch[1];
 
-      // 去重 (若第一聯與第二聯有重複機號，自動過濾)
+      // 自動過濾第二聯重複機號
       if (machinesMap.has(sn)) return;
 
-      const meterSlashMatches = block.match(/(\d{1,7})\/(\d{1,7})/g) || [];
-      let mainMeter = 0;
-      let bwMeter = 0;
+      // 提取斜線數值對 (格式如: 34081/6597, 40459/8874, 6282/2243)
+      const slashMatches = block.match(/(\d{1,7})\/(\d{1,7})/g) || [];
+      let mainUsage = 0;
+      let bwUsage = 0;
       let baseCount = 7000;
       let price = "0.501";
       let bwRate = 0;
 
       const isColor = block.includes('1C/') || block.includes('彩色') || block.includes('3.193') || block.includes('3.340');
 
-      if (meterSlashMatches.length >= 2) {
-        const latestMeter = meterSlashMatches[1].split('/');
-        const m1 = parseInt(latestMeter[0], 10) || 0;
-        const m2 = parseInt(latestMeter[1], 10) || 0;
+      if (slashMatches.length >= 2) {
+        const prevPair = slashMatches[0].split('/');
+        const currPair = slashMatches[1].split('/');
+
+        const prevBw = parseInt(prevPair[0], 10) || 0;
+        const prevC = parseInt(prevPair[1], 10) || 0;
+        const currBw = parseInt(currPair[0], 10) || 0;
+        const currC = parseInt(currPair[1], 10) || 0;
+
+        // 計算本期抄表增量 (本次抄表 - 前次抄表)
+        const deltaBw = currBw >= prevBw ? (currBw - prevBw) : currBw;
+        const deltaC = currC >= prevC ? (currC - prevC) : currC;
 
         if (isColor) {
-          mainMeter = m2 > 0 ? m2 : m1;
-          bwMeter = m2 > 0 ? m1 : 0;
+          mainUsage = deltaC;
+          bwUsage = deltaBw;
           bwRate = block.includes('0.38') ? 0.38 : 0.40;
           price = block.includes('3.193') ? "3.193" : "3.340";
-          baseCount = block.includes('2000') ? 2000 : 3000;
+          baseCount = block.includes('2000') ? 2000 : (block.includes('3500') ? 3500 : 3000);
         } else {
-          mainMeter = m1;
-          bwMeter = 0;
+          mainUsage = deltaBw > 0 ? deltaBw : deltaC;
+          bwUsage = 0;
         }
       }
 
+      // 媒合契約項次
       let matchedKey = currentMode === 'new' ? 'n_g1_1' : 'u_g1_1';
       if (isColor) {
-        matchedKey = 'n_g1_18';
+        matchedKey = (baseCount === 2000 || block.includes('3.193')) ? 'n_g1_18' : 'n_g1_17';
       } else if (baseCount === 15000 || block.includes('15000')) {
         matchedKey = 'n_g1_9';
         price = "0.461";
@@ -2630,77 +2605,17 @@ const NEW_CONTRACT_ITEMS = {
       }
 
       machinesMap.set(sn, {
-        name: `機號 ${sn}`,
+        name: `機號 ${sn}${isColor ? ' (彩色)' : ''}`,
         itemKey: matchedKey,
         price: price,
         base: baseCount,
-        meter: mainMeter > 0 ? mainMeter : baseCount,
-        bwMeter: bwMeter,
+        meter: mainUsage,
+        bwMeter: bwUsage,
         bwRate: bwRate
       });
     });
 
-    if (machinesMap.size > 0) {
-      parsedMachinesCache = Array.from(machinesMap.values());
-    } else {
-      parsedMachinesCache = getDemoTaoyuan19Machines();
-    }
-
-    renderParsePreview();
-  }
-
-  // 桃園市政府秘書處 19 台全新彩色影印機收費單 (發票總額 $124,527)
-  function getDemoTaoyuan19Machines() {
-    return [
-      { name: "機號 9175RB40073 (彩色)", itemKey: "n_g1_18", price: "3.193", base: 2000, meter: 8874, bwMeter: 40459, bwRate: 0.380 },
-      { name: "機號 9175RB40063 (彩色)", itemKey: "n_g1_18", price: "3.193", base: 2000, meter: 38440, bwMeter: 40337, bwRate: 0.380 },
-      { name: "機號 9175RB40060 (彩色)", itemKey: "n_g1_18", price: "3.193", base: 2000, meter: 20026, bwMeter: 30343, bwRate: 0.380 },
-      { name: "機號 9175RB40058 (彩色)", itemKey: "n_g1_18", price: "3.193", base: 2000, meter: 19014, bwMeter: 28493, bwRate: 0.380 },
-      { name: "機號 9175RB40056 (彩色)", itemKey: "n_g1_18", price: "3.193", base: 2000, meter: 20075, bwMeter: 30827, bwRate: 0.380 },
-      { name: "機號 9175RB40055 (彩色)", itemKey: "n_g1_18", price: "3.193", base: 2000, meter: 2249, bwMeter: 5217, bwRate: 0.380 },
-      { name: "機號 9175RB40021 (彩色)", itemKey: "n_g1_18", price: "3.193", base: 2000, meter: 7069, bwMeter: 1254, bwRate: 0.380 },
-      { name: "機號 9175RB40010 (彩色)", itemKey: "n_g1_18", price: "3.193", base: 2000, meter: 13006, bwMeter: 3842, bwRate: 0.380 },
-      { name: "機號 9175RB40006 (彩色)", itemKey: "n_g1_18", price: "3.193", base: 3000, meter: 12083, bwMeter: 5406, bwRate: 0.380 },
-      { name: "機號 9175RA40036 (彩色)", itemKey: "n_g1_18", price: "3.193", base: 2000, meter: 3609, bwMeter: 2565, bwRate: 0.380 },
-      { name: "機號 9175RA40017 (彩色)", itemKey: "n_g1_18", price: "3.193", base: 2000, meter: 10389, bwMeter: 3713, bwRate: 0.380 },
-      { name: "機號 9175RA40015 (彩色)", itemKey: "n_g1_18", price: "3.193", base: 2000, meter: 26113, bwMeter: 9364, bwRate: 0.380 },
-      { name: "機號 9155R850015 (彩色)", itemKey: "n_g1_18", price: "3.193", base: 2000, meter: 4384, bwMeter: 262, bwRate: 0.380 },
-      { name: "機號 9155R850014 (彩色)", itemKey: "n_g1_18", price: "3.193", base: 2000, meter: 1805, bwMeter: 2285, bwRate: 0.380 },
-      { name: "機號 9155R850013 (彩色)", itemKey: "n_g1_18", price: "3.193", base: 2000, meter: 5591, bwMeter: 3047, bwRate: 0.380 },
-      { name: "機號 9155R850012 (彩色)", itemKey: "n_g1_18", price: "3.193", base: 2000, meter: 6010, bwMeter: 737, bwRate: 0.380 },
-      { name: "機號 9155R850011 (彩色)", itemKey: "n_g1_18", price: "3.193", base: 2000, meter: 4432, bwMeter: 986, bwRate: 0.380 },
-      { name: "機號 9155R850009 (彩色)", itemKey: "n_g1_18", price: "3.193", base: 2000, meter: 277, bwMeter: 156, bwRate: 0.380 },
-      { name: "機號 9155R750050 (彩色)", itemKey: "n_g1_18", price: "3.193", base: 2000, meter: 268, bwMeter: 394, bwRate: 0.380 }
-    ];
-  }
-
-  function getDemo16Machines() {
-    return [
-      { name: "機號 9136R540012 (彩色)", itemKey: "n_g1_17", price: "3.340", base: 3000, meter: 3135, bwMeter: 3027, bwRate: 0.400 },
-      { name: "機號 4445RB50011", itemKey: "n_g1_9", price: "0.461", base: 15000, meter: 5504, bwMeter: 0, bwRate: 0 },
-      { name: "機號 4445RB50010", itemKey: "n_g1_9", price: "0.461", base: 15000, meter: 1235, bwMeter: 0, bwRate: 0 },
-      { name: "機號 4445RB50004", itemKey: "n_g1_9", price: "0.461", base: 15000, meter: 6418, bwMeter: 0, bwRate: 0 },
-      { name: "機號 4445RB50003", itemKey: "n_g1_9", price: "0.461", base: 15000, meter: 2217, bwMeter: 0, bwRate: 0 },
-      { name: "機號 4445RB50002", itemKey: "n_g1_9", price: "0.461", base: 15000, meter: 1802, bwMeter: 0, bwRate: 0 },
-      { name: "機號 4445RB50001", itemKey: "n_g1_9", price: "0.461", base: 15000, meter: 10504, bwMeter: 0, bwRate: 0 },
-      { name: "機號 4435RB50060", itemKey: "n_g1_5", price: "0.568", base: 10000, meter: 3494, bwMeter: 0, bwRate: 0 },
-      { name: "機號 4435RB50057", itemKey: "n_g1_5", price: "0.568", base: 10000, meter: 1754, bwMeter: 0, bwRate: 0 },
-      { name: "機號 4415RC50038", itemKey: "n_g1_1", price: "0.501", base: 7000, meter: 3064, bwMeter: 0, bwRate: 0 },
-      { name: "機號 4415RC50025", itemKey: "n_g1_1", price: "0.501", base: 7000, meter: 1267, bwMeter: 0, bwRate: 0 },
-      { name: "機號 4415RC50023", itemKey: "n_g1_1", price: "0.501", base: 7000, meter: 3492, bwMeter: 0, bwRate: 0 },
-      { name: "機號 4415RC50022", itemKey: "n_g1_1", price: "0.501", base: 7000, meter: 9897, bwMeter: 0, bwRate: 0 },
-      { name: "機號 4415RC50021", itemKey: "n_g1_1", price: "0.501", base: 7000, meter: 571, bwMeter: 0, bwRate: 0 },
-      { name: "機號 4415RC50007", itemKey: "n_g1_1", price: "0.501", base: 7000, meter: 5477, bwMeter: 0, bwRate: 0 },
-      { name: "機號 4415RC50006", itemKey: "n_g1_1", price: "0.501", base: 7000, meter: 79399, bwMeter: 0, bwRate: 0 }
-    ];
-  }
-
-  function loadDemoDataset(type) {
-    if (type === 'taoyuan') {
-      parsedMachinesCache = getDemoTaoyuan19Machines();
-    } else {
-      parsedMachinesCache = getDemo16Machines();
-    }
+    parsedMachinesCache = Array.from(machinesMap.values());
     renderParsePreview();
   }
 
@@ -2709,7 +2624,7 @@ const NEW_CONTRACT_ITEMS = {
     document.getElementById('parsePreviewArea').style.display = 'block';
     document.getElementById('btnConfirmImport').style.display = 'inline-flex';
 
-    document.getElementById('parseResultSummary').innerText = `✅ 成功辨識 ${parsedMachinesCache.length} 台設備資料 (已完成機號去重)！`;
+    document.getElementById('parseResultSummary').innerText = `✅ 成功辨識 ${parsedMachinesCache.length} 台設備資料 (已完成去重與增量計算)！`;
     const tbody = document.getElementById('parsePreviewTbody');
     tbody.innerHTML = '';
 
