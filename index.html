@@ -6,238 +6,531 @@
   <title>影印機租賃費用 - 多台合併計算系統</title>
   <style>
     :root {
-      --primary: #1e40af;
-      --primary-dark: #1e3a8a;
-      --accent: #b91c1c;
-      --bg: #f1f5f9;
-      --card-bg: #ffffff;
-      --border: #cbd5e1;
-      --text: #0f172a;
-      --text-muted: #64748b;
-      --success: #166534;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #eff6ff;
+      --slate-50: #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-300: #cbd5e1;
+      --slate-400: #94a3b8;
+      --slate-500: #64748b;
+      --slate-600: #475569;
+      --slate-700: #334155;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+      
+      --emerald-50: #ecfdf5;
+      --emerald-600: #059669;
+      --emerald-700: #047857;
+      
+      --amber-50: #fffbeb;
+      --amber-100: #fef3c7;
+      --amber-600: #d97706;
+      --amber-700: #b45309;
+      
+      --rose-50: #fff1f2;
+      --rose-600: #e11d48;
+      --rose-700: #be123c;
     }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Microsoft JhengHei", sans-serif;
     }
+
     body {
-      background-color: var(--bg);
-      color: var(--text);
-      padding: 24px 16px;
+      background-color: var(--slate-100);
+      color: var(--slate-800);
+      padding: 32px 20px;
+      line-height: 1.5;
     }
+
     .container {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
     }
+
+    /* 頁首標題區 */
     header {
       text-align: center;
-      margin-bottom: 24px;
+      margin-bottom: 28px;
+    }
+    .header-badge {
+      display: inline-block;
+      background: #dbeafe;
+      color: #1e40af;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
     }
     h1 {
-      color: var(--primary);
-      font-size: 1.6rem;
-      margin-bottom: 6px;
+      color: var(--slate-900);
+      font-size: 1.85rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
     }
     p.subtitle {
-      color: var(--text-muted);
-      font-size: 0.9rem;
+      color: var(--slate-500);
+      font-size: 0.95rem;
     }
 
     /* 頂部匯總儀表板 */
     .summary-card {
-      background: linear-gradient(135deg, #1e40af, #3b82f6);
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
       color: #ffffff;
-      border-radius: 12px;
-      padding: 20px;
+      border-radius: 14px;
+      padding: 22px 24px;
       margin-bottom: 24px;
-      box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
+      box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.25), 0 8px 10px -6px rgba(37, 99, 235, 0.2);
+    }
+    .summary-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
     }
     .summary-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-top: 12px;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin-top: 14px;
     }
     .summary-item {
       background: rgba(255, 255, 255, 0.12);
-      border-radius: 8px;
-      padding: 12px 16px;
-      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 10px;
+      padding: 14px 16px;
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
     .summary-item .label {
-      font-size: 0.85rem;
-      opacity: 0.9;
+      font-size: 0.82rem;
+      color: #e0e7ff;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
     .summary-item .value {
-      font-size: 1.4rem;
-      font-weight: 700;
-      margin-top: 4px;
+      font-size: 1.45rem;
+      font-weight: 800;
+      margin-top: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .total-highlight {
-      background: rgba(255, 255, 255, 0.25);
-      border: 1px solid rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.24);
+      border: 1.5px solid rgba(255, 255, 255, 0.55);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .total-highlight .value {
+      color: #fef08a;
+      font-size: 1.6rem;
     }
 
-    /* 控制按鈕列 */
+    /* 控制工具列 */
     .toolbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
       flex-wrap: wrap;
+      gap: 12px;
+    }
+    .toolbar-left, .toolbar-right {
+      display: flex;
+      align-items: center;
       gap: 10px;
     }
     .btn {
       background-color: var(--primary);
       color: white;
       border: none;
-      padding: 9px 16px;
-      border-radius: 6px;
+      padding: 10px 18px;
+      border-radius: 8px;
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 0.92rem;
       font-weight: 600;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      transition: background 0.2s;
+      gap: 8px;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
     }
     .btn:hover {
       background-color: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+    }
+    .btn:active {
+      transform: translateY(0);
     }
     .btn-secondary {
-      background-color: #64748b;
+      background-color: #ffffff;
+      color: var(--slate-700);
+      border: 1px solid var(--slate-300);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
     .btn-secondary:hover {
-      background-color: #475569;
+      background-color: var(--slate-50);
+      border-color: var(--slate-400);
+      color: var(--slate-900);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.08);
     }
-    .btn-danger {
-      background-color: #ef4444;
-      padding: 6px 10px;
-      font-size: 0.8rem;
+    .btn-danger-outline {
+      background-color: transparent;
+      color: var(--rose-600);
+      border: 1px solid #fecdd3;
+      padding: 6px 12px;
+      font-size: 0.82rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.15s;
     }
-    .btn-danger:hover {
-      background-color: #dc2626;
+    .btn-danger-outline:hover {
+      background-color: var(--rose-50);
+      border-color: var(--rose-600);
     }
 
     /* 設備卡片清單 */
     .machine-list {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 20px;
     }
     .machine-card {
-      background: var(--card-bg);
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      padding: 20px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-      position: relative;
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid var(--slate-200);
+      padding: 22px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
+    .machine-card:hover {
+      border-color: var(--slate-300);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+    }
+
+    /* 卡片頭部 */
     .machine-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid #e2e8f0;
-      padding-bottom: 12px;
-      margin-bottom: 16px;
+      border-bottom: 1px solid var(--slate-200);
+      padding-bottom: 14px;
+      margin-bottom: 18px;
     }
-    .machine-title {
-      font-weight: 700;
-      color: var(--primary);
+    .machine-title-wrap {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
+      flex: 1;
     }
-    .machine-title input {
-      border: 1px solid transparent;
+    .machine-badge {
+      background: var(--slate-800);
+      color: #ffffff;
+      font-size: 0.8rem;
       font-weight: 700;
-      font-size: 1rem;
-      color: var(--primary);
-      padding: 2px 6px;
-      border-radius: 4px;
+      padding: 3px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
     }
-    .machine-title input:hover, .machine-title input:focus {
-      border-color: var(--border);
-      background: #f8fafc;
+    .machine-name-input {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--slate-900);
+      border: 1px solid transparent;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: transparent;
+      transition: all 0.2s;
+      max-width: 320px;
+    }
+    .machine-name-input:hover {
+      background: var(--slate-100);
+      border-color: var(--slate-300);
+    }
+    .machine-name-input:focus {
+      background: #ffffff;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+      outline: none;
     }
 
-    .form-grid {
+    /* 統一整齊的 5 欄式表單佈局 */
+    .form-grid-5 {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
+      grid-template-columns: 1.4fr 1fr 1fr 1fr 1.1fr;
+      gap: 14px;
+      align-items: start;
     }
     .form-group {
       display: flex;
       flex-direction: column;
     }
+    .label-box {
+      min-height: 42px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      margin-bottom: 6px;
+    }
     label {
-      font-size: 0.8rem;
-      font-weight: 600;
-      margin-bottom: 4px;
-      color: #334155;
+      font-size: 0.83rem;
+      font-weight: 700;
+      color: var(--slate-700);
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
     .sub-note {
       font-size: 0.72rem;
-      color: var(--text-muted);
-      font-weight: normal;
+      color: var(--slate-500);
+      font-weight: 500;
+      margin-top: 1px;
     }
+    .badge-tag {
+      font-size: 0.68rem;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      display: inline-block;
+    }
+    .badge-calc {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    /* 輸入框與下拉選單樣式 */
     input, select {
-      padding: 8px 10px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 0.9rem;
-      outline: none;
+      height: 40px;
+      padding: 8px 12px;
+      border: 1px solid var(--slate-300);
+      border-radius: 7px;
+      font-size: 0.92rem;
+      color: var(--slate-900);
+      background-color: #ffffff;
+      transition: all 0.15s ease;
+      width: 100%;
     }
     input:focus, select:focus {
       border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+      outline: none;
+    }
+    input.num-align {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
     }
     input[readonly] {
-      background-color: #f1f5f9;
-      color: #64748b;
+      background-color: var(--slate-100);
+      color: var(--slate-700);
+      border-color: var(--slate-200);
+      font-weight: 700;
+    }
+    input.readonly-highlight {
+      background-color: #eff6ff;
+      color: var(--primary-dark);
+      border-color: #bfdbfe;
+      font-weight: 800;
     }
 
-    /* 單台計算小結 */
-    .card-footer {
+    /* 彩色機黑白加收專區子面板 */
+    .bw-subpanel {
       margin-top: 14px;
-      padding-top: 12px;
-      border-top: 1px dashed #e2e8f0;
+      background: var(--amber-50);
+      border: 1px solid var(--amber-100);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .bw-subpanel-title {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--amber-700);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .form-grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1.1fr;
+      gap: 14px;
+    }
+
+    /* 卡片底部明細與小計 */
+    .card-footer {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid var(--slate-200);
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 10px;
-      font-size: 0.88rem;
+      gap: 12px;
     }
-    .card-total {
-      font-weight: 700;
-      color: var(--accent);
-      font-size: 1.1rem;
+    .breakdown-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
     }
-    .card-details {
-      color: #475569;
+    .chip {
+      background: var(--slate-100);
+      border: 1px solid var(--slate-200);
+      padding: 4px 10px;
+      border-radius: 6px;
       font-size: 0.8rem;
+      color: var(--slate-600);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .chip strong {
+      color: var(--slate-800);
+    }
+    .chip-amber {
+      background: var(--amber-50);
+      border-color: var(--amber-100);
+      color: var(--amber-700);
+    }
+    .chip-amber strong {
+      color: var(--amber-700);
     }
 
-    /* 條款註腳 */
-    .rules-card {
-      margin-top: 24px;
-      background: #e2e8f0;
+    .card-total-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f8fafc;
+      padding: 6px 14px;
       border-radius: 8px;
-      padding: 14px 18px;
-      font-size: 0.8rem;
-      color: #475569;
-      line-height: 1.6;
+      border: 1px solid var(--slate-200);
+    }
+    .card-total-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--slate-500);
+    }
+    .card-total-value {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--rose-600);
+      font-variant-numeric: tabular-nums;
     }
 
+    /* 條款註腳區 */
+    .rules-card {
+      margin-top: 28px;
+      background: #ffffff;
+      border: 1px solid var(--slate-200);
+      border-left: 4px solid var(--primary);
+      border-radius: 8px;
+      padding: 16px 20px;
+      font-size: 0.86rem;
+      color: var(--slate-600);
+      line-height: 1.7;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .rules-card strong {
+      color: var(--slate-800);
+    }
+
+    /* 響應式佈局適應 */
+    @media (max-width: 980px) {
+      .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .summary-grid .total-highlight {
+        grid-column: span 2;
+      }
+      .form-grid-5 {
+        grid-template-columns: 1fr 1fr;
+      }
+      .form-grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 600px) {
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+      .summary-grid .total-highlight {
+        grid-column: span 1;
+      }
+      .form-grid-5 {
+        grid-template-columns: 1fr;
+      }
+      body {
+        padding: 16px 12px;
+      }
+    }
+
+    /* 列印樣式最佳化 */
     @media print {
-      body { background: white; padding: 0; }
-      .toolbar, .btn-danger, .rules-card { display: none !important; }
-      .machine-card { break-inside: avoid; border: 1px solid #000; box-shadow: none; margin-bottom: 12px; }
-      .summary-card { background: #f8fafc; color: black; border: 1px solid #000; }
-      .summary-item { background: transparent; border: 1px solid #cbd5e1; }
-      .summary-item .value { color: #000; }
+      body {
+        background: #ffffff;
+        padding: 0;
+        color: #000000;
+      }
+      .toolbar, .btn-danger-outline, .rules-card, .header-badge {
+        display: none !important;
+      }
+      .container {
+        max-width: 100%;
+      }
+      .summary-card {
+        background: #f8fafc !important;
+        color: #000000 !important;
+        border: 1px solid #94a3b8;
+        box-shadow: none !important;
+        padding: 14px;
+      }
+      .summary-header {
+        color: #000000;
+        border-bottom-color: #cbd5e1;
+      }
+      .summary-item {
+        background: transparent !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #000000 !important;
+      }
+      .summary-item .label {
+        color: #475569 !important;
+      }
+      .summary-item .value, .total-highlight .value {
+        color: #000000 !important;
+      }
+      .machine-card {
+        break-inside: avoid;
+        border: 1px solid #94a3b8 !important;
+        box-shadow: none !important;
+        margin-bottom: 16px;
+        padding: 14px;
+      }
+      input, select {
+        border-color: #cbd5e1 !important;
+      }
+      .bw-subpanel {
+        background: #fdfdfd !important;
+        border: 1px solid #cbd5e1 !important;
+      }
     }
   </style>
 </head>
@@ -245,62 +538,83 @@
 
 <div class="container">
   <header>
+    <div class="header-badge">臺灣共同供應契約條款標準試算</div>
     <h1>影印機租賃計費系統（多台合併管理）</h1>
-    <p class="subtitle">依據共同供應契約條款：自動扣除 1.5% 誤印、階梯累進超額（85% / 75%）及黑白加收試算</p>
+    <p class="subtitle">自動扣除 1.5% 誤印率・超額階梯累進折扣（85% / 75%）・彩色機黑白加收費率試算</p>
   </header>
 
-  <!-- 總結儀表板 -->
+  <!-- 頂部匯總儀表板 -->
   <div class="summary-card">
-    <div style="font-weight: 600; font-size: 1.05rem;">全機關本月合計結算</div>
+    <div class="summary-header">
+      <span>📊 全機關本月合計結算報告</span>
+      <span id="currentDateText" style="font-size: 0.85rem; font-weight: normal; opacity: 0.9;"></span>
+    </div>
     <div class="summary-grid">
       <div class="summary-item">
-        <div class="label">設備總數</div>
+        <div class="label">🏢 設備總數</div>
         <div class="value" id="sumDeviceCount">0 台</div>
       </div>
       <div class="summary-item">
-        <div class="label">總基本租費</div>
+        <div class="label">📄 總基本租費</div>
         <div class="value" id="sumBaseFee">NT$ 0</div>
       </div>
       <div class="summary-item">
-        <div class="label">總超額租費 (85%/75%)</div>
+        <div class="label">⚡ 總超額租費 (85%/75%)</div>
         <div class="value" id="sumOverFee">NT$ 0</div>
       </div>
       <div class="summary-item">
-        <div class="label">總黑白加收費</div>
+        <div class="label">🎨 總黑白加收費</div>
         <div class="value" id="sumBwFee">NT$ 0</div>
       </div>
       <div class="summary-item total-highlight">
-        <div class="label">應付總金額合計</div>
+        <div class="label">💰 應付總金額合計</div>
         <div class="value" id="sumGrandTotal">NT$ 0</div>
       </div>
     </div>
   </div>
 
-  <!-- 工具列 -->
+  <!-- 控制工具列 -->
   <div class="toolbar">
-    <button class="btn" onclick="addMachine()">＋ 新增一台設備</button>
-    <div>
-      <button class="btn btn-secondary" onclick="window.print()">🖨️ 列印 / 匯出報表</button>
+    <div class="toolbar-left">
+      <button class="btn" onclick="addMachine()">
+        <span>＋</span> 新增一台設備
+      </button>
+      <button class="btn btn-secondary" onclick="resetDefault()">
+        <span>🔄</span> 重設範例資料
+      </button>
+    </div>
+    <div class="toolbar-right">
+      <button class="btn btn-secondary" onclick="window.print()">
+        <span>🖨️</span> 列印 / 匯出 PDF 報表
+      </button>
     </div>
   </div>
 
   <!-- 設備動態容器 -->
   <div class="machine-list" id="machineContainer"></div>
 
-  <!-- 條款備註 -->
+  <!-- 條款備註卡片 -->
   <div class="rules-card">
-    <strong>📋 契約計費依據摘要：</strong><br>
-    1. <strong>實際張數</strong> = 抄表張數 × (1 - 1.5%)。<br>
-    2. <strong>超額 50% 以內</strong>：超額張數按原單價 <strong>85%</strong> 計收。<br>
-    3. <strong>超額 50% 以上</strong>：超出部分按原單價 <strong>75%</strong> 計收。<br>
-    4. <strong>彩色機加收黑白</strong>：第 17, 19, 20, 23, 25 項加收 $0.4/張；第 18, 21, 22, 24, 26 項加收 $0.38/張。
+    <strong>📋 共同供應契約計費依據摘要：</strong><br>
+    1. <strong>實際計費張數</strong>：每台設備依抄表張數自動扣除 <strong>1.5% 誤印率</strong>（四捨五入計算至整數）。<br>
+    2. <strong>階梯累進超額計費</strong>：<br>
+       &nbsp;&nbsp;• <strong>超額 50% 以內</strong>：超額張數按原單價 <strong>85%</strong> 計收。<br>
+       &nbsp;&nbsp;• <strong>超額 50% 以上</strong>：超出 50% 之部分按原單價 <strong>75%</strong> 計收。<br>
+    3. <strong>彩色機黑白加收費率</strong>：<br>
+       &nbsp;&nbsp;• 第 17, 19, 20, 23, 25 項：加收 <strong>NT$ 0.40 / 張</strong>。<br>
+       &nbsp;&nbsp;• 第 18, 21, 22, 24, 26 項：加收 <strong>NT$ 0.38 / 張</strong>。
   </div>
 </div>
 
 <script>
+  // 顯示今日日期
+  const today = new Date();
+  const dateStr = today.getFullYear() + ' 年 ' + (today.getMonth() + 1) + ' 月 ' + today.getDate() + ' 日';
+  document.getElementById('currentDateText').innerText = `結算日期：${dateStr}`;
+
   let machines = [
-    { id: 1, name: "1F 總務處彩色機", type: "typeA", price: 0.5, base: 5000, meter: 7500, bwMeter: 3000 },
-    { id: 2, name: "2F 會計室黑白機", type: "standard", price: 0.35, base: 4000, meter: 4200, bwMeter: 0 }
+    { id: 1, name: "1F 總務處彩色機", type: "typeA", price: 0.500, base: 5000, meter: 7500, bwMeter: 3000 },
+    { id: 2, name: "2F 會計室黑白機", type: "standard", price: 0.350, base: 4000, meter: 4200, bwMeter: 0 }
   ];
 
   let nextId = 3;
@@ -320,8 +634,14 @@
       
       // 2. 黑白加收費率
       let bwRate = 0;
-      if (m.type === 'typeA') bwRate = 0.40;
-      if (m.type === 'typeB') bwRate = 0.38;
+      let bwTypeName = "一般/黑白機";
+      if (m.type === 'typeA') {
+        bwRate = 0.40;
+        bwTypeName = "彩色機 A組 (+0.40元)";
+      } else if (m.type === 'typeB') {
+        bwRate = 0.38;
+        bwTypeName = "彩色機 B組 (+0.38元)";
+      }
 
       let bwActual = 0;
       let bwFee = 0;
@@ -362,74 +682,114 @@
       card.className = 'machine-card';
       card.innerHTML = `
         <div class="machine-header">
-          <div class="machine-title">
-            <span>#${idx + 1}</span>
-            <input type="text" value="${m.name}" onchange="updateMachine(${m.id}, 'name', this.value)">
+          <div class="machine-title-wrap">
+            <span class="machine-badge">#${idx + 1}</span>
+            <input type="text" class="machine-name-input" value="${m.name}" title="點擊可直接修改設備名稱" onchange="updateMachine(${m.id}, 'name', this.value)">
           </div>
           <div>
-            <button class="btn btn-danger" onclick="deleteMachine(${m.id})">刪除設備</button>
+            <button class="btn-danger-outline" onclick="deleteMachine(${m.id})">🗑️ 刪除設備</button>
           </div>
         </div>
 
-        <div class="form-grid">
+        <!-- 主參數 5 欄式整齊網格 -->
+        <div class="form-grid-5">
           <div class="form-group">
-            <label>契約項次類別</label>
+            <div class="label-box">
+              <label>契約項次類別</label>
+            </div>
             <select onchange="updateMachine(${m.id}, 'type', this.value)">
               <option value="standard" ${m.type === 'standard' ? 'selected' : ''}>一般/黑白 (免加收黑白)</option>
-              <option value="typeA" ${m.type === 'typeA' ? 'selected' : ''}>17, 19, 20, 23, 25項 (+0.4元)</option>
+              <option value="typeA" ${m.type === 'typeA' ? 'selected' : ''}>17, 19, 20, 23, 25項 (+0.40元)</option>
               <option value="typeB" ${m.type === 'typeB' ? 'selected' : ''}>18, 21, 22, 24, 26項 (+0.38元)</option>
             </select>
           </div>
+
           <div class="form-group">
-            <label>每張原單價 (NT$) <span class="sub-note">(支援三位小數如 0.501)</span></label>
-            <input type="number" step="0.001" min="0" placeholder="例如 0.501" value="${m.price}" oninput="updateMachine(${m.id}, 'price', parseFloat(this.value)||0)">
+            <div class="label-box">
+              <label>每張原單價 (NT$)</label>
+              <span class="sub-note">支援三位小數</span>
+            </div>
+            <input type="number" class="num-align" step="0.001" min="0" placeholder="0.500" value="${m.price}" oninput="updateMachine(${m.id}, 'price', parseFloat(this.value)||0)">
           </div>
+
           <div class="form-group">
-            <label>每月基本張數</label>
-            <input type="number" step="1" min="0" value="${m.base}" oninput="updateMachine(${m.id}, 'base', parseFloat(this.value)||0)">
+            <div class="label-box">
+              <label>每月基本張數</label>
+              <span class="sub-note">合約規定額度</span>
+            </div>
+            <input type="number" class="num-align" step="1" min="0" placeholder="5000" value="${m.base}" oninput="updateMachine(${m.id}, 'base', parseFloat(this.value)||0)">
           </div>
+
           <div class="form-group">
-            <label>抄表張數 <span class="sub-note">(扣1.5%誤印)</span></label>
-            <input type="number" step="1" min="0" value="${m.meter}" oninput="updateMachine(${m.id}, 'meter', parseFloat(this.value)||0)">
+            <div class="label-box">
+              <label>抄表張數</label>
+              <span class="sub-note">原始計數器讀數</span>
+            </div>
+            <input type="number" class="num-align" step="1" min="0" placeholder="0" value="${m.meter}" oninput="updateMachine(${m.id}, 'meter', parseFloat(this.value)||0)">
           </div>
+
           <div class="form-group">
-            <label>實際計費張數</label>
-            <input type="text" readonly value="${actualCount.toLocaleString()} 張">
+            <div class="label-box">
+              <label>實際計費張數 <span class="badge-tag badge-calc">扣1.5%</span></label>
+              <span class="sub-note">抄表 × 98.5%</span>
+            </div>
+            <input type="text" class="num-align readonly-highlight" readonly value="${actualCount.toLocaleString()} 張">
           </div>
         </div>
 
+        <!-- 彩色機黑白加收子面板 -->
         ${bwRate > 0 ? `
-          <div class="form-grid" style="margin-top: 10px; background: #fffbeb; padding: 10px; border-radius: 6px; border: 1px solid #fef3c7;">
-            <div class="form-group">
-              <label>黑白抄表張數 <span class="sub-note">(加收 NT$${bwRate}/張)</span></label>
-              <input type="number" step="1" min="0" value="${m.bwMeter}" oninput="updateMachine(${m.id}, 'bwMeter', parseFloat(this.value)||0)">
+          <div class="bw-subpanel">
+            <div class="bw-subpanel-title">
+              <span>🎨 彩色機黑白加收試算專區</span>
+              <span style="font-size: 0.76rem; font-weight: normal; color: var(--amber-700);">（適用費率：NT$ ${bwRate.toFixed(2)} / 張）</span>
             </div>
-            <div class="form-group">
-              <label>黑白計費張數</label>
-              <input type="text" readonly value="${bwActual.toLocaleString()} 張">
-            </div>
-            <div class="form-group">
-              <label>黑白加收金額</label>
-              <input type="text" readonly value="NT$ ${bwFee.toFixed(2)}">
+            <div class="form-grid-3">
+              <div class="form-group">
+                <div class="label-box">
+                  <label style="color: var(--amber-700);">黑白抄表張數</label>
+                  <span class="sub-note">黑白計數器讀數</span>
+                </div>
+                <input type="number" class="num-align" step="1" min="0" placeholder="0" value="${m.bwMeter}" oninput="updateMachine(${m.id}, 'bwMeter', parseFloat(this.value)||0)">
+              </div>
+
+              <div class="form-group">
+                <div class="label-box">
+                  <label style="color: var(--amber-700);">黑白計費張數 <span class="badge-tag" style="background:#fef3c7; color:#b45309;">扣1.5%</span></label>
+                  <span class="sub-note">黑白抄表 × 98.5%</span>
+                </div>
+                <input type="text" class="num-align" readonly value="${bwActual.toLocaleString()} 張">
+              </div>
+
+              <div class="form-group">
+                <div class="label-box">
+                  <label style="color: var(--amber-700);">黑白加收金額小計</label>
+                  <span class="sub-note">計費張數 × ${bwRate}</span>
+                </div>
+                <input type="text" class="num-align" readonly style="background:#fffbeb; color:#b45309; border-color:#fde68a; font-weight:800;" value="NT$ ${bwFee.toFixed(2)}">
+              </div>
             </div>
           </div>
         ` : ''}
 
+        <!-- 費用結構明細與本台小計 -->
         <div class="card-footer">
-          <div class="card-details">
-            基本費: NT$ ${baseFee.toFixed(2)} | 
-            超額(85%): ${tier1Count.toLocaleString()}張 ($${(tier1Count * (m.price || 0) * 0.85).toFixed(2)}) | 
-            超額(75%): ${tier2Count.toLocaleString()}張 ($${(tier2Count * (m.price || 0) * 0.75).toFixed(2)})
+          <div class="breakdown-chips">
+            <span class="chip">📘 基本租費: <strong>NT$ ${baseFee.toFixed(2)}</strong></span>
+            <span class="chip">📈 超額(85%): <strong>${tier1Count.toLocaleString()} 張</strong> (NT$ ${(tier1Count * (m.price || 0) * 0.85).toFixed(2)})</span>
+            <span class="chip">🚀 超額(75%): <strong>${tier2Count.toLocaleString()} 張</strong> (NT$ ${(tier2Count * (m.price || 0) * 0.75).toFixed(2)})</span>
+            ${bwRate > 0 ? `<span class="chip chip-amber">🎨 黑白加收: <strong>NT$ ${bwFee.toFixed(2)}</strong></span>` : ''}
           </div>
-          <div class="card-total">
-            本台小計: NT$ ${Math.round(mTotal).toLocaleString()}
+          <div class="card-total-box">
+            <span class="card-total-label">本台應付小計:</span>
+            <span class="card-total-value">NT$ ${Math.round(mTotal).toLocaleString()}</span>
           </div>
         </div>
       `;
       container.appendChild(card);
     });
 
-    // 更新儀表板
+    // 更新頂部匯總
     document.getElementById('sumDeviceCount').innerText = `${machines.length} 台`;
     document.getElementById('sumBaseFee').innerText = `NT$ ${Math.round(totalBaseFee).toLocaleString()}`;
     document.getElementById('sumOverFee').innerText = `NT$ ${Math.round(totalOverFee).toLocaleString()}`;
@@ -442,7 +802,7 @@
       id: nextId++,
       name: `設備 #${machines.length + 1}`,
       type: "standard",
-      price: 0.5,
+      price: 0.500,
       base: 5000,
       meter: 5000,
       bwMeter: 0
@@ -463,6 +823,17 @@
     const machine = machines.find(m => m.id === id);
     if (machine) {
       machine[field] = value;
+      render();
+    }
+  }
+
+  function resetDefault() {
+    if (confirm("確定要重設為預設範例資料嗎？")) {
+      machines = [
+        { id: 1, name: "1F 總務處彩色機", type: "typeA", price: 0.500, base: 5000, meter: 7500, bwMeter: 3000 },
+        { id: 2, name: "2F 會計室黑白機", type: "standard", price: 0.350, base: 4000, meter: 4200, bwMeter: 0 }
+      ];
+      nextId = 3;
       render();
     }
   }
