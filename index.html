@@ -977,7 +977,7 @@
   <header>
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
       <h1 id="pageMainTitle" style="margin-bottom:0;">台銀影印機租賃印量計算系統 — 全新機</h1>
-      <span class="version-badge" title="最新系統更新版本">v2.6.0 (2026.08.26)</span>
+      <span class="version-badge" title="最新系統更新版本">v2.6.1 (2026.08.26)</span>
     </div>
     <p class="subtitle" id="pageSubTitle" style="margin-top:6px;">依據臺灣銀行 LP5-114034 契約：自動1.5%誤印率・超印階梯累進（85% / 75%）・彩色機黑白加收試算</p>
   </header>
@@ -1109,7 +1109,7 @@
   <!-- 底部備註署名 -->
   <footer style="text-align: center; margin-top: 24px; padding: 14px 0; color: #64748b; font-size: 0.84rem; line-height: 1.8;">
     <p style="color: #64748b; font-size: 0.84rem; margin-bottom: 4px; font-weight: 500;">⚠️ 網站算式僅供參考 實際請依ERP與台銀公告資訊為準 ｜ 🛡️ 本機端即時運算・公務資料絕不上傳外流</p>
-    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">系統版本：<strong>v2.6.0</strong> (Build 20260826.1945) ｜ by Antigravity 吳漢君</p>
+    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">系統版本：<strong>v2.6.1</strong> (Build 20260826.1955) ｜ by Antigravity 吳漢君</p>
   </footer>
 </div>
 
@@ -1824,15 +1824,13 @@ const NEW_CONTRACT_ITEMS = {
     calcMode = mode;
     const isUsed = currentMode === 'used';
     const btnMerged = document.getElementById('btnCalcMerged');
+    const btnFair = document.getElementById('btnCalcFair');
     const btnSingle = document.getElementById('btnCalcSingle');
 
-    if (mode === 'merged') {
-      btnMerged.className = `calc-mode-btn active ${isUsed ? 'used-active' : ''}`;
-      btnSingle.className = 'calc-mode-btn';
-    } else {
-      btnMerged.className = 'calc-mode-btn';
-      btnSingle.className = `calc-mode-btn active ${isUsed ? 'used-active' : ''}`;
-    }
+    if (btnMerged) btnMerged.className = `calc-mode-btn ${mode === 'merged' ? 'active ' + (isUsed ? 'used-active' : '') : ''}`;
+    if (btnFair) btnFair.className = `calc-mode-btn ${mode === 'fair' ? 'active ' + (isUsed ? 'used-active' : '') : ''}`;
+    if (btnSingle) btnSingle.className = `calc-mode-btn ${mode === 'single' ? 'active ' + (isUsed ? 'used-active' : '') : ''}`;
+
     recalculate();
   }
 
@@ -1854,7 +1852,7 @@ const NEW_CONTRACT_ITEMS = {
            &nbsp;&nbsp;• 若機關黑白機實際印量未達每月基本張數，其已繳付基本費之剩餘額度價值（<code>未印張數 × 契約單價</code>），開啟「<strong>🎁 啟用黑彩折抵</strong>」後，系統會自動等值折抵彩色機之超印租費或黑白加收費，為機關發揮最大效益。<br>
         5. <strong>🛡️ 公務機密與資訊安全保障說明</strong>：<br>
            &nbsp;&nbsp;• <strong>100% 本機端即時運算（Client-Side Only）</strong>：本系統所有設備資料、抄表讀數、及上傳之收費單 PDF 檔案，<strong>完全僅在使用者本機瀏覽器內部進行解析運算</strong>。<br>
-           &nbsp;&nbsp;• <strong>絕無任何資料外流</strong>：無後端伺服器儲存或傳輸任何公務資訊，完全杜絕資安外洩風險，請各級公家機關與國衛院同仁安心使用。
+           &nbsp;&nbsp;• <strong>絕無任何資料外流</strong>：無後端伺服器儲存或傳輸任何公務資訊，完全杜絕資安外洩風險，請各級公家機關與機關同仁安心使用。
       `;
     } else {
       box.style.borderLeftColor = '#059669';
@@ -1870,7 +1868,7 @@ const NEW_CONTRACT_ITEMS = {
            &nbsp;&nbsp;• 若機關黑白機實際印量未達每月基本張數，其已繳付基本費之剩餘額度價值（<code>未印張數 × 契約單價</code>），開啟「<strong>🎁 啟用黑彩折抵</strong>」後，系統會自動等值折抵彩色機之超印租費或黑白加收費，為機關發揮最大效益。<br>
         5. <strong>🛡️ 公務機密與資訊安全保障說明</strong>：<br>
            &nbsp;&nbsp;• <strong>100% 本機端即時運算（Client-Side Only）</strong>：本系統所有設備資料、抄表讀數、及上傳之收費單 PDF 檔案，<strong>完全僅在使用者本機瀏覽器內部進行解析運算</strong>。<br>
-           &nbsp;&nbsp;• <strong>絕無任何資料外流</strong>：無後端伺服器儲存或傳輸任何公務資訊，完全杜絕資安外洩風險，請各級公家機關與國衛院同仁安心使用。
+           &nbsp;&nbsp;• <strong>絕無任何資料外流</strong>：無後端伺服器儲存或傳輸任何公務資訊，完全杜絕資安外洩風險，請各級公家機關與機關同仁安心使用。
       `;
     }
   }
