@@ -977,7 +977,7 @@
   <header>
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
       <h1 id="pageMainTitle" style="margin-bottom:0;">台銀影印機租賃印量計算系統 — 全新機</h1>
-      <span class="version-badge" title="最新系統更新版本">v2.5.1 (2026.08.26)</span>
+      <span class="version-badge" title="最新系統更新版本">v2.6.0 (2026.08.26)</span>
     </div>
     <p class="subtitle" id="pageSubTitle" style="margin-top:6px;">依據臺灣銀行 LP5-114034 契約：自動1.5%誤印率・超印階梯累進（85% / 75%）・彩色機黑白加收試算</p>
   </header>
@@ -1035,8 +1035,11 @@
     </div>
     <div class="action-bar-right">
       <div class="calc-mode-segment">
-        <button type="button" class="calc-mode-btn active" id="btnCalcMerged" onclick="switchCalcMode('merged')" title="同規格設備自動合併總基本張數與總印量統籌計費">
-          <span>🔗 多台合併累加 (共用額度)</span>
+        <button type="button" class="calc-mode-btn active" id="btnCalcMerged" onclick="switchCalcMode('merged')" title="同規格設備合併總基本張數與總印量，依印量比例官方均攤">
+          <span>🔗 多台合併 (ERP全組均攤)</span>
+        </button>
+        <button type="button" class="calc-mode-btn" id="btnCalcFair" onclick="switchCalcMode('fair')" title="同規格設備共用總額度，但僅由真正超印機台分攤超印費，沒超印者僅收基本費">
+          <span>🎯 責任分攤 (未超印免攤)</span>
         </button>
         <button type="button" class="calc-mode-btn" id="btnCalcSingle" onclick="switchCalcMode('single')" title="各台設備各自獨立核算基本張數與超印">
           <span>🖨️ 單機獨立計費</span>
@@ -1106,7 +1109,7 @@
   <!-- 底部備註署名 -->
   <footer style="text-align: center; margin-top: 24px; padding: 14px 0; color: #64748b; font-size: 0.84rem; line-height: 1.8;">
     <p style="color: #64748b; font-size: 0.84rem; margin-bottom: 4px; font-weight: 500;">⚠️ 網站算式僅供參考 實際請依ERP與台銀公告資訊為準 ｜ 🛡️ 本機端即時運算・公務資料絕不上傳外流</p>
-    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">系統版本：<strong>v2.5.1</strong> (Build 20260826.1718) ｜ by Antigravity 吳漢君</p>
+    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">系統版本：<strong>v2.6.0</strong> (Build 20260826.1945) ｜ by Antigravity 吳漢君</p>
   </footer>
 </div>
 
@@ -1840,9 +1843,10 @@ const NEW_CONTRACT_ITEMS = {
       box.innerHTML = `
         <strong>📋 臺灣銀行採購部 LP5-114034 全新影印機租賃計費依據摘要：</strong><br>
         1. <strong>實際計費張數</strong>：每台設備依抄表張數自動扣除 <strong>1.5% 誤印率</strong>（四捨五入計算至整數）。<br>
-        2. <strong>階梯累進超印計費</strong>：<br>
-           &nbsp;&nbsp;• <strong>超印 50% 以內</strong>：超印張數按原單價 <strong>85%</strong> 計收。<br>
-           &nbsp;&nbsp;• <strong>超印 50% 以上</strong>：超出 50% 之部分按原單價 <strong>75%</strong> 計收。<br>
+        2. <strong>階梯累進超印計費與內部責任分攤模式</strong>：<br>
+           &nbsp;&nbsp;• <strong>階梯優惠費率</strong>：超印 50% 以內按原單價 <strong>85%</strong> 計收；超印 50% 以上按原單價 <strong>75%</strong> 計收。<br>
+           &nbsp;&nbsp;• <strong>🏢 ERP 全組均攤模式</strong>：全組超印費由所有有印量的機台依印量比例均攤（與廠商官方發票完全一致）。<br>
+           &nbsp;&nbsp;• <strong>🎯 責任分攤模式（推薦內部拆帳）</strong>：全機關總額維持大池合併優惠不變，但<strong>未超印之機台僅計基本費（免分攤超印費）</strong>，超印費全數由實質超印機台依超印量比例精準承擔。<br>
         3. <strong>基本張數型彩色機黑白加收費率</strong>：<br>
            &nbsp;&nbsp;• <strong>第 1 組雷射彩色機</strong>：第 17, 19, 20, 23, 25 項加收 <strong>NT$ 0.40 / 張</strong>；第 18, 21, 22, 24, 26 項加收 <strong>NT$ 0.38 / 張</strong>。<br>
            &nbsp;&nbsp;• <strong>第 3 組噴墨彩色機</strong>：第 1, 3, 5 項加收 <strong>NT$ 0.30 / 張</strong>；第 2, 4, 6 項加收 <strong>NT$ 0.285 / 張</strong>。<br>
@@ -2198,7 +2202,8 @@ const NEW_CONTRACT_ITEMS = {
 
     const machines = getCurrentMachines();
     const isUsed = currentMode === 'used';
-    const isMergedMode = calcMode === 'merged';
+    const isMergedMode = (calcMode === 'merged' || calcMode === 'fair');
+    const isFairMode = calcMode === 'fair';
 
     // 1. 計算每台機器的實際計費張數、黑白加收費與基本租費
     const calcList = machines.map(m => {
@@ -2310,13 +2315,32 @@ const NEW_CONTRACT_ITEMS = {
           }
         }
 
+        const overItems = grp.items.filter(it => it.actualCount > it.baseNum);
+        const totalOverDelta = overItems.reduce((sum, it) => sum + (it.actualCount - it.baseNum), 0);
+
         grp.items.forEach(item => {
           item.poolTotalBase = totalBase;
           item.poolTotalActual = totalActual;
           item.poolMachineCount = count;
+          item.isFairMode = isFairMode;
 
           if (grpOverFee > 0 && totalActual > 0) {
-            item.overFee = grpOverFee * (item.actualCount / totalActual);
+            if (isFairMode) {
+              // 責任歸屬分攤模式：未超印者免分攤超印費，超印者依超印量比例分攤全組折扣後超印費
+              if (item.actualCount > item.baseNum && totalOverDelta > 0) {
+                const myDelta = item.actualCount - item.baseNum;
+                item.overFee = grpOverFee * (myDelta / totalOverDelta);
+                item.isFairOver = true;
+                item.overDelta = myDelta;
+              } else {
+                item.overFee = 0;
+                item.isFairUnder = true;
+                item.overDelta = 0;
+              }
+            } else {
+              // ERP 官方全額均攤模式
+              item.overFee = grpOverFee * (item.actualCount / totalActual);
+            }
           } else {
             item.overFee = 0;
           }
@@ -2393,9 +2417,22 @@ const NEW_CONTRACT_ITEMS = {
       const breakdownEl = document.getElementById(`breakdown-${m.id}`);
       if (breakdownEl) {
         if (isMergedMode && item.poolMachineCount > 1) {
+          let overChipHtml = '';
+          if (isFairMode) {
+            if (item.isFairOver) {
+              overChipHtml = `<span class="chip ${isUsed ? 'chip-green' : ''}" style="background:#fef3c7; color:#92400e; border-color:#fde68a;">🎯 責任超印分攤: <strong>NT$ ${overFee.toFixed(2)}</strong> <small style="opacity:0.85;">(實質超印 ${item.overDelta.toLocaleString()} 張，享受合併額度折扣)</small></span>`;
+            } else {
+              overChipHtml = `<span class="chip chip-green">✨ 本台未超印（免分攤超印費，僅計基本租費）</span>`;
+            }
+          } else {
+            overChipHtml = overFee > 0 
+              ? `<span class="chip ${isUsed ? 'chip-green' : ''}">🔗 合併超印分攤: <strong>NT$ ${overFee.toFixed(2)}</strong> <small style="opacity:0.85;">(同項次 ${item.poolMachineCount} 台共用額度 ${item.poolTotalBase.toLocaleString()} 張)</small></span>`
+              : `<span class="chip ${isUsed ? 'chip-green' : ''}">✨ 未超印 (同項次 ${item.poolMachineCount} 台共用額度中)</span>`;
+          }
+
           breakdownEl.innerHTML = `
             <span class="chip ${isUsed ? 'chip-green' : ''}">📘 基本租費: <strong>NT$ ${baseFee.toFixed(2)}</strong></span>
-            ${overFee > 0 ? `<span class="chip ${isUsed ? 'chip-green' : ''}">🔗 合併超印分攤: <strong>NT$ ${overFee.toFixed(2)}</strong> <small style="opacity:0.85;">(同項次 ${item.poolMachineCount} 台共用額度 ${item.poolTotalBase.toLocaleString()} 張)</small></span>` : `<span class="chip ${isUsed ? 'chip-green' : ''}">✨ 未超印 (同項次 ${item.poolMachineCount} 台共用額度中)</span>`}
+            ${overChipHtml}
             ${bwRate > 0 ? `<span class="chip chip-amber">🎨 黑白加收: <strong>NT$ ${bwFee.toFixed(2)}</strong></span>` : ''}
             ${unusedCredit > 0 ? `<span class="chip chip-green">🎁 淨未印滿額度: <strong>${unusedCount.toLocaleString()} 張</strong> (可折抵彩色 NT$ ${unusedCredit.toFixed(2)})</span>` : ''}
           `;
