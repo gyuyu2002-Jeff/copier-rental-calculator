@@ -2456,7 +2456,7 @@ const NEW_CONTRACT_ITEMS = {
 
 
   // ══════════════════════════════════════════════════════
-  // 全通用純本機收費單解析器 (機號前綴精準定項 + 100% 官方收費單吻合)
+  // 全通用純本機收費單解析器 (直取原始抄表讀數，零多重折算)
   // ══════════════════════════════════════════════════════
   let parsedMachinesCache = [];
 
@@ -2556,12 +2556,12 @@ const NEW_CONTRACT_ITEMS = {
     parseRawText(ocrCombinedText);
   }
 
-  // 100% 精準之多頁收費單解析演算法 (以機號前綴嚴格綁定契約項次)
+  // 100% 直取收費單上真實抄表讀數 (3135, 5504, 1235...)
   function parseRawText(text) {
     const statusBox = document.getElementById('parseStatusBox');
     const statusText = document.getElementById('parseStatusText');
     statusBox.style.display = 'flex';
-    statusText.innerText = '正在進行機號去重、抄表萃取與契約項次自動媒合...';
+    statusText.innerText = '正在直取收費單抄表讀數並進行契約項次精確對齊...';
 
     const machinesMap = new Map();
     const pageBlocks = text.split(/--- Page \d+ ---/);
@@ -2598,7 +2598,7 @@ const NEW_CONTRACT_ITEMS = {
         filteredPairs.push([c1, c2]);
       });
 
-      // 配對出該頁的抄表讀數清單
+      // 配對出該頁的原始抄表讀數 (取較大之原始計數器讀數：如 3135/3027, 5504, 1235...)
       const meterPairs = [];
       let i = 0;
       while (i < filteredPairs.length) {
@@ -2619,7 +2619,7 @@ const NEW_CONTRACT_ITEMS = {
         i += 1;
       }
 
-      // 3. 依序對齊機號與契約項次 (嚴格以機號前綴判斷，絕不跨設備干擾)
+      // 3. 依序對齊機號與契約項次 (直接使用原始抄表數，不重複除以 0.985)
       pageSns.forEach((sn, idx) => {
         let matchedKey = 'n_g1_1';
         let price = "0.501";
@@ -2629,28 +2629,23 @@ const NEW_CONTRACT_ITEMS = {
         let bwMeter = 0;
 
         if (sn.startsWith('4415')) {
-          // 黑白 20張機型 (第 1 項: 7,000張, $0.501)
           matchedKey = 'n_g1_1';
           price = "0.501";
           baseCount = 7000;
         } else if (sn.startsWith('4435')) {
-          // 黑白 30張含掃描 (第 5 項: 10,000張, $0.568)
           matchedKey = 'n_g1_5';
           price = "0.568";
           baseCount = 10000;
         } else if (sn.startsWith('4445')) {
-          // 黑白 40張機型 (第 9 項: 15,000張, $0.461)
           matchedKey = 'n_g1_9';
           price = "0.461";
           baseCount = 15000;
         } else if (sn.startsWith('9136')) {
-          // 彩色 20/25張 (第 17 項: 3,000張, $3.340, 黑白+$0.400)
           matchedKey = 'n_g1_17';
           price = "3.340";
           baseCount = 3000;
           bwRate = 0.400;
         } else if (sn.startsWith('9175') || sn.startsWith('9155')) {
-          // 彩色 20/25張 3年期 (第 18 項: 2,000張, $3.193, 黑白+$0.380)
           matchedKey = 'n_g1_18';
           price = "3.193";
           baseCount = 2000;
@@ -2662,11 +2657,10 @@ const NEW_CONTRACT_ITEMS = {
         if (idx < meterPairs.length) {
           const p = meterPairs[idx];
           if (isColor) {
-            bwMeter = p[0] > 0 ? (p[0] < 50000 && p[0] % 10 !== 0 ? roundActualToMeter(p[0]) : p[0]) : 0;
-            meter = p[1] > 0 ? (p[1] < 50000 && p[1] % 10 !== 0 ? roundActualToMeter(p[1]) : p[1]) : p[0];
+            bwMeter = p[0] > 0 ? p[0] : 0;
+            meter = p[1] > 0 ? p[1] : p[0];
           } else {
-            const act = p[0] > 0 ? p[0] : p[1];
-            meter = (act < 100000 && act % 10 !== 0) ? roundActualToMeter(act) : act;
+            meter = p[0] > 0 ? p[0] : p[1];
           }
         }
 
@@ -2684,11 +2678,6 @@ const NEW_CONTRACT_ITEMS = {
 
     parsedMachinesCache = Array.from(machinesMap.values());
     renderParsePreview();
-  }
-
-  function roundActualToMeter(num) {
-    if (!num || num <= 0) return 0;
-    return Math.round(num / 0.985);
   }
 
   function renderParsePreview() {
