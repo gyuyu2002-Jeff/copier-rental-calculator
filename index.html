@@ -2437,7 +2437,7 @@ const NEW_CONTRACT_ITEMS = {
 
 
   // ══════════════════════════════════════════════════════
-  // 全通用純本機收費單解析器 (高精度 OCR + 嚴格機號比對 + 零誤差抄表)
+  // 全通用純本機收費單解析器 (過濾 A3/A4 干擾 + 超快純淨數字抽取)
   // ══════════════════════════════════════════════════════
   let parsedMachinesCache = [];
 
@@ -2497,7 +2497,7 @@ const NEW_CONTRACT_ITEMS = {
         if (fullText.trim().replace(/--- Page \d+ ---/g, '').trim().length > 50) {
           parseRawText(fullText);
         } else {
-          statusText.innerText = `偵測為掃描版收費單 (共 ${pdf.numPages} 頁)，正在啟動高解析度 OCR 光學文字辨識...`;
+          statusText.innerText = `正在啟動高速精準 OCR 文字辨識 (共 ${pdf.numPages} 頁)...`;
           await runOcrOnPdf(pdf);
         }
       } catch (err) {
@@ -2508,7 +2508,7 @@ const NEW_CONTRACT_ITEMS = {
     } else if (file.type.startsWith('image/')) {
       statusText.innerText = '正在本機啟動 OCR 影像光學字元辨識...';
       try {
-        const res = await Tesseract.recognize(file, 'chi_tra+eng');
+        const res = await Tesseract.recognize(file, 'eng');
         parseRawText(res.data.text);
       } catch (err) {
         alert('影像辨識失敗，請確認圖片清晰度或改用文字貼上。');
@@ -2523,54 +2523,55 @@ const NEW_CONTRACT_ITEMS = {
     const numPages = pdf.numPages;
 
     for (let i = 1; i <= numPages; i++) {
-      statusText.innerText = `正在本機高精準 OCR 辨識第 ${i} / ${numPages} 頁收費單...`;
+      statusText.innerText = `正在本機 OCR 辨識第 ${i} / ${numPages} 頁收費單...`;
       const page = await pdf.getPage(i);
-      const viewport = page.getViewport({ scale: 2.2 });
+      const viewport = page.getViewport({ scale: 2.0 });
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       canvas.width = viewport.width;
       canvas.height = viewport.height;
       await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-      const res = await Tesseract.recognize(canvas, 'chi_tra+eng');
+      // 使用 eng 模式辨識英文機號與純數字，速度極快且精確
+      const res = await Tesseract.recognize(canvas, 'eng');
       ocrCombinedText += '\n--- OCR Page ' + i + ' ---\n' + res.data.text;
     }
     parseRawText(ocrCombinedText);
   }
 
-  // 100% 精準通用提取演算法
+  // 100% 穩定且純淨的數值萃取引擎
   function parseRawText(text) {
     const statusBox = document.getElementById('parseStatusBox');
     const statusText = document.getElementById('parseStatusText');
     statusBox.style.display = 'flex';
-    statusText.innerText = '正在進行設備機號比對、抄表萃取與契約項次媒合...';
+    statusText.innerText = '正在清洗表頭與 A3/A4 雜訊、萃取正確抄表數值...';
+
+    // 1. 深度清洗文字，剔除 A3/A4、費率字串、日期、基本費標籤等干擾
+    let clean = text;
+    clean = clean.replace(/\b\d{4}\/\d{1,2}\/\d{1,2}\b/g, ' ');
+    clean = clean.replace(/\b\d{1,2}\/\d{1,2}\/\d{4}\b/g, ' ');
+    clean = clean.replace(/\b\d{1,2}\/\d{1,2}\b/g, ' ');
+    clean = clean.replace(/A[34]黑?\/A[34]彩?/gi, ' ');
+    clean = clean.replace(/\bA[34]\b/gi, ' ');
+    clean = clean.replace(/\d+[BC]\/A[34]\/\d+\.\d+/gi, ' ');
+    clean = clean.replace(/0\/0\/\d+/g, ' ');
+    clean = clean.replace(/0\/0/g, ' ');
 
     const machinesMap = new Map();
 
-    // 嚴格比對真正的影印機機號格式 (4碼數字 + 1~3碼英文字母 + 5~8碼數字，例如 9136R540012, 4445RB50011, 4415RC50038, 9175RB40073)
+    // 2. 匹配標準影印機機號 (4碼數字 + 1~3碼英文字母 + 5~8碼數字)
     const snRegex = /\b([0-9]{4}[A-Z]{1,3}[0-9]{5,8})\b/g;
-    const snMatches = Array.from(text.matchAll(snRegex));
+    const snMatches = Array.from(clean.matchAll(snRegex));
 
     snMatches.forEach((m, idx) => {
       const sn = m[1].toUpperCase();
       if (machinesMap.has(sn)) return; // 自動去重存根聯
 
       const startPos = m.index;
-      const nextPos = (idx + 1 < snMatches.length) ? snMatches[idx + 1].index : (startPos + 600);
-      const block = text.slice(startPos, Math.min(text.length, nextPos));
+      const nextPos = (idx + 1 < snMatches.length) ? snMatches[idx + 1].index : clean.length;
+      const block = clean.slice(startPos, nextPos);
 
-      // 檢查此區塊是否包含有效計費特徵 (例如 合併、累加、單機、/A4/、基本費等)
-      if (!block.includes('合併') && !block.includes('累加') && !block.includes('單機') && !block.includes('A4') && !block.includes('0/0')) {
-        return; // 排除表頭殘留文字
-      }
-
-      // 清除日期字串干擾
-      let cleanBlock = block.replace(/\b\d{4}\/\d{1,2}\/\d{1,2}\b/g, ' ');
-      cleanBlock = cleanBlock.replace(/\b\d{1,2}\/\d{1,2}\/\d{4}\b/g, ' ');
-      cleanBlock = cleanBlock.replace(/\b(2025|2026|2027|114|115)\/(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\b/g, ' ');
-      cleanBlock = cleanBlock.replace(/\b(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\b/g, ' ');
-
-      // 提取非零數值對
-      const slashMatches = (cleanBlock.match(/(\d{1,7})\/(\d{1,7})/g) || []).filter(s => s !== '0/0');
+      // 提取非零純數字對 (例如 3027/3135 或 5504/0)
+      const pairs = Array.from(block.matchAll(/\b(\d{2,7})\/(\d{1,7})\b/g)).map(p => [parseInt(p[1], 10) || 0, parseInt(p[2], 10) || 0]);
 
       let mainUsage = 0;
       let bwUsage = 0;
@@ -2578,59 +2579,39 @@ const NEW_CONTRACT_ITEMS = {
       let price = "0.501";
       let bwRate = 0;
 
-      const isColor = block.includes('1C/') || block.includes('彩色') || block.includes('3.193') || block.includes('3.340') || sn.startsWith('9136') || sn.startsWith('9175') || sn.startsWith('9155');
+      const isColor = sn.startsWith('9136') || sn.startsWith('9175') || sn.startsWith('9155') || block.includes('3.340') || block.includes('3.193');
 
-      if (slashMatches.length >= 2) {
-        const pair1 = slashMatches[0].split('/').map(n => parseInt(n, 10) || 0);
-        const pair2 = slashMatches[1].split('/').map(n => parseInt(n, 10) || 0);
-
-        // 判斷是否為前次與本次抄表
-        if (pair1[0] > 1000 && pair2[0] > pair1[0]) {
-          // 有前次與本次抄表 (例如 34081/6597 與 40459/8874)
-          if (isColor) {
-            mainUsage = pair2[1] - pair1[1];
-            bwUsage = pair2[0] - pair1[0];
-          } else {
-            mainUsage = pair2[0] - pair1[0];
-          }
-        } else {
-          // 單一抄表讀數 (例如 3027/3135 與 2982/3088)
-          if (isColor) {
-            mainUsage = pair1[1] > 0 ? pair1[1] : pair1[0];
-            bwUsage = pair1[1] > 0 ? pair1[0] : 0;
-          } else {
-            mainUsage = pair1[0] > 0 ? pair1[0] : pair1[1];
-          }
-        }
-      } else if (slashMatches.length === 1) {
-        const pair = slashMatches[0].split('/').map(n => parseInt(n, 10) || 0);
+      if (pairs.length > 0) {
+        // 第一組有效數值即為抄表讀數
+        const p = pairs[0];
         if (isColor) {
-          mainUsage = pair[1] > 0 ? pair[1] : pair[0];
-          bwUsage = pair[1] > 0 ? pair[0] : 0;
+          bwUsage = p[0];
+          mainUsage = p[1] > 0 ? p[1] : p[0];
         } else {
-          mainUsage = pair[0] > 0 ? pair[0] : pair[1];
+          mainUsage = p[0] > 0 ? p[0] : p[1];
+          bwUsage = 0;
         }
       }
 
-      // 判斷基本張數與契約項次
+      // 判斷契約項次與單價規格
       let matchedKey = currentMode === 'new' ? 'n_g1_1' : 'u_g1_1';
       if (isColor) {
-        if (block.includes('3.193') || sn.startsWith('9175') || sn.startsWith('9155')) {
+        if (sn.startsWith('9175') || sn.startsWith('9155') || block.includes('3.193')) {
           matchedKey = 'n_g1_18';
           price = "3.193";
           bwRate = 0.380;
-          baseCount = (block.includes('3000') || block.includes('/3000')) ? 3000 : 2000;
+          baseCount = 2000;
         } else {
           matchedKey = 'n_g1_17';
           price = "3.340";
           bwRate = 0.400;
           baseCount = 3000;
         }
-      } else if (block.includes('15000') || block.includes('6915') || sn.startsWith('4445')) {
+      } else if (sn.startsWith('4445') || block.includes('15000') || block.includes('6915')) {
         matchedKey = 'n_g1_9';
         price = "0.461";
         baseCount = 15000;
-      } else if (block.includes('10000') || block.includes('5680') || sn.startsWith('4435')) {
+      } else if (sn.startsWith('4435') || block.includes('10000') || block.includes('5680')) {
         matchedKey = 'n_g1_5';
         price = "0.568";
         baseCount = 10000;
