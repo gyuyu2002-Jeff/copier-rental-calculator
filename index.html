@@ -2456,7 +2456,7 @@ const NEW_CONTRACT_ITEMS = {
 
 
   // ══════════════════════════════════════════════════════
-  // 全通用純本機收費單解析器 (高精度雙重數值配對 + 100% 官方收費單吻合)
+  // 全通用純本機收費單解析器 (機號前綴精準定項 + 100% 官方收費單吻合)
   // ══════════════════════════════════════════════════════
   let parsedMachinesCache = [];
 
@@ -2556,7 +2556,7 @@ const NEW_CONTRACT_ITEMS = {
     parseRawText(ocrCombinedText);
   }
 
-  // 100% 精準之多頁收費單解析演算法
+  // 100% 精準之多頁收費單解析演算法 (以機號前綴嚴格綁定契約項次)
   function parseRawText(text) {
     const statusBox = document.getElementById('parseStatusBox');
     const statusText = document.getElementById('parseStatusText');
@@ -2605,7 +2605,6 @@ const NEW_CONTRACT_ITEMS = {
         const p1 = filteredPairs[i];
         if (i + 1 < filteredPairs.length) {
           const p2 = filteredPairs[i+1];
-          // 比較 p1 與 p2：若較大者為原始抄表，較小者為扣1.5%印量
           if ((p2[0] > p1[0] && p2[0] - p1[0] < p1[0] * 0.05) || (p2[1] > p1[1] && p2[1] - p1[1] < p1[1] * 0.05)) {
             meterPairs.push(p2);
             i += 2;
@@ -2620,14 +2619,45 @@ const NEW_CONTRACT_ITEMS = {
         i += 1;
       }
 
-      // 3. 依序對齊機號與契約項次
+      // 3. 依序對齊機號與契約項次 (嚴格以機號前綴判斷，絕不跨設備干擾)
       pageSns.forEach((sn, idx) => {
-        const isColor = sn.startsWith('9136') || sn.startsWith('9175') || sn.startsWith('9155') || cleanPage.includes('3.340') || cleanPage.includes('3.193');
+        let matchedKey = 'n_g1_1';
+        let price = "0.501";
+        let baseCount = 7000;
+        let bwRate = 0;
         let meter = 7000;
         let bwMeter = 0;
-        let baseCount = 7000;
-        let price = "0.501";
-        let bwRate = 0;
+
+        if (sn.startsWith('4415')) {
+          // 黑白 20張機型 (第 1 項: 7,000張, $0.501)
+          matchedKey = 'n_g1_1';
+          price = "0.501";
+          baseCount = 7000;
+        } else if (sn.startsWith('4435')) {
+          // 黑白 30張含掃描 (第 5 項: 10,000張, $0.568)
+          matchedKey = 'n_g1_5';
+          price = "0.568";
+          baseCount = 10000;
+        } else if (sn.startsWith('4445')) {
+          // 黑白 40張機型 (第 9 項: 15,000張, $0.461)
+          matchedKey = 'n_g1_9';
+          price = "0.461";
+          baseCount = 15000;
+        } else if (sn.startsWith('9136')) {
+          // 彩色 20/25張 (第 17 項: 3,000張, $3.340, 黑白+$0.400)
+          matchedKey = 'n_g1_17';
+          price = "3.340";
+          baseCount = 3000;
+          bwRate = 0.400;
+        } else if (sn.startsWith('9175') || sn.startsWith('9155')) {
+          // 彩色 20/25張 3年期 (第 18 項: 2,000張, $3.193, 黑白+$0.380)
+          matchedKey = 'n_g1_18';
+          price = "3.193";
+          baseCount = 2000;
+          bwRate = 0.380;
+        }
+
+        const isColor = matchedKey === 'n_g1_17' || matchedKey === 'n_g1_18';
 
         if (idx < meterPairs.length) {
           const p = meterPairs[idx];
@@ -2638,34 +2668,6 @@ const NEW_CONTRACT_ITEMS = {
             const act = p[0] > 0 ? p[0] : p[1];
             meter = (act < 100000 && act % 10 !== 0) ? roundActualToMeter(act) : act;
           }
-        }
-
-        // 精準契約項次判定
-        let matchedKey = currentMode === 'new' ? 'n_g1_1' : 'u_g1_1';
-        if (isColor) {
-          if (sn.startsWith('9175') || sn.startsWith('9155') || cleanPage.includes('3.193')) {
-            matchedKey = 'n_g1_18';
-            price = "3.193";
-            bwRate = 0.380;
-            baseCount = 2000;
-          } else {
-            matchedKey = 'n_g1_17';
-            price = "3.340";
-            bwRate = 0.400;
-            baseCount = 3000;
-          }
-        } else if (sn.startsWith('4445') || cleanPage.includes('15000') || cleanPage.includes('6915')) {
-          matchedKey = 'n_g1_9';
-          price = "0.461";
-          baseCount = 15000;
-        } else if (sn.startsWith('4435') || cleanPage.includes('10000') || cleanPage.includes('5680')) {
-          matchedKey = 'n_g1_5';
-          price = "0.568";
-          baseCount = 10000;
-        } else {
-          matchedKey = 'n_g1_1';
-          price = "0.501";
-          baseCount = 7000;
         }
 
         machinesMap.set(sn, {
