@@ -2437,7 +2437,7 @@ const NEW_CONTRACT_ITEMS = {
 
 
   // ══════════════════════════════════════════════════════
-  // 全通用純本機收費單解析器 (過濾 A3/A4 干擾 + 超快純淨數字抽取)
+  // 全通用純本機收費單解析器 (頁面級欄位精準對齊 + 零雜訊過濾)
   // ══════════════════════════════════════════════════════
   let parsedMachinesCache = [];
 
@@ -2481,7 +2481,7 @@ const NEW_CONTRACT_ITEMS = {
     statusBox.style.display = 'flex';
 
     if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-      statusText.innerText = '正在讀取本機 PDF 文件表格與文字結構...';
+      statusText.innerText = '正在讀取本機 PDF 數位文字層...';
       try {
         const arrayBuffer = await file.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -2497,7 +2497,7 @@ const NEW_CONTRACT_ITEMS = {
         if (fullText.trim().replace(/--- Page \d+ ---/g, '').trim().length > 50) {
           parseRawText(fullText);
         } else {
-          statusText.innerText = `正在啟動高速精準 OCR 文字辨識 (共 ${pdf.numPages} 頁)...`;
+          statusText.innerText = `偵測為紙本掃描檔 (共 ${pdf.numPages} 頁)，啟動本機 OCR 光學辨識...`;
           await runOcrOnPdf(pdf);
         }
       } catch (err) {
@@ -2523,117 +2523,131 @@ const NEW_CONTRACT_ITEMS = {
     const numPages = pdf.numPages;
 
     for (let i = 1; i <= numPages; i++) {
-      statusText.innerText = `正在本機 OCR 辨識第 ${i} / ${numPages} 頁收費單...`;
+      statusText.innerText = `正在本機 OCR 辨識第 ${i} / ${numPages} 頁收費單 (精確對齊欄位)...`;
       const page = await pdf.getPage(i);
-      const viewport = page.getViewport({ scale: 2.0 });
+      const viewport = page.getViewport({ scale: 2.2 });
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       canvas.width = viewport.width;
       canvas.height = viewport.height;
       await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-      // 使用 eng 模式辨識英文機號與純數字，速度極快且精確
       const res = await Tesseract.recognize(canvas, 'eng');
-      ocrCombinedText += '\n--- OCR Page ' + i + ' ---\n' + res.data.text;
+      ocrCombinedText += '\n--- Page ' + i + ' ---\n' + res.data.text;
     }
     parseRawText(ocrCombinedText);
   }
 
-  // 100% 穩定且純淨的數值萃取引擎
+  // 100% 穩定之頁面級對齊與契約項次媒合演算法
   function parseRawText(text) {
     const statusBox = document.getElementById('parseStatusBox');
     const statusText = document.getElementById('parseStatusText');
     statusBox.style.display = 'flex';
-    statusText.innerText = '正在清洗表頭與 A3/A4 雜訊、萃取正確抄表數值...';
-
-    // 1. 深度清洗文字，剔除 A3/A4、費率字串、日期、基本費標籤等干擾
-    let clean = text;
-    clean = clean.replace(/\b\d{4}\/\d{1,2}\/\d{1,2}\b/g, ' ');
-    clean = clean.replace(/\b\d{1,2}\/\d{1,2}\/\d{4}\b/g, ' ');
-    clean = clean.replace(/\b\d{1,2}\/\d{1,2}\b/g, ' ');
-    clean = clean.replace(/A[34]黑?\/A[34]彩?/gi, ' ');
-    clean = clean.replace(/\bA[34]\b/gi, ' ');
-    clean = clean.replace(/\d+[BC]\/A[34]\/\d+\.\d+/gi, ' ');
-    clean = clean.replace(/0\/0\/\d+/g, ' ');
-    clean = clean.replace(/0\/0/g, ' ');
+    statusText.innerText = '正在進行機號去重、抄表萃取與契約項次自動媒合...';
 
     const machinesMap = new Map();
+    const pageBlocks = text.split(/--- Page \d+ ---/);
 
-    // 2. 匹配標準影印機機號 (4碼數字 + 1~3碼英文字母 + 5~8碼數字)
-    const snRegex = /\b([0-9]{4}[A-Z]{1,3}[0-9]{5,8})\b/g;
-    const snMatches = Array.from(clean.matchAll(snRegex));
+    pageBlocks.forEach((pageStr) => {
+      if (!pageStr.trim()) return;
 
-    snMatches.forEach((m, idx) => {
-      const sn = m[1].toUpperCase();
-      if (machinesMap.has(sn)) return; // 自動去重存根聯
+      // 1. 萃取該頁所有唯一機號
+      const cleanPage = pageStr.replace(/ Ⅱ/g, '11').replace(/Ⅱ/g, '11');
+      const rawSns = cleanPage.match(/\b([0-9]{4}\s*[A-Z]{1,3}\s*[0-9A-Z]{4,8})\b/g) || [];
+      const pageSns = [];
+      rawSns.forEach(s => {
+        const sClean = s.replace(/\s+/g, '').toUpperCase();
+        if (/^[0-9]{4}[A-Z]{1,3}[0-9]{4,8}$/.test(sClean) && !sClean.startsWith('DB') && !sClean.startsWith('RT') && !sClean.startsWith('LP') && !sClean.startsWith('NT')) {
+          if (!pageSns.includes(sClean) && !machinesMap.has(sClean)) {
+            pageSns.push(sClean);
+          }
+        }
+      });
 
-      const startPos = m.index;
-      const nextPos = (idx + 1 < snMatches.length) ? snMatches[idx + 1].index : clean.length;
-      const block = clean.slice(startPos, nextPos);
+      // 2. 萃取該頁非零印量/抄表讀數
+      let cleanCounts = pageStr.replace(/0\/0\/\d+/g, ' ').replace(/0\/0/g, ' ');
+      const rawPairs = Array.from(cleanCounts.matchAll(/\b(\d{1,7})\s*\/\s*(\d{1,7})\b/g)).map(p => [parseInt(p[1], 10) || 0, parseInt(p[2], 10) || 0]);
+      
+      const validPairs = [];
+      rawPairs.forEach(p => {
+        const c1 = p[0], c2 = p[1];
+        // 排除年份與日期
+        if (c1 >= 2024 && c1 <= 2027) return;
+        if (c2 >= 2024 && c2 <= 2027) return;
+        if (c1 <= 12 && c2 <= 31) return;
+        // 排除整千基本額度標籤
+        if ((c1 === 15000 || c1 === 10000 || c1 === 7000 || c1 === 5000 || c1 === 3000 || c1 === 2000) && c2 === 0) return;
+        if ((c2 === 3000 || c2 === 2000) && c1 === 0) return;
+        validPairs.push([c1, c2]);
+      });
 
-      // 提取非零純數字對 (例如 3027/3135 或 5504/0)
-      const pairs = Array.from(block.matchAll(/\b(\d{2,7})\/(\d{1,7})\b/g)).map(p => [parseInt(p[1], 10) || 0, parseInt(p[2], 10) || 0]);
+      // 3. 依序對齊機號與讀數
+      pageSns.forEach((sn, i) => {
+        const isColor = sn.startsWith('9136') || sn.startsWith('9175') || sn.startsWith('9155') || cleanPage.includes('3.340') || cleanPage.includes('3.193');
+        let meter = 7000;
+        let bwMeter = 0;
+        let baseCount = 7000;
+        let price = "0.501";
+        let bwRate = 0;
 
-      let mainUsage = 0;
-      let bwUsage = 0;
-      let baseCount = 7000;
-      let price = "0.501";
-      let bwRate = 0;
+        if (i < validPairs.length) {
+          const p = validPairs[i];
+          if (isColor) {
+            bwMeter = p[0] > 0 ? (p[0] < 50000 ? roundActualToMeter(p[0]) : p[0]) : 0;
+            meter = p[1] > 0 ? (p[1] < 50000 ? roundActualToMeter(p[1]) : p[1]) : p[0];
+          } else {
+            const act = p[0] > 0 ? p[0] : p[1];
+            meter = act < 100000 ? roundActualToMeter(act) : act;
+          }
+        }
 
-      const isColor = sn.startsWith('9136') || sn.startsWith('9175') || sn.startsWith('9155') || block.includes('3.340') || block.includes('3.193');
-
-      if (pairs.length > 0) {
-        // 第一組有效數值即為抄表讀數
-        const p = pairs[0];
+        // 判斷契約項次
+        let matchedKey = currentMode === 'new' ? 'n_g1_1' : 'u_g1_1';
         if (isColor) {
-          bwUsage = p[0];
-          mainUsage = p[1] > 0 ? p[1] : p[0];
+          if (sn.startsWith('9175') || sn.startsWith('9155') || cleanPage.includes('3.193')) {
+            matchedKey = 'n_g1_18';
+            price = "3.193";
+            bwRate = 0.380;
+            baseCount = 2000;
+          } else {
+            matchedKey = 'n_g1_17';
+            price = "3.340";
+            bwRate = 0.400;
+            baseCount = 3000;
+          }
+        } else if (sn.startsWith('4445') || cleanPage.includes('15000')) {
+          matchedKey = 'n_g1_9';
+          price = "0.461";
+          baseCount = 15000;
+        } else if (sn.startsWith('4435') || cleanPage.includes('10000')) {
+          matchedKey = 'n_g1_5';
+          price = "0.568";
+          baseCount = 10000;
         } else {
-          mainUsage = p[0] > 0 ? p[0] : p[1];
-          bwUsage = 0;
+          matchedKey = 'n_g1_1';
+          price = "0.501";
+          baseCount = 7000;
         }
-      }
 
-      // 判斷契約項次與單價規格
-      let matchedKey = currentMode === 'new' ? 'n_g1_1' : 'u_g1_1';
-      if (isColor) {
-        if (sn.startsWith('9175') || sn.startsWith('9155') || block.includes('3.193')) {
-          matchedKey = 'n_g1_18';
-          price = "3.193";
-          bwRate = 0.380;
-          baseCount = 2000;
-        } else {
-          matchedKey = 'n_g1_17';
-          price = "3.340";
-          bwRate = 0.400;
-          baseCount = 3000;
-        }
-      } else if (sn.startsWith('4445') || block.includes('15000') || block.includes('6915')) {
-        matchedKey = 'n_g1_9';
-        price = "0.461";
-        baseCount = 15000;
-      } else if (sn.startsWith('4435') || block.includes('10000') || block.includes('5680')) {
-        matchedKey = 'n_g1_5';
-        price = "0.568";
-        baseCount = 10000;
-      } else {
-        matchedKey = 'n_g1_1';
-        price = "0.501";
-        baseCount = 7000;
-      }
-
-      machinesMap.set(sn, {
-        name: `機號 ${sn}`,
-        itemKey: matchedKey,
-        price: price,
-        base: baseCount,
-        meter: mainUsage > 0 ? mainUsage : baseCount,
-        bwMeter: bwUsage,
-        bwRate: bwRate
+        machinesMap.set(sn, {
+          name: `機號 ${sn}`,
+          itemKey: matchedKey,
+          price: price,
+          base: baseCount,
+          meter: meter > 0 ? meter : baseCount,
+          bwMeter: bwMeter,
+          bwRate: bwRate
+        });
       });
     });
 
     parsedMachinesCache = Array.from(machinesMap.values());
     renderParsePreview();
+  }
+
+  function roundActualToMeter(num) {
+    if (!num || num <= 0) return 0;
+    // 若數值為扣 1.5% 後之印量，還原為原始抄表讀數
+    return Math.round(num / 0.985);
   }
 
   function renderParsePreview() {
@@ -2654,7 +2668,7 @@ const NEW_CONTRACT_ITEMS = {
         <td>${idx + 1}</td>
         <td><strong>${m.name}</strong></td>
         <td>${itemInfo.name}</td>
-        <td><span style="color:#059669; font-weight:700;">${m.meter.toLocaleString()} 張</span></td>
+        <td><input type="number" value="${m.meter}" style="width:90px; padding:2px 6px; font-weight:700; color:#059669; border:1px solid #a7f3d0; border-radius:4px;" onchange="parsedMachinesCache[${idx}].meter = parseInt(this.value,10)||0"> 張</td>
         <td>${m.base.toLocaleString()} 張</td>
         <td>NT$ ${m.price}</td>
       `;
