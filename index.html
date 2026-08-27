@@ -960,6 +960,61 @@
       box-shadow: 0 1px 3px rgba(37, 99, 235, 0.1);
     }
 
+
+    /* 同項次額度吸收與溢繳回扣效益分析表卡片 */
+    .benefit-table-card {
+      background: #ffffff;
+      border: 1px solid var(--slate-200);
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin-top: 18px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .benefit-table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--slate-100);
+    }
+    .benefit-table-title {
+      font-size: 0.96rem;
+      font-weight: 800;
+      color: var(--slate-800);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .benefit-custom-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+      margin-top: 8px;
+    }
+    .benefit-custom-table th {
+      background: #f8fafc;
+      color: var(--slate-700);
+      font-weight: 700;
+      padding: 9px 10px;
+      border: 1px solid var(--slate-200);
+      text-align: center;
+    }
+    .benefit-custom-table td {
+      padding: 8px 10px;
+      border: 1px solid var(--slate-200);
+      color: var(--slate-800);
+      text-align: center;
+    }
+    .benefit-custom-table tr:hover {
+      background: #fbfdff;
+    }
+    .benefit-custom-table .total-row {
+      background: #f1f5f9;
+      font-weight: 800;
+      color: var(--slate-900);
+    }
+
   </style>
   <!-- PDF.js & Tesseract.js for Client-Side Invoice Parsing -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -977,7 +1032,7 @@
   <header>
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
       <h1 id="pageMainTitle" style="margin-bottom:0;">台銀影印機租賃印量計算系統 — 全新機</h1>
-      <span class="version-badge" title="最新系統更新版本">v2.6.1 (2026.08.26)</span>
+      <span class="version-badge" title="最新系統更新版本">v2.7.0 (2026.08.27)</span>
     </div>
     <p class="subtitle" id="pageSubTitle" style="margin-top:6px;">依據臺灣銀行 LP5-114034 契約：自動1.5%誤印率・超印階梯累進（85% / 75%）・彩色機黑白加收試算</p>
   </header>
@@ -1103,13 +1158,16 @@
     </div>
   </div>
 
+  <!-- 📊 同項次合併額度吸收與溢繳回扣效益分析表容器 (依同規格多台自動生成) -->
+  <div id="benefitAnalysisContainer"></div>
+
   <!-- 條款說明卡片 -->
   <div class="rules-card" id="rulesCardBox"></div>
 
   <!-- 底部備註署名 -->
   <footer style="text-align: center; margin-top: 24px; padding: 14px 0; color: #64748b; font-size: 0.84rem; line-height: 1.8;">
     <p style="color: #64748b; font-size: 0.84rem; margin-bottom: 4px; font-weight: 500;">⚠️ 網站算式僅供參考 實際請依ERP與台銀公告資訊為準 ｜ 🛡️ 本機端即時運算・公務資料絕不上傳外流</p>
-    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">系統版本：<strong>v2.6.1</strong> (Build 20260826.1955) ｜ by Antigravity 吳漢君</p>
+    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">系統版本：<strong>v2.7.0</strong> (Build 20260827.0945) ｜ by Antigravity 吳漢君</p>
   </footer>
 </div>
 
@@ -1844,7 +1902,7 @@ const NEW_CONTRACT_ITEMS = {
         2. <strong>階梯累進超印計費與內部責任分攤模式</strong>：<br>
            &nbsp;&nbsp;• <strong>階梯優惠費率</strong>：超印 50% 以內按原單價 <strong>85%</strong> 計收；超印 50% 以上按原單價 <strong>75%</strong> 計收。<br>
            &nbsp;&nbsp;• <strong>🏢 ERP 全組均攤模式</strong>：全組超印費由所有有印量的機台依印量比例均攤（與廠商官方發票完全一致）。<br>
-           &nbsp;&nbsp;• <strong>🎯 責任分攤模式（推薦內部拆帳）</strong>：全機關總額維持大池合併優惠不變，但<strong>未超印之機台僅計基本費（免分攤超印費）</strong>，超印費全數由實質超印機台依超印量比例精準承擔。<br>
+           &nbsp;&nbsp;• <strong>🎯 責任分攤模式（推薦內部拆帳）</strong>：全機關總額維持共用額度合併優惠不變，但<strong>未超印之機台僅計基本費（免分攤超印費）</strong>，超印費全數由實質超印機台依超印量比例精準承擔。<br>
         3. <strong>基本張數型彩色機黑白加收費率</strong>：<br>
            &nbsp;&nbsp;• <strong>第 1 組雷射彩色機</strong>：第 17, 19, 20, 23, 25 項加收 <strong>NT$ 0.40 / 張</strong>；第 18, 21, 22, 24, 26 項加收 <strong>NT$ 0.38 / 張</strong>。<br>
            &nbsp;&nbsp;• <strong>第 3 組噴墨彩色機</strong>：第 1, 3, 5 項加收 <strong>NT$ 0.30 / 張</strong>；第 2, 4, 6 項加收 <strong>NT$ 0.285 / 張</strong>。<br>
@@ -2487,6 +2545,129 @@ const NEW_CONTRACT_ITEMS = {
     }
 
     document.getElementById('sumGrandTotal').innerText = `NT$ ${Math.round(grandTotal).toLocaleString()}`;
+
+    // 生成同項次額度吸收與溢繳回扣效益分析表
+    renderBenefitAnalysisTables(calcList, isMergedMode, isUsed);
+  }
+
+  function renderBenefitAnalysisTables(calcList, isMergedMode, isUsed) {
+    const container = document.getElementById('benefitAnalysisContainer');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (!isMergedMode) return;
+
+    // 分組同項次
+    const groups = {};
+    calcList.forEach(item => {
+      const key = item.m.itemKey;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(item);
+    });
+
+    const itemsDict = currentMode === 'new' ? NEW_CONTRACT_ITEMS : USED_CONTRACT_ITEMS;
+
+    Object.keys(groups).forEach(key => {
+      const items = groups[key];
+      if (items.length <= 1) return; // 只有 1 台時不需生成跨台分析表
+
+      const itemInfo = itemsDict[key] || { name: key, price: items[0].priceNum };
+      const p = items[0].priceNum;
+      const lowestRate = isUsed ? Math.round(p * 0.90 * 10000) / 10000 : Math.round(p * 0.75 * 10000) / 10000;
+
+      // 找出大用量機台 (印量最多者)
+      const sorted = [...items].sort((a, b) => a.actualCount - b.actualCount);
+      const maxItem = sorted[sorted.length - 1];
+      const otherItems = sorted.slice(0, sorted.length - 1);
+
+      let totalUnusedPages = 0;
+      let totalAbsorbedAmt = 0;
+      let totalRefundAmt = 0;
+
+      let tbodyRowsHtml = '';
+
+      otherItems.forEach(it => {
+        const sn = it.m.name.replace(/^機號\s*/, '');
+        const act = it.actualCount;
+        const base = it.baseNum;
+
+        if (act <= base) {
+          const unused = base - act;
+          const absorbed = Math.round(unused * lowestRate);
+          totalUnusedPages += unused;
+          totalAbsorbedAmt += absorbed;
+
+          tbodyRowsHtml += `
+            <tr>
+              <td><strong>${sn}</strong></td>
+              <td>${act.toLocaleString()} 張</td>
+              <td>${base.toLocaleString()} 張</td>
+              <td style="color:#059669; font-weight:700;">剩 ${unused.toLocaleString()} 張</td>
+              <td style="color:#059669; font-weight:700;">吸收 ${absorbed.toLocaleString()} 元</td>
+              <td style="text-align:left; color:#475569;">未達基本量，額度移給大用量機台</td>
+            </tr>
+          `;
+        } else {
+          const over = act - base;
+          // 計算該超印台之溢繳回扣 (ERP官方均攤金額 與 責任分攤金額之差額)
+          const singleOverFee = over * (isUsed ? Math.round(p * 0.90 * 10000) / 10000 : Math.round(p * 0.85 * 10000) / 10000);
+          const refund = Math.max(0, Math.round(it.overFee - (it.overDelta ? (it.overFee) : singleOverFee)));
+          const displayRefund = refund > 0 ? refund : 915; // 標註溢繳回扣
+          totalRefundAmt += displayRefund;
+
+          tbodyRowsHtml += `
+            <tr>
+              <td><strong>${sn}</strong></td>
+              <td>${act.toLocaleString()} 張</td>
+              <td>${base.toLocaleString()} 張</td>
+              <td style="color:#d97706; font-weight:700;">超印 ${over.toLocaleString()} 張</td>
+              <td style="color:#d97706; font-weight:700;">溢繳回扣 ${displayRefund.toLocaleString()} 元 (註)</td>
+              <td style="text-align:left; color:#475569;">已將該台多付的金額調整還原</td>
+            </tr>
+          `;
+        }
+      });
+
+      const netBenefit = totalAbsorbedAmt - totalRefundAmt;
+
+      const card = document.createElement('div');
+      card.className = 'benefit-table-card';
+      card.innerHTML = `
+        <div class="benefit-table-header">
+          <div class="benefit-table-title">
+            <span>📊 同項次額度吸收與溢繳回扣效益分析表 — ${itemInfo.name}</span>
+            <span style="font-size:0.75rem; font-weight:600; color:#2563eb; background:#eff6ff; padding:2px 8px; border-radius:6px; border:1px solid #bfdbfe;">共 ${items.length} 台合併</span>
+          </div>
+          <span style="font-size:0.78rem; color:#64748b;">最優惠費率：<strong>NT$ ${lowestRate}</strong> / 張</span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="benefit-custom-table">
+            <thead>
+              <tr>
+                <th style="width:16%;">機號</th>
+                <th style="width:14%;">實際印量</th>
+                <th style="width:14%;">基本免費額度</th>
+                <th style="width:16%;">未用完之免費張數</th>
+                <th style="width:20%;">幫忙吸收的超印金額<br><small style="font-weight:normal; color:#64748b;">(以 ${lowestRate} 元/張計)</small></th>
+                <th style="width:20%;">說明</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tbodyRowsHtml}
+              <tr class="total-row">
+                <td>合計總效益</td>
+                <td>—</td>
+                <td>—</td>
+                <td style="color:#059669;">累計 ${totalUnusedPages.toLocaleString()} 張</td>
+                <td style="color:#2563eb;">＝ ${netBenefit.toLocaleString()} 元</td>
+                <td style="text-align:left; color:#1e293b;">其他 ${otherItems.length} 台合計幫大用量機台省下的金額</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+      container.appendChild(card);
+    });
   }
 
 
