@@ -1032,7 +1032,7 @@
   <header>
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
       <h1 id="pageMainTitle" style="margin-bottom:0;">台銀影印機租賃印量計算系統 — 全新機</h1>
-      <span class="version-badge" title="最新系統更新版本">v2.8.0 (2026.08.27)</span>
+      <span class="version-badge" title="最新系統更新版本">v2.8.1 (2026.08.27)</span>
     </div>
     <p class="subtitle" id="pageSubTitle" style="margin-top:6px;">依據臺灣銀行 LP5-114034 契約：自動1.5%誤印率・超印階梯累進（85% / 75%）・彩色機黑白加收試算</p>
   </header>
@@ -1170,7 +1170,7 @@
   <!-- 底部備註署名 -->
   <footer style="text-align: center; margin-top: 24px; padding: 14px 0; color: #64748b; font-size: 0.84rem; line-height: 1.8;">
     <p style="color: #64748b; font-size: 0.84rem; margin-bottom: 4px; font-weight: 500;">⚠️ 網站算式僅供參考 實際請依ERP與台銀公告資訊為準 ｜ 🛡️ 本機端即時運算・公務資料絕不上傳外流</p>
-    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">系統版本：<strong>v2.8.0</strong> (Build 20260827.0955) ｜ by Antigravity 吳漢君</p>
+    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">系統版本：<strong>v2.8.1</strong> (Build 20260827.1025) ｜ by Antigravity 吳漢君</p>
   </footer>
 </div>
 
@@ -1944,10 +1944,13 @@ const NEW_CONTRACT_ITEMS = {
       box.innerHTML = `
         <strong>📋 臺灣銀行採購部 LP5-114034 全新影印機租賃計費依據摘要：</strong><br>
         1. <strong>實際計費張數</strong>：每台設備依抄表張數自動扣除 <strong>1.5% 誤印率</strong>（四捨五入計算至整數）。<br>
-        2. <strong>階梯累進超印計費與內部責任分攤模式</strong>：<br>
-           &nbsp;&nbsp;• <strong>階梯優惠費率</strong>：超印 50% 以內按原單價 <strong>85%</strong> 計收；超印 50% 以上按原單價 <strong>75%</strong> 計收。<br>
-           &nbsp;&nbsp;• <strong>🏢 ERP 全組均攤模式</strong>：全組超印費由所有有印量的機台依印量比例均攤（與廠商官方發票完全一致）。<br>
-           &nbsp;&nbsp;• <strong>🎯 責任分攤模式（推薦內部拆帳）</strong>：全機關總額維持共用額度合併優惠不變，但<strong>未超印之機台僅計基本費（免分攤超印費）</strong>，超印費全數由實質超印機台依超印量比例精準承擔。<br>
+        2. <strong>各式計算方法備註說明與適用情境</strong>：<br>
+           &nbsp;&nbsp;• <strong>🏢 模式一：多台合併 (ERP全組均攤模式)</strong><br>
+           &nbsp;&nbsp;&nbsp;&nbsp;將同項次設備之基本額度與實際印量統籌合併計算。產生的總超印費由所有有印量的機台依印量權重均攤。<strong>（核銷對帳專用：與互盛/震旦官方發票各台應收小計 100% 完全相符）</strong>。<br>
+           &nbsp;&nbsp;• <strong>🎯 模式二：責任分攤模式 (未超印免攤 / 溢繳回扣)</strong><br>
+           &nbsp;&nbsp;&nbsp;&nbsp;全機關實付總金額維持合併計算總額分毫不變；但<strong>未達基本額度之機台僅收取基本租費（免分攤超印費）</strong>，其未用完之額度移轉給大用量機台吸收；超印機台則依責任比例承擔折抵後的超印費。<strong>（內部各科室公平拆帳專用）</strong>。<br>
+           &nbsp;&nbsp;• <strong>🖨️ 模式三：單機獨立計費模式</strong><br>
+           &nbsp;&nbsp;&nbsp;&nbsp;各台設備獨立核算，額度不互通、不移轉，未印滿之額度當月失效，超印台各自依 85%/75% 階梯費率計收。<strong>（效益分析比價專用：可清晰比較未合併時之總支出差異）</strong>。<br>
         3. <strong>基本張數型彩色機黑白加收費率</strong>：<br>
            &nbsp;&nbsp;• <strong>第 1 組雷射彩色機</strong>：第 17, 19, 20, 23, 25 項加收 <strong>NT$ 0.40 / 張</strong>；第 18, 21, 22, 24, 26 項加收 <strong>NT$ 0.38 / 張</strong>。<br>
            &nbsp;&nbsp;• <strong>第 3 組噴墨彩色機</strong>：第 1, 3, 5 項加收 <strong>NT$ 0.30 / 張</strong>；第 2, 4, 6 項加收 <strong>NT$ 0.285 / 張</strong>。<br>
@@ -2607,8 +2610,6 @@ const NEW_CONTRACT_ITEMS = {
     if (!container) return;
     container.innerHTML = '';
 
-    if (!isMergedMode) return;
-
     // 分組同項次
     const groups = {};
     calcList.forEach(item => {
@@ -2618,10 +2619,13 @@ const NEW_CONTRACT_ITEMS = {
     });
 
     const itemsDict = currentMode === 'new' ? NEW_CONTRACT_ITEMS : USED_CONTRACT_ITEMS;
+    let renderedCount = 0;
 
     Object.keys(groups).forEach(key => {
       const items = groups[key];
-      if (items.length <= 1) return; // 只有 1 台時不需生成跨台分析表
+      if (items.length <= 1) return; // 只有 1 台時跳過
+
+      renderedCount++;
 
       const itemInfo = itemsDict[key] || { name: key, price: items[0].priceNum };
       const p = items[0].priceNum;
@@ -2720,6 +2724,22 @@ const NEW_CONTRACT_ITEMS = {
       `;
       container.appendChild(card);
     });
+
+    if (renderedCount === 0 && isMergedMode) {
+      const emptyCard = document.createElement('div');
+      emptyCard.className = 'benefit-table-card';
+      emptyCard.style.borderStyle = 'dashed';
+      emptyCard.style.background = '#f8fafc';
+      emptyCard.innerHTML = `
+        <div class="benefit-table-header" style="border-bottom:none; margin-bottom:0; padding-bottom:0;">
+          <div class="benefit-table-title" style="color:#64748b; font-size:0.88rem;">
+            <span>📊 同項次額度吸收與溢繳回扣效益分析表</span>
+          </div>
+          <span style="font-size:0.78rem; color:#94a3b8;">💡 提示：當上傳收費單或新增 2 台以上相同契約項次之設備時，系統將在此自動生成效益拆帳分析表。</span>
+        </div>
+      `;
+      container.appendChild(emptyCard);
+    }
   }
 
 
