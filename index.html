@@ -184,37 +184,75 @@
       gap: 8px;
     }
 
-    /* 計費模式分段切換按鈕 */
+    /* 計費模式色塊分段切換區 (高對比三大專屬色塊、文字清晰易辨) */
     .calc-mode-segment {
       display: inline-flex;
-      background: var(--slate-100);
-      padding: 3px;
-      border-radius: 8px;
-      gap: 3px;
-      border: 1px solid var(--slate-200);
+      background: #f1f5f9;
+      padding: 4px;
+      border-radius: 10px;
+      gap: 6px;
+      border: 1px solid #cbd5e1;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);
+      flex-wrap: wrap;
     }
     .calc-mode-btn {
-      padding: 5px 12px;
-      border-radius: 6px;
-      border: none;
-      font-size: 0.8rem;
-      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 700;
       cursor: pointer;
-      background: transparent;
-      color: var(--slate-600);
-      transition: all 0.15s;
+      transition: all 0.18s ease;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
+      white-space: nowrap;
     }
-    .calc-mode-btn.active {
-      background: #ffffff;
-      color: var(--primary);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-      font-weight: 700;
+    /* 色塊 1: 多台合併 (ERP格式) */
+    #btnCalcMerged {
+      background: #eff6ff;
+      color: #1e40af;
+      border: 1.5px solid #bfdbfe;
     }
-    .calc-mode-btn.active.used-active {
-      color: var(--emerald-700);
+    #btnCalcMerged:hover {
+      background: #dbeafe;
+    }
+    #btnCalcMerged.active {
+      background: #2563eb !important;
+      color: #ffffff !important;
+      border-color: #1d4ed8 !important;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
+    }
+
+    /* 色塊 2: 責任分攤 (無超印機台免攤) */
+    #btnCalcFair {
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1.5px solid #a7f3d0;
+    }
+    #btnCalcFair:hover {
+      background: #d1fae5;
+    }
+    #btnCalcFair.active {
+      background: #059669 !important;
+      color: #ffffff !important;
+      border-color: #047857 !important;
+      box-shadow: 0 2px 6px rgba(5, 150, 105, 0.4);
+    }
+
+    /* 色塊 3: 單機獨立運算 (每台實際費用) */
+    #btnCalcSingle {
+      background: #faf5ff;
+      color: #6b21a8;
+      border: 1.5px solid #e9d5ff;
+    }
+    #btnCalcSingle:hover {
+      background: #f3e8ff;
+    }
+    #btnCalcSingle.active {
+      background: #7c3aed !important;
+      color: #ffffff !important;
+      border-color: #6d28d9 !important;
+      box-shadow: 0 2px 6px rgba(124, 58, 237, 0.4);
     }
 
     /* 通用按鈕 */
@@ -1032,7 +1070,7 @@
   <header>
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
       <h1 id="pageMainTitle" style="margin-bottom:0;">台銀影印機租賃印量計算系統 — 全新機</h1>
-      <span class="version-badge" title="最新系統更新版本">v2.8.1 (2026.08.27)</span>
+      <span class="version-badge" title="最新系統更新版本">v2.9.0 (2026.08.27)</span>
     </div>
     <p class="subtitle" id="pageSubTitle" style="margin-top:6px;">依據臺灣銀行 LP5-114034 契約：自動1.5%誤印率・超印階梯累進（85% / 75%）・彩色機黑白加收試算</p>
   </header>
@@ -1094,13 +1132,13 @@
     <div class="action-bar-right">
       <div class="calc-mode-segment">
         <button type="button" class="calc-mode-btn active" id="btnCalcMerged" onclick="switchCalcMode('merged')" title="同規格設備合併總基本張數與總印量，依印量比例官方均攤">
-          <span>🔗 多台合併 (ERP全組均攤)</span>
+          <span>🔗 多台合併 (ERP格式)</span>
         </button>
-        <button type="button" class="calc-mode-btn" id="btnCalcFair" onclick="switchCalcMode('fair')" title="同規格設備共用總額度，但僅由真正超印機台分攤超印費，沒超印者僅收基本費">
-          <span>🎯 責任分攤 (未超印免攤)</span>
+        <button type="button" class="calc-mode-btn" id="btnCalcFair" onclick="switchCalcMode('fair')" title="同規格設備共用總額度，但無超印機台僅收取基本租費免分攤，由超印機台承擔">
+          <span>🎯 責任分攤 (無超印機台免攤)</span>
         </button>
-        <button type="button" class="calc-mode-btn" id="btnCalcSingle" onclick="switchCalcMode('single')" title="各台設備各自獨立核算基本張數與超印">
-          <span>🖨️ 單機獨立計費</span>
+        <button type="button" class="calc-mode-btn" id="btnCalcSingle" onclick="switchCalcMode('single')" title="各台設備各自獨立核算基本張數與超印，呈現每台獨立運算之實際費用">
+          <span>🖨️ 單機獨立運算 (每台實際費用)</span>
         </button>
       </div>
       <button class="btn btn-secondary" onclick="window.print()">
@@ -1170,7 +1208,7 @@
   <!-- 底部備註署名 -->
   <footer style="text-align: center; margin-top: 24px; padding: 14px 0; color: #64748b; font-size: 0.84rem; line-height: 1.8;">
     <p style="color: #64748b; font-size: 0.84rem; margin-bottom: 4px; font-weight: 500;">⚠️ 網站算式僅供參考 實際請依ERP與台銀公告資訊為準 ｜ 🛡️ 本機端即時運算・公務資料絕不上傳外流</p>
-    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">系統版本：<strong>v2.8.1</strong> (Build 20260827.1025) ｜ by Antigravity 吳漢君</p>
+    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">系統版本：<strong>v2.9.0</strong> (Build 20260827.1055) ｜ by Antigravity 吳漢君</p>
   </footer>
 </div>
 
@@ -1925,14 +1963,22 @@ const NEW_CONTRACT_ITEMS = {
 
   function switchCalcMode(mode) {
     calcMode = mode;
-    const isUsed = currentMode === 'used';
     const btnMerged = document.getElementById('btnCalcMerged');
     const btnFair = document.getElementById('btnCalcFair');
     const btnSingle = document.getElementById('btnCalcSingle');
 
-    if (btnMerged) btnMerged.className = `calc-mode-btn ${mode === 'merged' ? 'active ' + (isUsed ? 'used-active' : '') : ''}`;
-    if (btnFair) btnFair.className = `calc-mode-btn ${mode === 'fair' ? 'active ' + (isUsed ? 'used-active' : '') : ''}`;
-    if (btnSingle) btnSingle.className = `calc-mode-btn ${mode === 'single' ? 'active ' + (isUsed ? 'used-active' : '') : ''}`;
+    if (btnMerged) {
+      if (mode === 'merged') btnMerged.classList.add('active');
+      else btnMerged.classList.remove('active');
+    }
+    if (btnFair) {
+      if (mode === 'fair') btnFair.classList.add('active');
+      else btnFair.classList.remove('active');
+    }
+    if (btnSingle) {
+      if (mode === 'single') btnSingle.classList.add('active');
+      else btnSingle.classList.remove('active');
+    }
 
     recalculate();
   }
@@ -1945,12 +1991,12 @@ const NEW_CONTRACT_ITEMS = {
         <strong>📋 臺灣銀行採購部 LP5-114034 全新影印機租賃計費依據摘要：</strong><br>
         1. <strong>實際計費張數</strong>：每台設備依抄表張數自動扣除 <strong>1.5% 誤印率</strong>（四捨五入計算至整數）。<br>
         2. <strong>各式計算方法備註說明與適用情境</strong>：<br>
-           &nbsp;&nbsp;• <strong>🏢 模式一：多台合併 (ERP全組均攤模式)</strong><br>
+           &nbsp;&nbsp;• <strong>🔗 模式一：多台合併 (ERP格式)</strong><br>
            &nbsp;&nbsp;&nbsp;&nbsp;將同項次設備之基本額度與實際印量統籌合併計算。產生的總超印費由所有有印量的機台依印量權重均攤。<strong>（核銷對帳專用：與互盛/震旦官方發票各台應收小計 100% 完全相符）</strong>。<br>
-           &nbsp;&nbsp;• <strong>🎯 模式二：責任分攤模式 (未超印免攤 / 溢繳回扣)</strong><br>
+           &nbsp;&nbsp;• <strong>🎯 模式二：責任分攤 (無超印機台免攤)</strong><br>
            &nbsp;&nbsp;&nbsp;&nbsp;全機關實付總金額維持合併計算總額分毫不變；但<strong>未達基本額度之機台僅收取基本租費（免分攤超印費）</strong>，其未用完之額度移轉給大用量機台吸收；超印機台則依責任比例承擔折抵後的超印費。<strong>（內部各科室公平拆帳專用）</strong>。<br>
-           &nbsp;&nbsp;• <strong>🖨️ 模式三：單機獨立計費模式</strong><br>
-           &nbsp;&nbsp;&nbsp;&nbsp;各台設備獨立核算，額度不互通、不移轉，未印滿之額度當月失效，超印台各自依 85%/75% 階梯費率計收。<strong>（效益分析比價專用：可清晰比較未合併時之總支出差異）</strong>。<br>
+           &nbsp;&nbsp;• <strong>🖨️ 模式三：單機獨立運算 (每台實際費用)</strong><br>
+           &nbsp;&nbsp;&nbsp;&nbsp;各台設備獨立核算，額度不互通、不移轉，未印滿之額度當月失效，超印台各自依 85%/75% 階梯費率計收。<strong>（效益分析比價專用：可清晰比較每台獨立運算之實際費用與未合併時之總支出差異）</strong>。<br>
         3. <strong>基本張數型彩色機黑白加收費率</strong>：<br>
            &nbsp;&nbsp;• <strong>第 1 組雷射彩色機</strong>：第 17, 19, 20, 23, 25 項加收 <strong>NT$ 0.40 / 張</strong>；第 18, 21, 22, 24, 26 項加收 <strong>NT$ 0.38 / 張</strong>。<br>
            &nbsp;&nbsp;• <strong>第 3 組噴墨彩色機</strong>：第 1, 3, 5 項加收 <strong>NT$ 0.30 / 張</strong>；第 2, 4, 6 項加收 <strong>NT$ 0.285 / 張</strong>。<br>
