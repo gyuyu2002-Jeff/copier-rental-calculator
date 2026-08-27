@@ -1032,7 +1032,7 @@
   <header>
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
       <h1 id="pageMainTitle" style="margin-bottom:0;">台銀影印機租賃印量計算系統 — 全新機</h1>
-      <span class="version-badge" title="最新系統更新版本">v2.7.0 (2026.08.27)</span>
+      <span class="version-badge" title="最新系統更新版本">v2.8.0 (2026.08.27)</span>
     </div>
     <p class="subtitle" id="pageSubTitle" style="margin-top:6px;">依據臺灣銀行 LP5-114034 契約：自動1.5%誤印率・超印階梯累進（85% / 75%）・彩色機黑白加收試算</p>
   </header>
@@ -1083,6 +1083,9 @@
       </button>
       <button class="btn btn-secondary" id="btnBatchAdd" onclick="openBatchModal()">
         <span>📑</span> 批量新增多台
+      </button>
+      <button class="btn btn-secondary" onclick="openAliasModal()" title="設定機號與自訂科室名稱對照表（例如：4415RC50038 ➔ 秘書室），下次匯入自動套用">
+        <span>🏷️</span> 機號科室記憶
       </button>
       <button class="btn btn-secondary" onclick="resetDefault()">
         <span>🔄</span> 重設範例
@@ -1167,10 +1170,52 @@
   <!-- 底部備註署名 -->
   <footer style="text-align: center; margin-top: 24px; padding: 14px 0; color: #64748b; font-size: 0.84rem; line-height: 1.8;">
     <p style="color: #64748b; font-size: 0.84rem; margin-bottom: 4px; font-weight: 500;">⚠️ 網站算式僅供參考 實際請依ERP與台銀公告資訊為準 ｜ 🛡️ 本機端即時運算・公務資料絕不上傳外流</p>
-    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">系統版本：<strong>v2.7.0</strong> (Build 20260827.0945) ｜ by Antigravity 吳漢君</p>
+    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">系統版本：<strong>v2.8.0</strong> (Build 20260827.0955) ｜ by Antigravity 吳漢君</p>
   </footer>
 </div>
 
+
+<!-- 🏷️ 機號與自訂科室名稱對照表 (本機記憶) Modal -->
+<div class="modal-backdrop" id="aliasModal" onclick="if(event.target===this) closeAliasModal()">
+  <div class="modal-dialog" style="max-width: 640px;">
+    <div class="modal-header">
+      <div class="modal-title">🏷️ 機號與自訂科室名稱對照表 (本機自動記憶)</div>
+      <button type="button" class="modal-close" onclick="closeAliasModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:0.84rem; color:var(--slate-600); margin-bottom:12px; line-height:1.6;">
+        💡 <strong>本機自動記憶功能</strong>：在此設定或於匯入時自訂的科室名稱（如 <code>秘書室</code>、<code>總務部</code>），系統會安全儲存於您電腦的瀏覽器中。<strong>下次上傳收費單時將自動轉換帶入</strong>，無須重複輸入！
+      </div>
+
+      <!-- 新增對照表項目區 -->
+      <div style="display:flex; gap:8px; margin-bottom:14px; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0;">
+        <input type="text" id="newAliasSn" placeholder="設備機號 (如 4415RC50038)" style="flex:1; font-weight:700; text-transform:uppercase;">
+        <input type="text" id="newAliasName" placeholder="自訂科室名稱 (如 秘書室)" style="flex:1; font-weight:700;">
+        <button type="button" class="btn btn-new" style="white-space:nowrap;" onclick="addManualAlias()">＋ 新增對照</button>
+      </div>
+
+      <!-- 對照表清單 -->
+      <div style="max-height:280px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px;">
+        <table style="width:100%; border-collapse:collapse; font-size:0.86rem;">
+          <thead>
+            <tr style="background:#f1f5f9; color:#475569; position:sticky; top:0;">
+              <th style="padding:8px 10px; text-align:left; border-bottom:1px solid #e2e8f0;">設備機號</th>
+              <th style="padding:8px 10px; text-align:left; border-bottom:1px solid #e2e8f0;">自訂科室/設備名稱</th>
+              <th style="padding:8px 10px; width:70px; text-align:center; border-bottom:1px solid #e2e8f0;">操作</th>
+            </tr>
+          </thead>
+          <tbody id="aliasTableBody">
+            <!-- 動態插入 -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
+      <button type="button" class="btn btn-secondary" style="color:#ef4444;" onclick="clearAllAliases()">🗑️ 清空所有記憶</button>
+      <button type="button" class="btn btn-new" onclick="closeAliasModal()">完成</button>
+    </div>
+  </div>
+</div>
 
 <!-- 📤 智慧上傳收費單 / 自動帶入設備 Modal -->
 <div class="modal-backdrop" id="uploadModal" onclick="if(event.target===this) closeUploadModal()">
@@ -2116,6 +2161,13 @@ const NEW_CONTRACT_ITEMS = {
     if (!m) return;
 
     m[field] = value;
+    if (field === 'name') {
+      const snMatch = (m.sn || value).match(/([0-9]{4}[A-Z]{1,3}[0-9A-Z]{4,8})/);
+      const sn = m.sn || (snMatch ? snMatch[1] : '');
+      if (sn) {
+        saveMachineAlias(sn, value.replace(`(${sn})`, '').trim());
+      }
+    }
     recalculate();
   }
 
@@ -2672,6 +2724,100 @@ const NEW_CONTRACT_ITEMS = {
 
 
   // ══════════════════════════════════════════════════════
+  // 機號科室名稱記憶管理 (LocalStorage 本機完全隱私儲存)
+  // ══════════════════════════════════════════════════════
+  const ALIAS_STORAGE_KEY = 'copier_machine_aliases';
+
+  function getSavedAliases() {
+    try {
+      return JSON.parse(localStorage.getItem(ALIAS_STORAGE_KEY) || '{}');
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveMachineAlias(sn, name) {
+    if (!sn || !name) return;
+    const map = getSavedAliases();
+    map[sn.toUpperCase()] = name.trim();
+    try {
+      localStorage.setItem(ALIAS_STORAGE_KEY, JSON.stringify(map));
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function deleteMachineAlias(sn) {
+    const map = getSavedAliases();
+    delete map[sn.toUpperCase()];
+    localStorage.setItem(ALIAS_STORAGE_KEY, JSON.stringify(map));
+    renderAliasTable();
+  }
+
+  function clearAllAliases() {
+    if (confirm("確定要清空本機記憶的所有機號科室對照表嗎？")) {
+      localStorage.removeItem(ALIAS_STORAGE_KEY);
+      renderAliasTable();
+    }
+  }
+
+  function openAliasModal() {
+    renderAliasTable();
+    document.getElementById('aliasModal').classList.add('open');
+  }
+
+  function closeAliasModal() {
+    document.getElementById('aliasModal').classList.remove('open');
+    render();
+  }
+
+  function renderAliasTable() {
+    const tbody = document.getElementById('aliasTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const map = getSavedAliases();
+    const sns = Object.keys(map);
+
+    if (sns.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:20px; color:#94a3b8;">目前尚未有自訂記憶。只要在設備卡片修改名稱或在此新增，即可永久記憶！</td></tr>`;
+      return;
+    }
+
+    sns.sort().forEach(sn => {
+      const name = map[sn];
+      const tr = document.createElement('tr');
+      tr.style.borderBottom = '1px solid #f1f5f9';
+      tr.innerHTML = `
+        <td style="padding:8px 10px; font-weight:700; color:#1e293b;">${sn}</td>
+        <td style="padding:8px 10px;">
+          <input type="text" value="${name}" style="height:28px; padding:2px 8px; font-size:0.84rem;" onchange="saveMachineAlias('${sn}', this.value)">
+        </td>
+        <td style="padding:8px 10px; text-align:center;">
+          <button type="button" style="background:transparent; border:none; color:#ef4444; cursor:pointer; font-weight:700;" onclick="deleteMachineAlias('${sn}')">✕ 刪除</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function addManualAlias() {
+    const snInput = document.getElementById('newAliasSn');
+    const nameInput = document.getElementById('newAliasName');
+    const sn = snInput.value.trim().toUpperCase();
+    const name = nameInput.value.trim();
+
+    if (!sn || !name) {
+      alert("請輸入完整的機號與科室名稱！");
+      return;
+    }
+
+    saveMachineAlias(sn, name);
+    snInput.value = '';
+    nameInput.value = '';
+    renderAliasTable();
+  }
+
+  // ══════════════════════════════════════════════════════
   // 全通用純本機收費單解析器 (直取原始抄表讀數，零多重折算)
   // ══════════════════════════════════════════════════════
   let parsedMachinesCache = [];
@@ -2880,8 +3026,14 @@ const NEW_CONTRACT_ITEMS = {
           }
         }
 
+        const aliasMap = getSavedAliases();
+        const customDept = aliasMap[sn] || '';
+        const displayName = customDept ? `${customDept} (${sn})` : `機號 ${sn}`;
+
         machinesMap.set(sn, {
-          name: `機號 ${sn}`,
+          sn: sn,
+          name: displayName,
+          customDept: customDept,
           itemKey: matchedKey,
           price: price,
           base: baseCount,
@@ -2912,7 +3064,7 @@ const NEW_CONTRACT_ITEMS = {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${idx + 1}</td>
-        <td><strong>${m.name}</strong></td>
+        <td><input type="text" value="${m.name}" placeholder="如 秘書室" style="width:140px; padding:2px 6px; font-weight:700; color:#1e293b; border:1px solid #cbd5e1; border-radius:4px;" onchange="parsedMachinesCache[${idx}].name = this.value; if(parsedMachinesCache[${idx}].sn) saveMachineAlias(parsedMachinesCache[${idx}].sn, this.value);"></td>
         <td>${itemInfo.name}</td>
         <td><input type="number" value="${m.meter}" style="width:90px; padding:2px 6px; font-weight:700; color:#059669; border:1px solid #a7f3d0; border-radius:4px;" onchange="parsedMachinesCache[${idx}].meter = parseInt(this.value,10)||0"> 張</td>
         <td>${m.base.toLocaleString()} 張</td>
@@ -2929,16 +3081,22 @@ const NEW_CONTRACT_ITEMS = {
       switchContractMode('new');
     }
 
-    newMachinesData = parsedMachinesCache.map((m, idx) => ({
-      id: idx + 1,
-      name: m.name,
-      itemKey: m.itemKey,
-      price: m.price,
-      base: m.base,
-      meter: m.meter,
-      bwMeter: m.bwMeter || 0,
-      bwRate: m.bwRate || 0
-    }));
+    newMachinesData = parsedMachinesCache.map((m, idx) => {
+      if (m.sn && m.name) {
+        saveMachineAlias(m.sn, m.name.replace(`(${m.sn})`, '').trim());
+      }
+      return {
+        id: idx + 1,
+        sn: m.sn || '',
+        name: m.name,
+        itemKey: m.itemKey,
+        price: m.price,
+        base: m.base,
+        meter: m.meter,
+        bwMeter: m.bwMeter || 0,
+        bwRate: m.bwRate || 0
+      };
+    });
 
     nextId = newMachinesData.length + 1;
     closeUploadModal();
