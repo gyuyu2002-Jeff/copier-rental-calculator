@@ -2,6 +2,9 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <title>台銀影印機租賃印量計算系統</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -1070,7 +1073,7 @@
   <header>
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
       <h1 id="pageMainTitle" style="margin-bottom:0;">台銀影印機租賃印量計算系統 — 全新機</h1>
-      <span class="version-badge" title="最新系統更新版本">v3.6.0 (2026.09.10)</span>
+      <span class="version-badge" title="最新系統更新版本">v3.6.1 (2026.09.10)</span>
     </div>
     <p class="subtitle" id="pageSubTitle" style="margin-top:6px;">依據臺灣銀行 LP5-114034 契約：自動1.5%誤印率・超印階梯累進（85% / 75%）・彩色機黑白加收試算</p>
   </header>
@@ -1208,7 +1211,7 @@
   <!-- 底部備註署名 -->
   <footer style="text-align: center; margin-top: 24px; padding: 14px 0; color: #64748b; font-size: 0.84rem; line-height: 1.8;">
     <p style="color: #64748b; font-size: 0.84rem; margin-bottom: 4px; font-weight: 500;">⚠️ 網站算式僅供參考 實際請依ERP與台銀公告資訊為準 ｜ 🛡️ 本機端即時運算・公務資料絕不上傳外流</p>
-    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">系統版本：<strong>v3.6.0</strong> (Build 20260910.1730) ｜ by Antigravity 吳漢君</p>
+    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">系統版本：<strong>v3.6.1</strong> (Build 20260910.1740) ｜ by Antigravity 吳漢君</p>
   </footer>
 </div>
 
@@ -2941,7 +2944,7 @@ const NEW_CONTRACT_ITEMS = {
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
           const textContent = await page.getTextContent();
-          const pageText = textContent.items.map(s => s.str).join(' ');
+          const pageText = textContent.items.map(s => s.str).join('\n');
 
           fullText += '\n--- Page ' + i + ' ---\n' + pageText;
         }
@@ -3051,16 +3054,34 @@ const NEW_CONTRACT_ITEMS = {
         }
         const block = cleanPage.substring(snIdx, nextSnIdx);
 
-        // 1. 互盛【基本費】欄位：直取黑/彩/黑+彩，避開西元日期 (2020~2040/MM/DD)
+        // 1. 互盛【基本張數】與【基本費】直取（相鄰兩行標準格式）
+        let baseCount = 0;
         let exactBaseFee = 0;
-        const triples = Array.from(block.matchAll(/\b(\d+)\s*\/\s*(\d+)\s*\/\s*(\d+)\b/g));
-        for (const t of triples) {
-          const p1 = parseInt(t[1], 10) || 0;
-          const p2 = parseInt(t[2], 10) || 0;
-          const p3 = parseInt(t[3], 10) || 0;
-          if (p1 >= 2020 && p1 <= 2040 && p2 <= 12 && p3 <= 31) continue;
-          exactBaseFee = p3 > 0 ? p3 : (p1 > 0 ? p1 : p2);
+        const feeMatches = Array.from(block.matchAll(/(\d+)\s*\/\s*(\d+)\s+(\d+)\s*\/\s*(\d+)\s*\/\s*(\d+)/g));
+        for (const m of feeMatches) {
+          const p1 = parseInt(m[3], 10) || 0;
+          if (p1 >= 2020 && p1 <= 2040) continue; // 略過西元日期
+          const b1 = parseInt(m[1], 10) || 0;
+          const b2 = parseInt(m[2], 10) || 0;
+          baseCount = b2 > 0 ? b2 : b1;
+          const f_bw = parseInt(m[3], 10) || 0;
+          const f_col = parseInt(m[4], 10) || 0;
+          const f_comb = parseInt(m[5], 10) || 0;
+          exactBaseFee = f_comb > 0 ? f_comb : (f_bw > 0 ? f_bw : f_col);
           break;
+        }
+
+        // 容錯備援：若未成對抓取，個別抓取基本費三段
+        if (exactBaseFee === 0) {
+          const triples = Array.from(block.matchAll(/\b(\d+)\s*\/\s*(\d+)\s*\/\s*(\d+)\b/g));
+          for (const t of triples) {
+            const p1 = parseInt(t[1], 10) || 0;
+            const p2 = parseInt(t[2], 10) || 0;
+            const p3 = parseInt(t[3], 10) || 0;
+            if (p1 >= 2020 && p1 <= 2040 && p2 <= 12 && p3 <= 31) continue;
+            exactBaseFee = p3 > 0 ? p3 : (p1 > 0 ? p1 : p2);
+            break;
+          }
         }
 
         // 檢查緊接於三段基本費之後的機器月租費 (如照南國中第8台的 60 元)
@@ -3089,14 +3110,7 @@ const NEW_CONTRACT_ITEMS = {
           bwRate = 0.0;
         }
 
-        // 3. 互盛「月印量(黑)/(彩)」欄位：精準直取基本費三段數字正前方的「基本張數」
-        let baseCount = 0;
-        const baseMatch = block.match(/(\d+)\s*\/\s*(\d+)\s*\n\s*\d+\s*\/\s*\d+\s*\/\s*\d+/);
-        if (baseMatch) {
-          const b1 = parseInt(baseMatch[1], 10) || 0;
-          const b2 = parseInt(baseMatch[2], 10) || 0;
-          baseCount = b2 > 0 ? b2 : b1;
-        } else {
+        if (baseCount === 0) {
           baseCount = isColor ? 2000 : 7000;
         }
 
@@ -3131,8 +3145,9 @@ const NEW_CONTRACT_ITEMS = {
           }
         }
 
-        // 5. 互盛「前後抄表」：優先計算真實當月差額
-        const cleanBlock = block.replace(/0\/0\/\d+/g, ' ').replace(/0\/0/g, ' ');
+        // 5. 互盛「前後抄表」：優先計算真實當月差額 (精確邊界過濾，杜絕破壞以0結尾之計費數字)
+        let cleanBlock = block.replace(/\b0\s*\/\s*0\s*\/\s*\d+\b/g, ' ');
+        cleanBlock = cleanBlock.replace(/\b0\s*\/\s*0\b/g, ' ');
         const rawPairs = Array.from(cleanBlock.matchAll(/\b(\d{1,7})\s*\/\s*(\d{1,7})\b/g)).map(p => [parseInt(p[1], 10) || 0, parseInt(p[2], 10) || 0]);
         const validPairs = [];
         rawPairs.forEach(p => {
@@ -3178,7 +3193,7 @@ const NEW_CONTRACT_ITEMS = {
 
         // 6. 官方應收金額直取 (備查)
         let officialDue = 0;
-        const dueMatch = block.match(/(?:[BC]\/[A-Z0-9]+\/[0-9\.]+\s*\n)+\s*(\d+)\s*\n\s*(\d+)\s*\n\s*(\d+)/);
+        const dueMatch = block.match(/(?:[BC]\/[A-Z0-9]+\/[0-9\.]+\s+)+\s*(\d+)\s+(\d+)\s+(\d+)/);
         if (dueMatch) {
           officialDue = parseInt(dueMatch[3], 10) || 0;
         }
