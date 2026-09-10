@@ -1070,7 +1070,7 @@
   <header>
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
       <h1 id="pageMainTitle" style="margin-bottom:0;">台銀影印機租賃印量計算系統 — 全新機</h1>
-      <span class="version-badge" title="最新系統更新版本">v2.9.0 (2026.08.27)</span>
+      <span class="version-badge" title="最新系統更新版本">v3.0.0 (2026.09.10)</span>
     </div>
     <p class="subtitle" id="pageSubTitle" style="margin-top:6px;">依據臺灣銀行 LP5-114034 契約：自動1.5%誤印率・超印階梯累進（85% / 75%）・彩色機黑白加收試算</p>
   </header>
@@ -1208,7 +1208,7 @@
   <!-- 底部備註署名 -->
   <footer style="text-align: center; margin-top: 24px; padding: 14px 0; color: #64748b; font-size: 0.84rem; line-height: 1.8;">
     <p style="color: #64748b; font-size: 0.84rem; margin-bottom: 4px; font-weight: 500;">⚠️ 網站算式僅供參考 實際請依ERP與台銀公告資訊為準 ｜ 🛡️ 本機端即時運算・公務資料絕不上傳外流</p>
-    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">系統版本：<strong>v2.9.0</strong> (Build 20260827.1055) ｜ by Antigravity 吳漢君</p>
+    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">系統版本：<strong>v3.0.0</strong> (Build 20260910.1615) ｜ by Antigravity 吳漢君</p>
   </footer>
 </div>
 
@@ -2456,20 +2456,18 @@ const NEW_CONTRACT_ITEMS = {
             }
           }
         } else {
-          // 群組總印量未達總基本額度 ➔ 若為黑白機群組，產生存入折抵池之淨未印價值（供折抵彩色費用）
-          if (grp.bwRate === 0) {
-            const grpUnused = totalBase - totalActual;
-            const grpCredit = grpUnused * p;
-            totalOffsetCreditPool += grpCredit;
-            
-            // 按各台未達比例分配顯示
-            grp.items.forEach(item => {
-              if (item.actualCount < item.baseNum) {
-                item.unusedCount = item.baseNum - item.actualCount;
-                item.unusedCredit = item.unusedCount * p;
-              }
-            });
-          }
+          // 群組總印量未達總基本額度 ➔ 雙向黑彩折抵：未印滿之額度價值皆存入折抵池（黑白未滿可抵彩色，彩色未滿亦可等值折抵黑白加收與超印！）
+          const grpUnused = totalBase - totalActual;
+          const grpCredit = grpUnused * p;
+          totalOffsetCreditPool += grpCredit;
+          
+          // 按各台未達比例分配顯示
+          grp.items.forEach(item => {
+            if (item.actualCount < item.baseNum) {
+              item.unusedCount = item.baseNum - item.actualCount;
+              item.unusedCredit = item.unusedCount * p;
+            }
+          });
         }
 
         const overItems = grp.items.filter(it => it.actualCount > it.baseNum);
@@ -2530,7 +2528,7 @@ const NEW_CONTRACT_ITEMS = {
               item.overFee = (item.tier1Count * r85) + (item.tier2Count * r75);
             }
           }
-        } else if (item.bwRate === 0 && item.actualCount < item.baseNum) {
+        } else if (item.actualCount < item.baseNum) {
           item.unusedCount = item.baseNum - item.actualCount;
           item.unusedCredit = item.unusedCount * item.priceNum;
           totalOffsetCreditPool += item.unusedCredit;
@@ -2984,129 +2982,137 @@ const NEW_CONTRACT_ITEMS = {
     parseRawText(ocrCombinedText);
   }
 
-  // 100% 直取收費單上真實抄表讀數 (3135, 5504, 1235...)
+  // 100% 全通用收費單解析器 (支援新機首期與續租跨月前後抄表差額)
   function parseRawText(text) {
     const statusBox = document.getElementById('parseStatusBox');
     const statusText = document.getElementById('parseStatusText');
     statusBox.style.display = 'flex';
-    statusText.innerText = '正在直取收費單抄表讀數並進行契約項次精確對齊...';
+    statusText.innerText = '正在解析收費單機號、前後抄表差額與契約項次...';
 
     const machinesMap = new Map();
-    const pageBlocks = text.split(/--- Page \d+ ---/);
+    const aliasMap = getSavedAliases();
 
-    pageBlocks.forEach((pageStr) => {
-      if (!pageStr.trim()) return;
-
-      const cleanPage = pageStr.replace(/ Ⅱ/g, '11').replace(/Ⅱ/g, '11');
-      
-      // 1. 抓取該頁所有影印機機號
-      const rawSns = cleanPage.match(/\b([0-9]{4}\s*[A-Z]{1,3}\s*[0-9A-Z]{4,8})\b/g) || [];
-      const pageSns = [];
-      rawSns.forEach(s => {
-        const sClean = s.replace(/\s+/g, '').toUpperCase();
-        if (/^[0-9]{4}[A-Z]{1,3}[0-9]{4,8}$/.test(sClean) && !sClean.startsWith('DB') && !sClean.startsWith('RT') && !sClean.startsWith('LP') && !sClean.startsWith('NT')) {
-          if (!pageSns.includes(sClean) && !machinesMap.has(sClean)) {
-            pageSns.push(sClean);
-          }
+    // 找出所有唯一的影印機機號
+    const cleanText = text.replace(/ Ⅱ/g, '11').replace(/Ⅱ/g, '11');
+    const rawSns = cleanText.match(/\b([0-9]{4}\s*[A-Z]{1,3}\s*[0-9A-Z]{4,8})\b/g) || [];
+    const uniqueSns = [];
+    rawSns.forEach(s => {
+      const sClean = s.replace(/\s+/g, '').toUpperCase();
+      if (/^[0-9]{4}[A-Z]{1,3}[0-9]{4,8}$/.test(sClean) && !sClean.startsWith('DB') && !sClean.startsWith('RT') && !sClean.startsWith('LP') && !sClean.startsWith('NT') && !sClean.startsWith('2025') && !sClean.startsWith('2026') && !sClean.startsWith('2027')) {
+        if (!uniqueSns.includes(sClean)) {
+          uniqueSns.push(sClean);
         }
-      });
+      }
+    });
 
-      // 2. 抓取該頁所有非零印量與抄表讀數
-      let cleanCounts = pageStr.replace(/0\/0\/\d+/g, ' ').replace(/0\/0/g, ' ');
-      const rawPairs = Array.from(cleanCounts.matchAll(/\b(\d{1,7})\s*\/\s*(\d{1,7})\b/g)).map(p => [parseInt(p[1], 10) || 0, parseInt(p[2], 10) || 0]);
-      
-      const filteredPairs = [];
+    uniqueSns.forEach((sn, i) => {
+      const snIdx = cleanText.indexOf(sn);
+      let nextSnIdx = cleanText.length;
+      if (i + 1 < uniqueSns.length) {
+        const nextPos = cleanText.indexOf(uniqueSns[i + 1], snIdx + sn.length);
+        if (nextPos !== -1) nextSnIdx = nextPos;
+      }
+      const block = cleanText.substring(snIdx, nextSnIdx);
+
+      // 清理表頭雜訊
+      const cleanBlock = block.replace(/0\/0\/\d+/g, ' ').replace(/0\/0/g, ' ');
+      const rawPairs = Array.from(cleanBlock.matchAll(/\b(\d{1,7})\s*\/\s*(\d{1,7})\b/g)).map(p => [parseInt(p[1], 10) || 0, parseInt(p[2], 10) || 0]);
+
+      const validPairs = [];
       rawPairs.forEach(p => {
         const c1 = p[0], c2 = p[1];
         if (c1 >= 2024 && c1 <= 2027) return;
         if (c2 >= 2024 && c2 <= 2027) return;
         if (c1 <= 12 && c2 <= 31) return;
-        if ((c1 === 15000 || c1 === 10000 || c1 === 7000 || c1 === 5000 || c1 === 3000 || c1 === 2000) && c2 === 0) return;
-        if ((c2 === 3000 || c2 === 2000) && c1 === 0) return;
-        filteredPairs.push([c1, c2]);
+        validPairs.push([c1, c2]);
       });
 
-      // 配對出該頁的原始抄表讀數 (取較大之原始計數器讀數：如 3135/3027, 5504, 1235...)
-      const meterPairs = [];
-      let i = 0;
-      while (i < filteredPairs.length) {
-        const p1 = filteredPairs[i];
-        if (i + 1 < filteredPairs.length) {
-          const p2 = filteredPairs[i+1];
-          if ((p2[0] > p1[0] && p2[0] - p1[0] < p1[0] * 0.05) || (p2[1] > p1[1] && p2[1] - p1[1] < p1[1] * 0.05)) {
-            meterPairs.push(p2);
-            i += 2;
-            continue;
-          } else if ((p1[0] > p2[0] && p1[0] - p2[0] < p2[0] * 0.05) || (p1[1] > p2[1] && p1[1] - p2[1] < p2[1] * 0.05)) {
-            meterPairs.push(p1);
-            i += 2;
-            continue;
-          }
-        }
-        meterPairs.push(p1);
-        i += 1;
-      }
+      // 判斷契約項次與基本規格
+      let matchedKey = 'n_g1_1';
+      let price = "0.501";
+      let baseCount = 7000;
+      let bwRate = 0;
 
-      // 3. 依序對齊機號與契約項次 (直接使用原始抄表數，不重複除以 0.985)
-      pageSns.forEach((sn, idx) => {
-        let matchedKey = 'n_g1_1';
-        let price = "0.501";
-        let baseCount = 7000;
-        let bwRate = 0;
-        let meter = 7000;
-        let bwMeter = 0;
-
-        if (sn.startsWith('4415')) {
-          matchedKey = 'n_g1_1';
-          price = "0.501";
-          baseCount = 7000;
-        } else if (sn.startsWith('4435')) {
-          matchedKey = 'n_g1_5';
-          price = "0.568";
-          baseCount = 10000;
-        } else if (sn.startsWith('4445')) {
-          matchedKey = 'n_g1_9';
-          price = "0.461";
-          baseCount = 15000;
-        } else if (sn.startsWith('9136')) {
+      if (sn.startsWith('4415')) {
+        matchedKey = 'n_g1_1';
+        price = "0.501";
+        baseCount = 7000;
+      } else if (sn.startsWith('4435')) {
+        matchedKey = 'n_g1_5';
+        price = "0.568";
+        baseCount = 10000;
+      } else if (sn.startsWith('4445')) {
+        matchedKey = 'n_g1_9';
+        price = "0.461";
+        baseCount = 15000;
+      } else if (sn.startsWith('9136')) {
+        matchedKey = 'n_g1_17';
+        price = "3.340";
+        baseCount = 3000;
+        bwRate = 0.400;
+      } else if (sn.startsWith('9175') || sn.startsWith('9155')) {
+        if (block.includes('0/3000') || block.includes('7527')) {
           matchedKey = 'n_g1_17';
           price = "3.340";
           baseCount = 3000;
-          bwRate = 0.400;
-        } else if (sn.startsWith('9175') || sn.startsWith('9155')) {
+          bwRate = 0.380;
+        } else {
           matchedKey = 'n_g1_18';
           price = "3.193";
           baseCount = 2000;
           bwRate = 0.380;
         }
+      }
 
-        const isColor = matchedKey === 'n_g1_17' || matchedKey === 'n_g1_18';
+      const isColor = matchedKey === 'n_g1_17' || matchedKey === 'n_g1_18';
 
-        if (idx < meterPairs.length) {
-          const p = meterPairs[idx];
-          if (isColor) {
-            bwMeter = p[0] > 0 ? p[0] : 0;
-            meter = p[1] > 0 ? p[1] : p[0];
-          } else {
-            meter = p[0] > 0 ? p[0] : p[1];
+      // 萃取本次抄表讀數（自動判定首期 vs 續租前後抄表差額）
+      let meter = 0;
+      let bwMeter = 0;
+
+      // 續租前後抄表比對：尋找相鄰之前次抄表與本次抄表
+      for (let j = 0; j < validPairs.length - 1; j++) {
+        const pPrev = validPairs[j];
+        const pCurr = validPairs[j + 1];
+        if (pCurr[0] >= pPrev[0] && pCurr[1] >= pPrev[1] && (pCurr[0] > 100 || pCurr[1] > 100)) {
+          const diffBw = pCurr[0] - pPrev[0];
+          const diffCol = pCurr[1] - pPrev[1];
+          if (diffBw > 0 || diffCol > 0) {
+            if (isColor) {
+              bwMeter = diffBw;
+              meter = diffCol;
+            } else {
+              meter = diffBw > 0 ? diffBw : diffCol;
+            }
+            break;
           }
         }
+      }
 
-        const aliasMap = getSavedAliases();
-        const customDept = aliasMap[sn] || '';
-        const displayName = customDept ? `${customDept} (${sn})` : `機號 ${sn}`;
+      // 若未找到前後抄表差額（如新機首期前次為 0/0），則取最後非零印量讀數
+      if (meter === 0 && bwMeter === 0 && validPairs.length > 0) {
+        const lastPair = validPairs[validPairs.length - 1];
+        if (isColor) {
+          bwMeter = lastPair[0];
+          meter = lastPair[1] > 0 ? lastPair[1] : lastPair[0];
+        } else {
+          meter = lastPair[0] > 0 ? lastPair[0] : lastPair[1];
+        }
+      }
 
-        machinesMap.set(sn, {
-          sn: sn,
-          name: displayName,
-          customDept: customDept,
-          itemKey: matchedKey,
-          price: price,
-          base: baseCount,
-          meter: meter > 0 ? meter : baseCount,
-          bwMeter: bwMeter,
-          bwRate: bwRate
-        });
+      const customDept = aliasMap[sn] || '';
+      const displayName = customDept ? `${customDept} (${sn})` : `機號 ${sn}`;
+
+      machinesMap.set(sn, {
+        sn: sn,
+        name: displayName,
+        customDept: customDept,
+        itemKey: matchedKey,
+        price: price,
+        base: baseCount,
+        meter: meter > 0 ? meter : baseCount,
+        bwMeter: bwMeter,
+        bwRate: bwRate
       });
     });
 
@@ -3114,7 +3120,7 @@ const NEW_CONTRACT_ITEMS = {
     renderParsePreview();
   }
 
-  function renderParsePreview() {
+    function renderParsePreview() {
     document.getElementById('parseStatusBox').style.display = 'none';
     document.getElementById('parsePreviewArea').style.display = 'block';
     document.getElementById('btnConfirmImport').style.display = 'inline-flex';
