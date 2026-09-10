@@ -1070,7 +1070,7 @@
   <header>
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
       <h1 id="pageMainTitle" style="margin-bottom:0;">台銀影印機租賃印量計算系統 — 全新機</h1>
-      <span class="version-badge" title="最新系統更新版本">v3.5.0 (2026.09.10)</span>
+      <span class="version-badge" title="最新系統更新版本">v3.6.0 (2026.09.10)</span>
     </div>
     <p class="subtitle" id="pageSubTitle" style="margin-top:6px;">依據臺灣銀行 LP5-114034 契約：自動1.5%誤印率・超印階梯累進（85% / 75%）・彩色機黑白加收試算</p>
   </header>
@@ -1208,7 +1208,7 @@
   <!-- 底部備註署名 -->
   <footer style="text-align: center; margin-top: 24px; padding: 14px 0; color: #64748b; font-size: 0.84rem; line-height: 1.8;">
     <p style="color: #64748b; font-size: 0.84rem; margin-bottom: 4px; font-weight: 500;">⚠️ 網站算式僅供參考 實際請依ERP與台銀公告資訊為準 ｜ 🛡️ 本機端即時運算・公務資料絕不上傳外流</p>
-    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">系統版本：<strong>v3.5.0</strong> (Build 20260910.1715) ｜ by Antigravity 吳漢君</p>
+    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">系統版本：<strong>v3.6.0</strong> (Build 20260910.1730) ｜ by Antigravity 吳漢君</p>
   </footer>
 </div>
 
@@ -2890,6 +2890,7 @@ const NEW_CONTRACT_ITEMS = {
   // 全通用純本機收費單解析器 (直取原始抄表讀數，零多重折算)
   // ══════════════════════════════════════════════════════
   let parsedMachinesCache = [];
+  let detectedParsedMode = 'new';
 
   function openUploadModal() {
     document.getElementById('uploadModal').classList.add('open');
@@ -2991,13 +2992,34 @@ const NEW_CONTRACT_ITEMS = {
   // ══════════════════════════════════════════════════════
   // 互盛股份有限公司標準公務租賃收費單專屬直取引擎 (v3.4.0)
   // 100% 依發票印刷欄位直取：機號、前後抄表差額、基本費、印量級距單價
-  // 零機號硬編碼、零特例假設，放諸互盛全台各機關發票皆準
+  // ══════════════════════════════════════════════════════
+  // 互盛股份有限公司標準公務租賃收費單專屬直取引擎 (v3.6.0)
+  // 100% 依發票印刷欄位直取：機號、前後抄表差額、基本費、印量級距單價
+  // 零機號硬編碼、零特例假設，全自動判定全新機(LP5-114034)與二手機(LP5-114035)
   // ══════════════════════════════════════════════════════
   function parseRawText(text) {
     const statusBox = document.getElementById('parseStatusBox');
     const statusText = document.getElementById('parseStatusText');
     statusBox.style.display = 'flex';
     statusText.innerText = '正在直取互盛收費單標準表格欄位 (機號/底租/印量/費率)...';
+
+    // 0. 自動判定合約類型 (全新機 LP5-114034 階梯 85%/75% vs 二手機 LP5-114035 固定 90%)
+    detectedParsedMode = 'new';
+    if (/0\.2277|LP5-114035|二手機/i.test(text)) {
+      detectedParsedMode = 'used';
+    } else {
+      const rateMatches = Array.from(text.matchAll(/1[BC]\/[A-Z0-9]+\/(\d+\.\d+)/g));
+      const overMatches = Array.from(text.matchAll(/\d{4,6}[BC]\/[A-Z0-9]+\/(\d+\.\d+)/g));
+      if (rateMatches.length > 0 && overMatches.length > 0) {
+        const rBase = parseFloat(rateMatches[0][1]);
+        const rOver = parseFloat(overMatches[0][1]);
+        if (rBase > 0) {
+          const ratio = rOver / rBase;
+          if (Math.abs(ratio - 0.90) < 0.02) detectedParsedMode = 'used';
+          else if (Math.abs(ratio - 0.85) < 0.03 || Math.abs(ratio - 0.75) < 0.03) detectedParsedMode = 'new';
+        }
+      }
+    }
 
     const machinesMap = new Map();
     const aliasMap = getSavedAliases();
@@ -3013,7 +3035,7 @@ const NEW_CONTRACT_ITEMS = {
       const pageSns = [];
       rawSns.forEach(s => {
         const sClean = s.replace(/\s+/g, '').toUpperCase();
-        if (/^[0-9]{4}[A-Z]{1,3}[0-9]{4,8}$/.test(sClean) && !sClean.startsWith('DB') && !sClean.startsWith('RT') && !sClean.startsWith('LP') && !sClean.startsWith('NT') && !sClean.startsWith('2024') && !sClean.startsWith('2025') && !sClean.startsWith('2026') && !sClean.startsWith('2027')) {
+        if (/^[0-9]{4}[A-Z]{1,3}[0-9]{4,8}$/.test(sClean) && !sClean.startsWith('DB') && !sClean.startsWith('RT') && !sClean.startsWith('LP') && !sClean.startsWith('NT') && !sClean.startsWith('FD') && !sClean.startsWith('2024') && !sClean.startsWith('2025') && !sClean.startsWith('2026') && !sClean.startsWith('2027')) {
           if (!pageSns.includes(sClean) && !machinesMap.has(sClean)) {
             pageSns.push(sClean);
           }
@@ -3029,11 +3051,22 @@ const NEW_CONTRACT_ITEMS = {
         }
         const block = cleanPage.substring(snIdx, nextSnIdx);
 
-        // 1. 互盛【基本費】欄位：直取機器月租費金額
+        // 1. 互盛【基本費】欄位：直取黑/彩/黑+彩，避開西元日期 (2020~2040/MM/DD)
         let exactBaseFee = 0;
-        const feeMatch = block.match(/0\/0\/(\d{1,6})/);
-        if (feeMatch) {
-          exactBaseFee = parseInt(feeMatch[1], 10) || 0;
+        const triples = Array.from(block.matchAll(/\b(\d+)\s*\/\s*(\d+)\s*\/\s*(\d+)\b/g));
+        for (const t of triples) {
+          const p1 = parseInt(t[1], 10) || 0;
+          const p2 = parseInt(t[2], 10) || 0;
+          const p3 = parseInt(t[3], 10) || 0;
+          if (p1 >= 2020 && p1 <= 2040 && p2 <= 12 && p3 <= 31) continue;
+          exactBaseFee = p3 > 0 ? p3 : (p1 > 0 ? p1 : p2);
+          break;
+        }
+
+        // 檢查緊接於三段基本費之後的機器月租費 (如照南國中第8台的 60 元)
+        const rentMatch = block.match(/\d+\s*\/\s*\d+\s*\/\s*\d+\s+(\d+)\s+1[BC]\//);
+        if (rentMatch) {
+          exactBaseFee += (parseInt(rentMatch[1], 10) || 0);
         }
 
         // 2. 互盛「印量級距」欄位：直取契約單價與黑白加收費率
@@ -3056,33 +3089,46 @@ const NEW_CONTRACT_ITEMS = {
           bwRate = 0.0;
         }
 
-        // 3. 互盛「月印量(黑)/(彩)」欄位：直取包月基本張數
+        // 3. 互盛「月印量(黑)/(彩)」欄位：精準直取基本費三段數字正前方的「基本張數」
         let baseCount = 0;
-        const quotaMatches = Array.from(block.matchAll(/\b(\d+)\s*\/\s*(\d+)\b/g));
-        for (const q of quotaMatches) {
-          const q1 = parseInt(q[1], 10) || 0;
-          const q2 = parseInt(q[2], 10) || 0;
-          if ([2000, 3000, 3500, 5000, 7000, 10000, 15000, 25000].includes(q1) && q2 === 0) {
-            baseCount = q1;
-            break;
-          } else if ([2000, 3000, 3500, 5000, 7000, 10000, 15000, 25000].includes(q2) && q1 === 0) {
-            baseCount = q2;
-            break;
-          }
-        }
-        if (baseCount === 0) {
+        const baseMatch = block.match(/(\d+)\s*\/\s*(\d+)\s*\n\s*\d+\s*\/\s*\d+\s*\/\s*\d+/);
+        if (baseMatch) {
+          const b1 = parseInt(baseMatch[1], 10) || 0;
+          const b2 = parseInt(baseMatch[2], 10) || 0;
+          baseCount = b2 > 0 ? b2 : b1;
+        } else {
           baseCount = isColor ? 2000 : 7000;
         }
 
-        // 4. 契約項次標準對齊 (以費率與張數特徵精準對應台銀 LP5 項次，全組統籌合併)
+        // 4. 契約項次標準對齊
         let matchedKey = isColor ? 'n_g1_18' : 'n_g1_1';
-        if (isColor) {
-          if (bwRate >= 0.39) matchedKey = 'n_g1_17'; // 2年期彩色 (黑白+0.40)
-          else matchedKey = 'n_g1_18'; // 3年期彩色 (黑白+0.38)
+        if (detectedParsedMode === 'used') {
+          if (isColor) {
+            matchedKey = 'u_g2_1';
+            for (const [k, it] of Object.entries(USED_CONTRACT_ITEMS)) {
+              if (Math.abs(parseFloat(it.price) - parseFloat(price)) < 0.01) {
+                matchedKey = k;
+                break;
+              }
+            }
+          } else {
+            matchedKey = 'u_g1_6';
+            for (const [k, it] of Object.entries(USED_CONTRACT_ITEMS)) {
+              if (Math.abs(parseFloat(it.price) - parseFloat(price)) < 0.01) {
+                matchedKey = k;
+                break;
+              }
+            }
+          }
         } else {
-          if (baseCount === 15000) matchedKey = 'n_g1_9';
-          else if (baseCount === 10000) matchedKey = 'n_g1_5';
-          else matchedKey = 'n_g1_1';
+          if (isColor) {
+            if (bwRate >= 0.39) matchedKey = 'n_g1_17'; // 2年期彩色 (黑白+0.40)
+            else matchedKey = 'n_g1_18'; // 3年期彩色 (黑白+0.38)
+          } else {
+            if (baseCount === 15000) matchedKey = 'n_g1_9';
+            else if (baseCount === 10000) matchedKey = 'n_g1_5';
+            else matchedKey = 'n_g1_1';
+          }
         }
 
         // 5. 互盛「前後抄表」：優先計算真實當月差額
@@ -3130,6 +3176,13 @@ const NEW_CONTRACT_ITEMS = {
           }
         }
 
+        // 6. 官方應收金額直取 (備查)
+        let officialDue = 0;
+        const dueMatch = block.match(/(?:[BC]\/[A-Z0-9]+\/[0-9\.]+\s*\n)+\s*(\d+)\s*\n\s*(\d+)\s*\n\s*(\d+)/);
+        if (dueMatch) {
+          officialDue = parseInt(dueMatch[3], 10) || 0;
+        }
+
         const customDept = aliasMap[sn] || '';
         const displayName = customDept ? `${customDept} (${sn})` : `機號 ${sn}`;
 
@@ -3143,7 +3196,8 @@ const NEW_CONTRACT_ITEMS = {
           exactBaseFee: exactBaseFee,
           meter: meter > 0 ? meter : baseCount,
           bwMeter: bwMeter,
-          bwRate: bwRate
+          bwRate: bwRate,
+          officialDue: officialDue
         });
       });
     });
@@ -3152,16 +3206,17 @@ const NEW_CONTRACT_ITEMS = {
     renderParsePreview();
   }
 
-    function renderParsePreview() {
+  function renderParsePreview() {
     document.getElementById('parseStatusBox').style.display = 'none';
     document.getElementById('parsePreviewArea').style.display = 'block';
     document.getElementById('btnConfirmImport').style.display = 'inline-flex';
 
-    document.getElementById('parseResultSummary').innerText = `✅ 成功辨識 ${parsedMachinesCache.length} 台設備資料！`;
+    const modeBadge = detectedParsedMode === 'used' ? '♻️ 二手影印機 (LP5-114035)' : '🌟 全新影印機 (LP5-114034)';
+    document.getElementById('parseResultSummary').innerText = `✅ 成功辨識 ${parsedMachinesCache.length} 台設備！【契約判定：${modeBadge}】`;
     const tbody = document.getElementById('parsePreviewTbody');
     tbody.innerHTML = '';
 
-    const itemsDict = currentMode === 'new' ? NEW_CONTRACT_ITEMS : USED_CONTRACT_ITEMS;
+    const itemsDict = detectedParsedMode === 'new' ? NEW_CONTRACT_ITEMS : USED_CONTRACT_ITEMS;
 
     parsedMachinesCache.forEach((m, idx) => {
       const itemInfo = itemsDict[m.itemKey] || { name: m.itemKey };
@@ -3181,11 +3236,11 @@ const NEW_CONTRACT_ITEMS = {
   function confirmParsedImport() {
     if (parsedMachinesCache.length === 0) return;
 
-    if (currentMode !== 'new') {
-      switchContractMode('new');
+    if (currentMode !== detectedParsedMode) {
+      switchContractMode(detectedParsedMode);
     }
 
-    newMachinesData = parsedMachinesCache.map((m, idx) => {
+    const targetList = parsedMachinesCache.map((m, idx) => {
       if (m.sn && m.name) {
         saveMachineAlias(m.sn, m.name.replace(`(${m.sn})`, '').trim());
       }
@@ -3196,14 +3251,21 @@ const NEW_CONTRACT_ITEMS = {
         itemKey: m.itemKey,
         price: m.price,
         base: m.base,
-        exactBaseFee: m.exactBaseFee || 0,
+        exactBaseFee: (m.exactBaseFee !== undefined && m.exactBaseFee !== null) ? m.exactBaseFee : 0,
         meter: m.meter,
         bwMeter: m.bwMeter || 0,
-        bwRate: m.bwRate || 0
+        bwRate: m.bwRate || 0,
+        officialDue: m.officialDue || 0
       };
     });
 
-    nextId = newMachinesData.length + 1;
+    if (currentMode === 'used') {
+      usedMachinesData = targetList;
+    } else {
+      newMachinesData = targetList;
+    }
+
+    nextId = targetList.length + 1;
     closeUploadModal();
     render();
 
