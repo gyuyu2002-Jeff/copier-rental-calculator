@@ -1070,7 +1070,7 @@
   <header>
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
       <h1 id="pageMainTitle" style="margin-bottom:0;">台銀影印機租賃印量計算系統 — 全新機</h1>
-      <span class="version-badge" title="最新系統更新版本">v3.0.0 (2026.09.10)</span>
+      <span class="version-badge" title="最新系統更新版本">v3.1.0 (2026.09.10)</span>
     </div>
     <p class="subtitle" id="pageSubTitle" style="margin-top:6px;">依據臺灣銀行 LP5-114034 契約：自動1.5%誤印率・超印階梯累進（85% / 75%）・彩色機黑白加收試算</p>
   </header>
@@ -1208,7 +1208,7 @@
   <!-- 底部備註署名 -->
   <footer style="text-align: center; margin-top: 24px; padding: 14px 0; color: #64748b; font-size: 0.84rem; line-height: 1.8;">
     <p style="color: #64748b; font-size: 0.84rem; margin-bottom: 4px; font-weight: 500;">⚠️ 網站算式僅供參考 實際請依ERP與台銀公告資訊為準 ｜ 🛡️ 本機端即時運算・公務資料絕不上傳外流</p>
-    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">系統版本：<strong>v3.0.0</strong> (Build 20260910.1615) ｜ by Antigravity 吳漢君</p>
+    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">系統版本：<strong>v3.1.0</strong> (Build 20260910.1625) ｜ by Antigravity 吳漢君</p>
   </footer>
 </div>
 
@@ -2936,6 +2936,10 @@ const NEW_CONTRACT_ITEMS = {
           const page = await pdf.getPage(i);
           const textContent = await page.getTextContent();
           const pageText = textContent.items.map(s => s.str).join(' ');
+          // 自動跳過發票複寫之第二聯 (單位自存聯)，避免跨聯重複干擾
+          if (pageText.includes('第二聯') || pageText.includes('單位自存聯')) {
+            continue;
+          }
           fullText += '\n--- Page ' + i + ' ---\n' + pageText;
         }
 
@@ -2982,137 +2986,150 @@ const NEW_CONTRACT_ITEMS = {
     parseRawText(ocrCombinedText);
   }
 
-  // 100% 全通用收費單解析器 (支援新機首期與續租跨月前後抄表差額)
+  // 100% 全通用收費單解析器 (支援新機首期、續租跨月差額、多聯發票去重與底租精準對齊)
   function parseRawText(text) {
     const statusBox = document.getElementById('parseStatusBox');
     const statusText = document.getElementById('parseStatusText');
     statusBox.style.display = 'flex';
-    statusText.innerText = '正在解析收費單機號、前後抄表差額與契約項次...';
+    statusText.innerText = '正在解析收費單機號、底租契約規格與前後抄表差額...';
 
     const machinesMap = new Map();
     const aliasMap = getSavedAliases();
 
-    // 找出所有唯一的影印機機號
-    const cleanText = text.replace(/ Ⅱ/g, '11').replace(/Ⅱ/g, '11');
-    const rawSns = cleanText.match(/\b([0-9]{4}\s*[A-Z]{1,3}\s*[0-9A-Z]{4,8})\b/g) || [];
-    const uniqueSns = [];
-    rawSns.forEach(s => {
-      const sClean = s.replace(/\s+/g, '').toUpperCase();
-      if (/^[0-9]{4}[A-Z]{1,3}[0-9]{4,8}$/.test(sClean) && !sClean.startsWith('DB') && !sClean.startsWith('RT') && !sClean.startsWith('LP') && !sClean.startsWith('NT') && !sClean.startsWith('2025') && !sClean.startsWith('2026') && !sClean.startsWith('2027')) {
-        if (!uniqueSns.includes(sClean)) {
-          uniqueSns.push(sClean);
+    // 分頁獨立處理，杜絕跨頁與跨聯文字黏合
+    const pageChunks = text.split(/--- Page \d+ ---/);
+
+    pageChunks.forEach(pageStr => {
+      if (!pageStr.trim()) return;
+      if (pageStr.includes('第二聯') || pageStr.includes('單位自存聯')) return;
+
+      const cleanPage = pageStr.replace(/ Ⅱ/g, '11').replace(/Ⅱ/g, '11');
+      const rawSns = cleanPage.match(/\b([0-9]{4}\s*[A-Z]{1,3}\s*[0-9A-Z]{4,8})\b/g) || [];
+      const pageSns = [];
+      rawSns.forEach(s => {
+        const sClean = s.replace(/\s+/g, '').toUpperCase();
+        if (/^[0-9]{4}[A-Z]{1,3}[0-9]{4,8}$/.test(sClean) && !sClean.startsWith('DB') && !sClean.startsWith('RT') && !sClean.startsWith('LP') && !sClean.startsWith('NT') && !sClean.startsWith('2025') && !sClean.startsWith('2026') && !sClean.startsWith('2027')) {
+          if (!pageSns.includes(sClean) && !machinesMap.has(sClean)) {
+            pageSns.push(sClean);
+          }
         }
-      }
-    });
-
-    uniqueSns.forEach((sn, i) => {
-      const snIdx = cleanText.indexOf(sn);
-      let nextSnIdx = cleanText.length;
-      if (i + 1 < uniqueSns.length) {
-        const nextPos = cleanText.indexOf(uniqueSns[i + 1], snIdx + sn.length);
-        if (nextPos !== -1) nextSnIdx = nextPos;
-      }
-      const block = cleanText.substring(snIdx, nextSnIdx);
-
-      // 清理表頭雜訊
-      const cleanBlock = block.replace(/0\/0\/\d+/g, ' ').replace(/0\/0/g, ' ');
-      const rawPairs = Array.from(cleanBlock.matchAll(/\b(\d{1,7})\s*\/\s*(\d{1,7})\b/g)).map(p => [parseInt(p[1], 10) || 0, parseInt(p[2], 10) || 0]);
-
-      const validPairs = [];
-      rawPairs.forEach(p => {
-        const c1 = p[0], c2 = p[1];
-        if (c1 >= 2024 && c1 <= 2027) return;
-        if (c2 >= 2024 && c2 <= 2027) return;
-        if (c1 <= 12 && c2 <= 31) return;
-        validPairs.push([c1, c2]);
       });
 
-      // 判斷契約項次與基本規格
-      let matchedKey = 'n_g1_1';
-      let price = "0.501";
-      let baseCount = 7000;
-      let bwRate = 0;
+      pageSns.forEach((sn, idx) => {
+        const snIdx = cleanPage.indexOf(sn);
+        let nextSnIdx = cleanPage.length;
+        if (idx + 1 < pageSns.length) {
+          const nextPos = cleanPage.indexOf(pageSns[idx + 1], snIdx + sn.length);
+          if (nextPos !== -1) nextSnIdx = nextPos;
+        }
+        const block = cleanPage.substring(snIdx, nextSnIdx);
 
-      if (sn.startsWith('4415')) {
-        matchedKey = 'n_g1_1';
-        price = "0.501";
-        baseCount = 7000;
-      } else if (sn.startsWith('4435')) {
-        matchedKey = 'n_g1_5';
-        price = "0.568";
-        baseCount = 10000;
-      } else if (sn.startsWith('4445')) {
-        matchedKey = 'n_g1_9';
-        price = "0.461";
-        baseCount = 15000;
-      } else if (sn.startsWith('9136')) {
-        matchedKey = 'n_g1_17';
-        price = "3.340";
-        baseCount = 3000;
-        bwRate = 0.400;
-      } else if (sn.startsWith('9175') || sn.startsWith('9155')) {
-        if (block.includes('0/3000') || block.includes('7527')) {
+        // 萃取該區塊之底租特徵 (如 6500, 7527, 3507, 5680, 6915, 10020)
+        let exactBaseFee = 0;
+        const feeMatch = block.match(/0\/0\/(\d{4,6})/);
+        if (feeMatch) {
+          exactBaseFee = parseInt(feeMatch[1], 10) || 0;
+        }
+
+        // 清理雜訊
+        const cleanBlock = block.replace(/0\/0\/\d+/g, ' ').replace(/0\/0/g, ' ');
+        const rawPairs = Array.from(cleanBlock.matchAll(/\b(\d{1,7})\s*\/\s*(\d{1,7})\b/g)).map(p => [parseInt(p[1], 10) || 0, parseInt(p[2], 10) || 0]);
+
+        const validPairs = [];
+        rawPairs.forEach(p => {
+          const c1 = p[0], c2 = p[1];
+          if (c1 >= 2024 && c1 <= 2027) return;
+          if (c2 >= 2024 && c2 <= 2027) return;
+          if (c1 <= 12 && c2 <= 31) return;
+          validPairs.push([c1, c2]);
+        });
+
+        // 判定契約項次與基本規格
+        let matchedKey = 'n_g1_1';
+        let price = "0.501";
+        let baseCount = 7000;
+        let bwRate = 0;
+
+        if (sn.startsWith('4415')) {
+          matchedKey = 'n_g1_1';
+          price = "0.501";
+          baseCount = 7000;
+        } else if (sn.startsWith('4435')) {
+          matchedKey = 'n_g1_5';
+          price = "0.568";
+          baseCount = 10000;
+        } else if (sn.startsWith('4445')) {
+          matchedKey = 'n_g1_9';
+          price = "0.461";
+          baseCount = 15000;
+        } else if (sn.startsWith('9136')) {
           matchedKey = 'n_g1_17';
           price = "3.340";
           baseCount = 3000;
-          bwRate = 0.380;
-        } else {
-          matchedKey = 'n_g1_18';
-          price = "3.193";
-          baseCount = 2000;
-          bwRate = 0.380;
-        }
-      }
-
-      const isColor = matchedKey === 'n_g1_17' || matchedKey === 'n_g1_18';
-
-      // 萃取本次抄表讀數（自動判定首期 vs 續租前後抄表差額）
-      let meter = 0;
-      let bwMeter = 0;
-
-      // 續租前後抄表比對：尋找相鄰之前次抄表與本次抄表
-      for (let j = 0; j < validPairs.length - 1; j++) {
-        const pPrev = validPairs[j];
-        const pCurr = validPairs[j + 1];
-        if (pCurr[0] >= pPrev[0] && pCurr[1] >= pPrev[1] && (pCurr[0] > 100 || pCurr[1] > 100)) {
-          const diffBw = pCurr[0] - pPrev[0];
-          const diffCol = pCurr[1] - pPrev[1];
-          if (diffBw > 0 || diffCol > 0) {
-            if (isColor) {
-              bwMeter = diffBw;
-              meter = diffCol;
-            } else {
-              meter = diffBw > 0 ? diffBw : diffCol;
-            }
-            break;
+          bwRate = 0.400;
+        } else if (sn.startsWith('9175') || sn.startsWith('9155')) {
+          // 嚴格僅在當前單機區塊內判斷 0/3000 或 7527
+          if (block.includes('0/3000') || exactBaseFee === 7527) {
+            matchedKey = 'n_g1_17';
+            baseCount = 3000;
+            price = exactBaseFee > 0 ? (exactBaseFee / baseCount).toFixed(4) : "3.340";
+            bwRate = 0.380;
+          } else {
+            matchedKey = 'n_g1_18';
+            baseCount = 2000;
+            price = exactBaseFee > 0 ? (exactBaseFee / baseCount).toFixed(4) : "3.250";
+            bwRate = 0.380;
           }
         }
-      }
 
-      // 若未找到前後抄表差額（如新機首期前次為 0/0），則取最後非零印量讀數
-      if (meter === 0 && bwMeter === 0 && validPairs.length > 0) {
-        const lastPair = validPairs[validPairs.length - 1];
-        if (isColor) {
-          bwMeter = lastPair[0];
-          meter = lastPair[1] > 0 ? lastPair[1] : lastPair[0];
-        } else {
-          meter = lastPair[0] > 0 ? lastPair[0] : lastPair[1];
+        const isColor = matchedKey === 'n_g1_17' || matchedKey === 'n_g1_18';
+
+        // 萃取本次抄表讀數
+        let meter = 0;
+        let bwMeter = 0;
+
+        for (let j = 0; j < validPairs.length - 1; j++) {
+          const pPrev = validPairs[j];
+          const pCurr = validPairs[j + 1];
+          if (pCurr[0] >= pPrev[0] && pCurr[1] >= pPrev[1] && (pCurr[0] > 100 || pCurr[1] > 100)) {
+            const diffBw = pCurr[0] - pPrev[0];
+            const diffCol = pCurr[1] - pPrev[1];
+            if (diffBw > 0 || diffCol > 0) {
+              if (isColor) {
+                bwMeter = diffBw;
+                meter = diffCol;
+              } else {
+                meter = diffBw > 0 ? diffBw : diffCol;
+              }
+              break;
+            }
+          }
         }
-      }
 
-      const customDept = aliasMap[sn] || '';
-      const displayName = customDept ? `${customDept} (${sn})` : `機號 ${sn}`;
+        if (meter === 0 && bwMeter === 0 && validPairs.length > 0) {
+          const lastPair = validPairs[validPairs.length - 1];
+          if (isColor) {
+            bwMeter = lastPair[0];
+            meter = lastPair[1] > 0 ? lastPair[1] : lastPair[0];
+          } else {
+            meter = lastPair[0] > 0 ? lastPair[0] : lastPair[1];
+          }
+        }
 
-      machinesMap.set(sn, {
-        sn: sn,
-        name: displayName,
-        customDept: customDept,
-        itemKey: matchedKey,
-        price: price,
-        base: baseCount,
-        meter: meter > 0 ? meter : baseCount,
-        bwMeter: bwMeter,
-        bwRate: bwRate
+        const customDept = aliasMap[sn] || '';
+        const displayName = customDept ? `${customDept} (${sn})` : `機號 ${sn}`;
+
+        machinesMap.set(sn, {
+          sn: sn,
+          name: displayName,
+          customDept: customDept,
+          itemKey: matchedKey,
+          price: price,
+          base: baseCount,
+          meter: meter > 0 ? meter : baseCount,
+          bwMeter: bwMeter,
+          bwRate: bwRate
+        });
       });
     });
 
