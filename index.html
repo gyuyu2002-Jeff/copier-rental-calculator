@@ -1070,7 +1070,7 @@
   <header>
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
       <h1 id="pageMainTitle" style="margin-bottom:0;">台銀影印機租賃印量計算系統 — 全新機</h1>
-      <span class="version-badge" title="最新系統更新版本">v3.1.0 (2026.09.10)</span>
+      <span class="version-badge" title="最新系統更新版本">v3.2.0 (2026.09.10)</span>
     </div>
     <p class="subtitle" id="pageSubTitle" style="margin-top:6px;">依據臺灣銀行 LP5-114034 契約：自動1.5%誤印率・超印階梯累進（85% / 75%）・彩色機黑白加收試算</p>
   </header>
@@ -1208,7 +1208,7 @@
   <!-- 底部備註署名 -->
   <footer style="text-align: center; margin-top: 24px; padding: 14px 0; color: #64748b; font-size: 0.84rem; line-height: 1.8;">
     <p style="color: #64748b; font-size: 0.84rem; margin-bottom: 4px; font-weight: 500;">⚠️ 網站算式僅供參考 實際請依ERP與台銀公告資訊為準 ｜ 🛡️ 本機端即時運算・公務資料絕不上傳外流</p>
-    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">系統版本：<strong>v3.1.0</strong> (Build 20260910.1625) ｜ by Antigravity 吳漢君</p>
+    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">系統版本：<strong>v3.2.0</strong> (Build 20260910.1630) ｜ by Antigravity 吳漢君</p>
   </footer>
 </div>
 
@@ -2936,10 +2936,7 @@ const NEW_CONTRACT_ITEMS = {
           const page = await pdf.getPage(i);
           const textContent = await page.getTextContent();
           const pageText = textContent.items.map(s => s.str).join(' ');
-          // 自動跳過發票複寫之第二聯 (單位自存聯)，避免跨聯重複干擾
-          if (pageText.includes('第二聯') || pageText.includes('單位自存聯')) {
-            continue;
-          }
+
           fullText += '\n--- Page ' + i + ' ---\n' + pageText;
         }
 
@@ -3001,7 +2998,7 @@ const NEW_CONTRACT_ITEMS = {
 
     pageChunks.forEach(pageStr => {
       if (!pageStr.trim()) return;
-      if (pageStr.includes('第二聯') || pageStr.includes('單位自存聯')) return;
+
 
       const cleanPage = pageStr.replace(/ Ⅱ/g, '11').replace(/Ⅱ/g, '11');
       const rawSns = cleanPage.match(/\b([0-9]{4}\s*[A-Z]{1,3}\s*[0-9A-Z]{4,8})\b/g) || [];
