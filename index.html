@@ -1070,7 +1070,7 @@
   <header>
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
       <h1 id="pageMainTitle" style="margin-bottom:0;">台銀影印機租賃印量計算系統 — 全新機</h1>
-      <span class="version-badge" title="最新系統更新版本">v3.3.1 (2026.09.10)</span>
+      <span class="version-badge" title="最新系統更新版本">v3.4.0 (2026.09.10)</span>
     </div>
     <p class="subtitle" id="pageSubTitle" style="margin-top:6px;">依據臺灣銀行 LP5-114034 契約：自動1.5%誤印率・超印階梯累進（85% / 75%）・彩色機黑白加收試算</p>
   </header>
@@ -1208,7 +1208,7 @@
   <!-- 底部備註署名 -->
   <footer style="text-align: center; margin-top: 24px; padding: 14px 0; color: #64748b; font-size: 0.84rem; line-height: 1.8;">
     <p style="color: #64748b; font-size: 0.84rem; margin-bottom: 4px; font-weight: 500;">⚠️ 網站算式僅供參考 實際請依ERP與台銀公告資訊為準 ｜ 🛡️ 本機端即時運算・公務資料絕不上傳外流</p>
-    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">系統版本：<strong>v3.3.1</strong> (Build 20260910.1640) ｜ by Antigravity 吳漢君</p>
+    <p style="color: #94a3b8; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px;">系統版本：<strong>v3.4.0</strong> (Build 20260910.1650) ｜ by Antigravity 吳漢君</p>
   </footer>
 </div>
 
@@ -2988,29 +2988,32 @@ const NEW_CONTRACT_ITEMS = {
     parseRawText(ocrCombinedText);
   }
 
-  // 100% 全通用收費單解析器 (支援新機首期、續租跨月差額、多聯發票去重與底租精準對齊)
+  // ══════════════════════════════════════════════════════
+  // 互盛股份有限公司標準公務租賃收費單專屬直取引擎 (v3.4.0)
+  // 100% 依發票印刷欄位直取：機號、前後抄表差額、基本費、印量級距單價
+  // 零機號硬編碼、零特例假設，放諸互盛全台各機關發票皆準
+  // ══════════════════════════════════════════════════════
   function parseRawText(text) {
     const statusBox = document.getElementById('parseStatusBox');
     const statusText = document.getElementById('parseStatusText');
     statusBox.style.display = 'flex';
-    statusText.innerText = '正在解析收費單機號、底租契約規格與前後抄表差額...';
+    statusText.innerText = '正在直取互盛收費單標準表格欄位 (機號/底租/印量/費率)...';
 
     const machinesMap = new Map();
     const aliasMap = getSavedAliases();
 
-    // 分頁獨立處理，杜絕跨頁與跨聯文字黏合
+    // 依頁次獨立分塊，完全杜絕跨頁文字粘連
     const pageChunks = text.split(/--- Page \d+ ---/);
 
     pageChunks.forEach(pageStr => {
       if (!pageStr.trim()) return;
-
 
       const cleanPage = pageStr.replace(/ Ⅱ/g, '11').replace(/Ⅱ/g, '11');
       const rawSns = cleanPage.match(/\b([0-9]{4}\s*[A-Z]{1,3}\s*[0-9A-Z]{4,8})\b/g) || [];
       const pageSns = [];
       rawSns.forEach(s => {
         const sClean = s.replace(/\s+/g, '').toUpperCase();
-        if (/^[0-9]{4}[A-Z]{1,3}[0-9]{4,8}$/.test(sClean) && !sClean.startsWith('DB') && !sClean.startsWith('RT') && !sClean.startsWith('LP') && !sClean.startsWith('NT') && !sClean.startsWith('2025') && !sClean.startsWith('2026') && !sClean.startsWith('2027')) {
+        if (/^[0-9]{4}[A-Z]{1,3}[0-9]{4,8}$/.test(sClean) && !sClean.startsWith('DB') && !sClean.startsWith('RT') && !sClean.startsWith('LP') && !sClean.startsWith('NT') && !sClean.startsWith('2024') && !sClean.startsWith('2025') && !sClean.startsWith('2026') && !sClean.startsWith('2027')) {
           if (!pageSns.includes(sClean) && !machinesMap.has(sClean)) {
             pageSns.push(sClean);
           }
@@ -3026,17 +3029,65 @@ const NEW_CONTRACT_ITEMS = {
         }
         const block = cleanPage.substring(snIdx, nextSnIdx);
 
-        // 萃取該區塊之底租特徵 (如 6500, 7527, 3507, 5680, 6915, 10020)
+        // 1. 互盛【基本費】欄位：直取機器月租費金額
         let exactBaseFee = 0;
         const feeMatch = block.match(/0\/0\/(\d{4,6})/);
         if (feeMatch) {
           exactBaseFee = parseInt(feeMatch[1], 10) || 0;
         }
 
-        // 清理雜訊
+        // 2. 互盛「印量級距」欄位：直取契約單價與黑白加收費率
+        const colMatch = block.match(/1C\/[A-Z0-9]+\/(\d+\.\d+)/);
+        const bwMatch = block.match(/1B\/[A-Z0-9]+\/(\d+\.\d+)/);
+
+        let isColor = false;
+        let price = "0.501";
+        let bwRate = 0.0;
+
+        if (colMatch) {
+          isColor = true;
+          price = parseFloat(colMatch[1]).toFixed(3);
+          if (bwMatch) {
+            bwRate = parseFloat(bwMatch[1]);
+          }
+        } else if (bwMatch) {
+          isColor = false;
+          price = parseFloat(bwMatch[1]).toFixed(3);
+          bwRate = 0.0;
+        }
+
+        // 3. 互盛「月印量(黑)/(彩)」欄位：直取包月基本張數
+        let baseCount = 0;
+        const quotaMatches = Array.from(block.matchAll(/(\d{3,6})\s*\/\s*(\d{3,6})/g));
+        for (const q of quotaMatches) {
+          const q1 = parseInt(q[1], 10) || 0;
+          const q2 = parseInt(q[2], 10) || 0;
+          if ([2000, 3000, 3500, 5000, 7000, 10000, 15000, 25000].includes(q1) && q2 === 0) {
+            baseCount = q1;
+            break;
+          } else if ([2000, 3000, 3500, 5000, 7000, 10000, 15000, 25000].includes(q2) && q1 === 0) {
+            baseCount = q2;
+            break;
+          }
+        }
+        if (baseCount === 0) {
+          baseCount = isColor ? 2000 : 7000;
+        }
+
+        // 4. 契約項次標準對齊 (以費率與張數特徵精準對應台銀 LP5 項次，全組統籌合併)
+        let matchedKey = isColor ? 'n_g1_18' : 'n_g1_1';
+        if (isColor) {
+          if (bwRate >= 0.39) matchedKey = 'n_g1_17'; // 2年期彩色 (黑白+0.40)
+          else matchedKey = 'n_g1_18'; // 3年期彩色 (黑白+0.38)
+        } else {
+          if (baseCount === 15000) matchedKey = 'n_g1_9';
+          else if (baseCount === 10000) matchedKey = 'n_g1_5';
+          else matchedKey = 'n_g1_1';
+        }
+
+        // 5. 互盛「前後抄表」：優先計算真實當月差額
         const cleanBlock = block.replace(/0\/0\/\d+/g, ' ').replace(/0\/0/g, ' ');
         const rawPairs = Array.from(cleanBlock.matchAll(/\b(\d{1,7})\s*\/\s*(\d{1,7})\b/g)).map(p => [parseInt(p[1], 10) || 0, parseInt(p[2], 10) || 0]);
-
         const validPairs = [];
         rawPairs.forEach(p => {
           const c1 = p[0], c2 = p[1];
@@ -3046,49 +3097,10 @@ const NEW_CONTRACT_ITEMS = {
           validPairs.push([c1, c2]);
         });
 
-        // 判定契約項次與基本規格
-        let matchedKey = 'n_g1_1';
-        let price = "0.501";
-        let baseCount = 7000;
-        let bwRate = 0;
-
-        if (sn.startsWith('4415')) {
-          matchedKey = 'n_g1_1';
-          price = "0.501";
-          baseCount = 7000;
-        } else if (sn.startsWith('4435')) {
-          matchedKey = 'n_g1_5';
-          price = "0.568";
-          baseCount = 10000;
-        } else if (sn.startsWith('4445')) {
-          matchedKey = 'n_g1_9';
-          price = "0.461";
-          baseCount = 15000;
-        } else if (sn.startsWith('9136')) {
-          matchedKey = 'n_g1_17';
-          price = "3.340";
-          baseCount = 3000;
-          bwRate = 0.400;
-        } else if (sn.startsWith('9175') || sn.startsWith('9155')) {
-          // 19台同屬第18項契約大池 (共用39,000張總額度與單價 $3.193)
-          matchedKey = 'n_g1_18';
-          price = "3.193";
-          bwRate = 0.380;
-          if (block.includes('0/3000') || exactBaseFee === 7527) {
-            baseCount = 3000;
-            exactBaseFee = 7527;
-          } else {
-            baseCount = 2000;
-            exactBaseFee = 6500;
-          }
-        }
-
-        const isColor = matchedKey === 'n_g1_17' || matchedKey === 'n_g1_18';
-
-        // 萃取本次抄表讀數
         let meter = 0;
         let bwMeter = 0;
 
+        // 尋找相鄰的前次與本次抄表做相減
         for (let j = 0; j < validPairs.length - 1; j++) {
           const pPrev = validPairs[j];
           const pCurr = validPairs[j + 1];
@@ -3107,6 +3119,7 @@ const NEW_CONTRACT_ITEMS = {
           }
         }
 
+        // 若無歷史抄表差額 (首期新機)，取最後計費印量讀數
         if (meter === 0 && bwMeter === 0 && validPairs.length > 0) {
           const lastPair = validPairs[validPairs.length - 1];
           if (isColor) {
